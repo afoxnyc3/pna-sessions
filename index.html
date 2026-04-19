@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>P&A Session Archive</title>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --surface: #141414;
+      --border: #222;
+      --text: #e8e8e8;
+      --muted: #666;
+      --accent: #fff;
+      --tag-bg: #1e1e1e;
+      --tag-border: #333;
+      --hover: #1a1a1a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .logo strong { color: var(--accent); }
+    .meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+    h2 {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .session-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 14px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      text-decoration: none;
+      color: var(--text);
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .session-item:hover {
+      background: var(--hover);
+      border-color: var(--border);
+    }
+    .session-date {
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 120px;
+      flex-shrink: 0;
+    }
+    .session-title {
+      flex: 1;
+      font-size: 13px;
+    }
+    .session-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      border-radius: 3px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .empty {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 32px 0;
+      text-align: center;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 16px 32px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 64px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><strong>P&amp;A</strong> / Session Archive</div>
+    <div class="meta" id="session-count">Loading...</div>
+  </header>
+  <main>
+    <h2>Sessions</h2>
+    <div class="session-list" id="session-list">
+      <div class="empty">No sessions yet.</div>
+    </div>
+  </main>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+
+  <script>
+    // Session index is injected at build/deploy time via sessions/index.json
+    async function loadSessions() {
+      try {
+        const res = await fetch('./sessions/index.json');
+        if (!res.ok) throw new Error('no index');
+        const sessions = await res.json();
+        render(sessions);
+      } catch {
+        document.getElementById('session-count').textContent = '0 sessions';
+      }
+    }
+
+    function render(sessions) {
+      const list = document.getElementById('session-list');
+      const count = document.getElementById('session-count');
+      count.textContent = `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`;
+      if (!sessions.length) return;
+      list.innerHTML = sessions
+        .slice()
+        .reverse()
+        .map(s => `
+          <a class="session-item" href="./sessions/${s.file}">
+            <span class="session-date">${s.date}</span>
+            <span class="session-title">${s.title}</span>
+            <span class="session-tags">${(s.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}</span>
+          </a>
+        `).join('');
+    }
+
+    loadSessions();
+  </script>
+</body>
+</html>
