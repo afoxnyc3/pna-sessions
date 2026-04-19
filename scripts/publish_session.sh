@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
-# publish_session.sh — Generate an HTML session page and push to GitHub.
-# Vercel auto-deploys from the GitHub repo on push.
+# publish_session.sh — Generate an HTML session artifact and push to GitHub.
+# Vercel auto-deploys on push.
 #
 # Usage:
-#   publish_session.sh --title "Session title" --agent "agent_id" \
-#                      --body-md /path/to/summary.md [--tags "tag1,tag2"]
-#
-# Env vars (optional):
-#   PNA_SESSIONS_REPO  — absolute path to pna-sessions repo
-#                        default: ~/dev/projects/pna-sessions
+#   publish_session.sh --title "Title" --agent "agent_id" \
+#                      --body-md /path/to/summary.md \
+#                      [--type session|diagram|brainstorm|design] \
+#                      [--tags "tag1,tag2"]
 
 set -euo pipefail
 
 REPO="${PNA_SESSIONS_REPO:-$HOME/dev/projects/pna-sessions}"
 SCRIPT_DIR="$REPO/scripts"
 
-# Pass all args through to the Python generator
 FILENAME=$(python3 "$SCRIPT_DIR/generate_session.py" "$@")
 
 if [ -z "$FILENAME" ]; then
@@ -25,9 +22,8 @@ fi
 
 echo "Generated: sessions/$FILENAME"
 
-# Commit and push
 cd "$REPO"
-git add "sessions/$FILENAME" sessions/index.json
+git add "sessions/$FILENAME" manifest.json
 git commit -m "session: $FILENAME"
 git push origin main
 

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
 generate_session.py — Creates a self-contained HTML session summary and
-registers it in sessions/index.json.
+registers it in manifest.json at the repo root.
 
 Usage:
   python3 generate_session.py \
-    --title "Title of this session" \
+    --title "Title" \
     --agent "principal_architect" \
-    --body-md "path/to/summary.md" \
+    --body-md path/to/summary.md \
+    [--type session|diagram|brainstorm|design] \
     [--tags "tag1,tag2"]
 
 Or pipe markdown body via stdin:
@@ -15,8 +16,8 @@ Or pipe markdown body via stdin:
 
 Output:
   sessions/YYYY-MM-DD-HHMMSS.html  (created)
-  sessions/index.json              (updated)
-  Prints the filename on stdout so callers can capture it.
+  manifest.json                    (updated at repo root)
+  Prints the filename on stdout.
 """
 
 import argparse
@@ -29,9 +30,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
 SESSIONS_DIR = REPO_ROOT / "sessions"
-INDEX_FILE = SESSIONS_DIR / "index.json"
+MANIFEST_FILE = REPO_ROOT / "manifest.json"
 
-# ── Minimal Markdown → HTML (enough for session notes) ──────────────────────
 
 def md_to_html(md: str) -> str:
     lines = md.splitlines()
@@ -40,7 +40,6 @@ def md_to_html(md: str) -> str:
     in_list = False
 
     for line in lines:
-        # Code fence
         if line.strip().startswith("```"):
             if not in_code:
                 lang = line.strip()[3:].strip() or "text"
@@ -58,18 +57,15 @@ def md_to_html(md: str) -> str:
             html_lines.append(_esc(line))
             continue
 
-        # Headings
         m = re.match(r'^(#{1,4})\s+(.*)', line)
         if m:
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
             level = len(m.group(1))
-            tag = f"h{level}"
-            html_lines.append(f"<{tag}>{_inline(m.group(2))}</{tag}>")
+            html_lines.append(f"<h{level}>{_inline(m.group(2))}</h{level}>")
             continue
 
-        # Horizontal rule
         if re.match(r'^---+$', line.strip()):
             if in_list:
                 html_lines.append("</ul>")
@@ -77,16 +73,6 @@ def md_to_html(md: str) -> str:
             html_lines.append("<hr>")
             continue
 
-        # List items
-        m = re.match(r'^[-*]\s+(.*)', line)
-        if m:
-            if not in_list:
-                html_lines.append("<ul>")
-                in_list = True
-            html_lines.append(f"<li>{_inline(m.group(1))}</li>")
-            continue
-
-        # Checkboxes
         m = re.match(r'^[-*]\s+\[([ x])\]\s+(.*)', line)
         if m:
             checked = ' checked' if m.group(1) == 'x' else ''
@@ -96,7 +82,14 @@ def md_to_html(md: str) -> str:
             html_lines.append(f'<li><input type="checkbox" disabled{checked}> {_inline(m.group(2))}</li>')
             continue
 
-        # Close list on blank line
+        m = re.match(r'^[-*]\s+(.*)', line)
+        if m:
+            if not in_list:
+                html_lines.append("<ul>")
+                in_list = True
+            html_lines.append(f"<li>{_inline(m.group(1))}</li>")
+            continue
+
         if not line.strip():
             if in_list:
                 html_lines.append("</ul>")
@@ -104,7 +97,6 @@ def md_to_html(md: str) -> str:
             html_lines.append("")
             continue
 
-        # Paragraph
         if in_list:
             html_lines.append("</ul>")
             in_list = False
@@ -123,155 +115,64 @@ def _esc(s: str) -> str:
 
 
 def _inline(s: str) -> str:
-    # Bold
     s = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', s)
-    # Italic
     s = re.sub(r'\*(.+?)\*', r'<em>\1</em>', s)
-    # Inline code
     s = re.sub(r'`([^`]+)`', lambda m: f'<code>{_esc(m.group(1))}</code>', s)
-    # Links
     s = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank">\1</a>', s)
     return s
 
 
-# ── HTML Template ────────────────────────────────────────────────────────────
-
-def build_html(title: str, agent: str, date_str: str, tags: list[str], body_html: str) -> str:
+def build_html(title: str, agent: str, date_str: str, artifact_type: str, tags: list, body_html: str) -> str:
     tag_html = "".join(f'<span class="tag">{t}</span>' for t in tags)
+    type_colors = {
+        "session":    "#22c55e",
+        "diagram":    "#3b82f6",
+        "brainstorm": "#f59e0b",
+        "design":     "#a855f7",
+    }
+    type_color = type_colors.get(artifact_type, "#666")
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{_esc(title)} — P&amp;A Session</title>
+  <title>{_esc(title)} — P&amp;A</title>
   <style>
     :root {{
-      --bg: #0d0d0d;
-      --surface: #141414;
-      --border: #222;
-      --text: #e8e8e8;
-      --muted: #666;
-      --accent: #fff;
-      --code-bg: #111;
-      --tag-bg: #1e1e1e;
-      --tag-border: #333;
-      --link: #a0c4ff;
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: {type_color};
     }}
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    body {{
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-size: 14px;
-      line-height: 1.7;
-      min-height: 100vh;
-    }}
-    header {{
-      border-bottom: 1px solid var(--border);
-      padding: 18px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }}
-    .back {{
-      font-size: 11px;
-      color: var(--muted);
-      text-decoration: none;
-      letter-spacing: 0.08em;
-      font-family: 'SF Mono', monospace;
-    }}
+    body {{ background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }}
+    header {{ border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }}
+    .back {{ font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }}
     .back:hover {{ color: var(--accent); }}
-    .header-meta {{
-      font-size: 11px;
-      color: var(--muted);
-      font-family: 'SF Mono', monospace;
-    }}
-    .hero {{
-      border-bottom: 1px solid var(--border);
-      padding: 32px;
-      max-width: 860px;
-      margin: 0 auto;
-    }}
-    .agent-badge {{
-      display: inline-block;
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-family: 'SF Mono', monospace;
-      margin-bottom: 10px;
-    }}
-    h1 {{
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--accent);
-      line-height: 1.3;
-      margin-bottom: 12px;
-    }}
-    .tags {{
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }}
-    .tag {{
-      font-size: 10px;
-      padding: 3px 8px;
-      background: var(--tag-bg);
-      border: 1px solid var(--tag-border);
-      border-radius: 3px;
-      color: var(--muted);
-      font-family: 'SF Mono', monospace;
-      letter-spacing: 0.05em;
-    }}
-    article {{
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 32px;
-    }}
+    .header-meta {{ font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }}
+    .hero {{ border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }}
+    .type-badge {{ display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }}
+    .type-dot {{ width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }}
+    .agent-label {{ font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }}
+    h1 {{ font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }}
+    .tags {{ display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }}
+    .tag {{ font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }}
+    article {{ max-width: 860px; margin: 0 auto; padding: 32px; }}
     article h1 {{ font-size: 20px; margin: 28px 0 12px; color: var(--accent); }}
     article h2 {{ font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }}
     article h3 {{ font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }}
-    article h4 {{ font-size: 13px; margin: 16px 0 6px; color: var(--muted); }}
-    article p {{ margin-bottom: 12px; color: var(--text); }}
+    article p {{ margin-bottom: 12px; }}
     article ul {{ margin: 8px 0 12px 20px; }}
     article ul.checklist {{ list-style: none; margin-left: 4px; }}
     article li {{ margin-bottom: 4px; }}
     article hr {{ border: none; border-top: 1px solid var(--border); margin: 24px 0; }}
     article a {{ color: var(--link); text-decoration: none; }}
     article a:hover {{ text-decoration: underline; }}
-    article code {{
-      background: var(--code-bg);
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 12px;
-      color: #d4d4d4;
-    }}
-    article pre {{
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 16px;
-      overflow-x: auto;
-      margin: 12px 0 16px;
-    }}
-    article pre code {{
-      background: none;
-      padding: 0;
-      font-size: 12px;
-      line-height: 1.55;
-    }}
-    article input[type=checkbox] {{ accent-color: var(--muted); }}
-    footer {{
-      border-top: 1px solid var(--border);
-      padding: 16px 32px;
-      text-align: center;
-      font-size: 11px;
-      color: var(--muted);
-      font-family: 'SF Mono', monospace;
-      margin-top: 48px;
-    }}
+    article code {{ background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }}
+    article pre {{ background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }}
+    article pre code {{ background: none; padding: 0; font-size: 12px; line-height: 1.55; }}
+    footer {{ border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }}
   </style>
 </head>
 <body>
@@ -280,7 +181,8 @@ def build_html(title: str, agent: str, date_str: str, tags: list[str], body_html
     <div class="header-meta">{_esc(date_str)}</div>
   </header>
   <div class="hero">
-    <span class="agent-badge">{_esc(agent)}</span>
+    <div class="type-badge"><span class="type-dot"></span>{_esc(artifact_type)}</div>
+    <div class="agent-label">{_esc(agent)}</div>
     <h1>{_esc(title)}</h1>
     <div class="tags">{tag_html}</div>
   </div>
@@ -292,17 +194,16 @@ def build_html(title: str, agent: str, date_str: str, tags: list[str], body_html
 </html>"""
 
 
-# ── Main ─────────────────────────────────────────────────────────────────────
-
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--title", required=True)
     parser.add_argument("--agent", default="main")
     parser.add_argument("--body-md", help="Path to markdown file. If omitted, reads stdin.")
     parser.add_argument("--tags", default="", help="Comma-separated tags")
+    parser.add_argument("--type", default="session",
+                        choices=["session", "diagram", "brainstorm", "design"])
     args = parser.parse_args()
 
-    # Read markdown
     if args.body_md:
         body_md = Path(args.body_md).read_text()
     else:
@@ -320,6 +221,7 @@ def main() -> None:
         title=args.title,
         agent=args.agent,
         date_str=date_str,
+        artifact_type=args.type,
         tags=tags,
         body_html=body_html,
     )
@@ -327,16 +229,16 @@ def main() -> None:
     out_path = SESSIONS_DIR / filename
     out_path.write_text(html)
 
-    # Update index.json
-    index = json.loads(INDEX_FILE.read_text()) if INDEX_FILE.exists() else []
-    index.append({
-        "file": filename,
+    manifest = json.loads(MANIFEST_FILE.read_text()) if MANIFEST_FILE.exists() else []
+    manifest.append({
+        "path": f"sessions/{filename}",
         "date": date_str,
         "title": args.title,
         "agent": args.agent,
         "tags": tags,
+        "type": args.type,
     })
-    INDEX_FILE.write_text(json.dumps(index, indent=2))
+    MANIFEST_FILE.write_text(json.dumps(manifest, indent=2))
 
     print(filename)
 
