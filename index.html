@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>P&A Session Archive</title>
+  <title>P&A Archive</title>
   <style>
     :root {
       --bg: #0d0d0d;
@@ -15,6 +15,10 @@
       --tag-bg: #1e1e1e;
       --tag-border: #333;
       --hover: #1a1a1a;
+      --dot-session:    #22c55e;
+      --dot-diagram:    #3b82f6;
+      --dot-brainstorm: #f59e0b;
+      --dot-design:     #a855f7;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -39,59 +43,90 @@
       color: var(--muted);
     }
     .logo strong { color: var(--accent); }
-    .meta {
-      font-size: 11px;
-      color: var(--muted);
-    }
-    main {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 32px;
-    }
-    h2 {
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
+    .meta { font-size: 11px; color: var(--muted); }
+    main { max-width: 900px; margin: 0 auto; padding: 32px; }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 16px;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
+      padding-bottom: 12px;
     }
-    .session-list {
+    .filters { display: flex; gap: 6px; }
+    .filter-btn {
+      font-family: inherit;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color 0.1s, color 0.1s;
+    }
+    .filter-btn:hover    { color: var(--text); border-color: #444; }
+    .filter-btn.active   { color: var(--accent); border-color: #555; }
+    .legend {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .artifact-list {
       display: flex;
       flex-direction: column;
       gap: 2px;
     }
-    .session-item {
+    .artifact-item {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 12px 14px;
+      gap: 14px;
+      padding: 11px 14px;
       border: 1px solid transparent;
       border-radius: 4px;
       text-decoration: none;
       color: var(--text);
       transition: background 0.1s, border-color 0.1s;
     }
-    .session-item:hover {
+    .artifact-item:hover {
       background: var(--hover);
       border-color: var(--border);
     }
-    .session-date {
-      font-size: 11px;
-      color: var(--muted);
-      min-width: 120px;
+    .type-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
       flex-shrink: 0;
     }
-    .session-title {
-      flex: 1;
-      font-size: 13px;
+    .dot-session    { background: var(--dot-session); }
+    .dot-diagram    { background: var(--dot-diagram); }
+    .dot-brainstorm { background: var(--dot-brainstorm); }
+    .dot-design     { background: var(--dot-design); }
+    .artifact-date {
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 90px;
+      flex-shrink: 0;
     }
-    .session-tags {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
+    .artifact-agent {
+      font-size: 10px;
+      color: var(--muted);
+      min-width: 130px;
+      flex-shrink: 0;
+      letter-spacing: 0.03em;
     }
+    .artifact-title { flex: 1; font-size: 13px; }
+    .artifact-tags  { display: flex; gap: 6px; flex-wrap: wrap; }
     .tag {
       font-size: 10px;
       padding: 2px 7px;
@@ -119,48 +154,92 @@
 </head>
 <body>
   <header>
-    <div class="logo"><strong>P&amp;A</strong> / Session Archive</div>
-    <div class="meta" id="session-count">Loading...</div>
+    <div class="logo"><strong>P&amp;A</strong> / Archive</div>
+    <div class="meta" id="item-count">Loading...</div>
   </header>
+
   <main>
-    <h2>Sessions</h2>
-    <div class="session-list" id="session-list">
-      <div class="empty">No sessions yet.</div>
+    <div class="toolbar">
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="session">Sessions</button>
+        <button class="filter-btn" data-filter="diagram">Diagrams</button>
+        <button class="filter-btn" data-filter="brainstorm">Brainstorms</button>
+        <button class="filter-btn" data-filter="design">Designs</button>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="type-dot dot-session"></span>session</div>
+        <div class="legend-item"><span class="type-dot dot-diagram"></span>diagram</div>
+        <div class="legend-item"><span class="type-dot dot-brainstorm"></span>brainstorm</div>
+        <div class="legend-item"><span class="type-dot dot-design"></span>design</div>
+      </div>
+    </div>
+
+    <div class="artifact-list" id="artifact-list">
+      <div class="empty">Loading...</div>
     </div>
   </main>
+
   <footer>Principal &amp; Agent &mdash; internal</footer>
 
   <script>
-    // Session index is injected at build/deploy time via sessions/index.json
-    async function loadSessions() {
+    let allEntries = [];
+    let activeFilter = 'all';
+
+    async function loadManifest() {
       try {
-        const res = await fetch('./sessions/index.json');
-        if (!res.ok) throw new Error('no index');
-        const sessions = await res.json();
-        render(sessions);
+        const res = await fetch('./manifest.json');
+        if (!res.ok) throw new Error('no manifest');
+        allEntries = await res.json();
+        render();
       } catch {
-        document.getElementById('session-count').textContent = '0 sessions';
+        document.getElementById('item-count').textContent = '0 items';
+        document.getElementById('artifact-list').innerHTML =
+          '<div class="empty">No artifacts yet.</div>';
       }
     }
 
-    function render(sessions) {
-      const list = document.getElementById('session-list');
-      const count = document.getElementById('session-count');
-      count.textContent = `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`;
-      if (!sessions.length) return;
-      list.innerHTML = sessions
+    function render() {
+      const list  = document.getElementById('artifact-list');
+      const count = document.getElementById('item-count');
+
+      const filtered = activeFilter === 'all'
+        ? allEntries
+        : allEntries.filter(e => e.type === activeFilter);
+
+      const label = activeFilter === 'all' ? 'items' : activeFilter + 's';
+      count.textContent = `${filtered.length} ${label}`;
+
+      if (!filtered.length) {
+        list.innerHTML = '<div class="empty">Nothing here yet.</div>';
+        return;
+      }
+
+      list.innerHTML = filtered
         .slice()
         .reverse()
-        .map(s => `
-          <a class="session-item" href="./sessions/${s.file}">
-            <span class="session-date">${s.date}</span>
-            <span class="session-title">${s.title}</span>
-            <span class="session-tags">${(s.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}</span>
+        .map(e => `
+          <a class="artifact-item" href="./${e.path}">
+            <span class="type-dot dot-${e.type}"></span>
+            <span class="artifact-date">${e.date}</span>
+            <span class="artifact-agent">${e.agent}</span>
+            <span class="artifact-title">${e.title}</span>
+            <span class="artifact-tags">${(e.tags || [])
+              .map(t => `<span class="tag">${t}</span>`).join('')}</span>
           </a>
         `).join('');
     }
 
-    loadSessions();
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        render();
+      });
+    });
+
+    loadManifest();
   </script>
 </body>
 </html>

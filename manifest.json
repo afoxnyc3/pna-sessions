@@ -1,0 +1,10 @@
+[
+  {
+    "type": "diagram",
+    "title": "Clarke Context Architecture — Current State vs. Proposed",
+    "date": "2026-04-19",
+    "agent": "principal_engineer",
+    "path": "diagrams/clarke-context-architecture.html",
+    "tags": ["memory", "architecture", "context-management"]
+  }
+]
