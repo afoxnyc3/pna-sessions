@@ -34,5 +34,20 @@
       "backfill"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-19-214016.html",
+    "date": "2026-04-19",
+    "title": "main session \u2014 2026-04-19",
+    "agent": "main",
+    "tags": [
+      "main",
+      "clarke",
+      "2026-04-19",
+      "research-agents",
+      "sandbox-agent",
+      "wrap-fix"
+    ],
+    "type": "session"
   }
 ]

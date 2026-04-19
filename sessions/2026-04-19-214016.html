@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>main session — 2026-04-19 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-19</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">main</div>
+    <h1>main session — 2026-04-19</h1>
+    <div class="tags"><span class="tag">main</span><span class="tag">clarke</span><span class="tag">2026-04-19</span><span class="tag">research-agents</span><span class="tag">sandbox-agent</span><span class="tag">wrap-fix</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — main — 2026-04-19</h1>
+
+<p><strong>Agent:</strong> Clarke (main)</p>
+<p><strong>Date:</strong> 2026-04-19</p>
+<p><strong>Session duration:</strong> ~6 hours (resumed from compacted session, continued through evening)</p>
+<p><strong>Project(s):</strong> claudeclaw, pna-sessions, pna-claude-skills, agent-design</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Fixed wrap → pna-sessions chain — agent-session-summary SKILL.md was a broken symlink (SKILL.md never existed). Wrote the file, verified both symlink chains resolve, ran live publish test. Chain confirmed end-to-end. (<code>~/.claude/skills/agent-session-summary/SKILL.md</code>)</li>
+<li><input type="checkbox" disabled checked> Created <code>afoxnyc3/pna-claude-skills</code> private GitHub repo — pushed full skill catalog (338 files, 44 new skills + skill-optimizer hardening from Engineer). (<code>git push origin main</code>)</li>
+<li><input type="checkbox" disabled checked> Committed claude-opus-4-7 model upgrades — <code>src/bot.ts</code>, <code>src/dashboard.ts</code>, <code>src/dashboard-html.ts</code>. Commit <code>2db4028</code>.</li>
+<li><input type="checkbox" disabled checked> Verified all 6 claudeclaw services running since 14:55 with new build — Opus 4.7 live, AGENT_MAX_TURNS=100, SHOW_COST_FOOTER=off confirmed in .env.</li>
+<li><input type="checkbox" disabled checked> Installed <code>agent-sandboxes</code> skill from <code>disler/agent-sandbox-skill</code> — cloned to <code>~/dev/external/agent-sandbox-skill</code>, copied to <code>~/.claude/skills/agent-sandboxes/</code>, adapted absolute paths in SKILL.md, pushed to pna-claude-skills.</li>
+<li><input type="checkbox" disabled checked> Designed 4 new agent specs (research cluster + sandbox) — brainstormed architecture with Alex over 2+ hours via Telegram while mobile.</li>
+<li><input type="checkbox" disabled checked> Dispatched Architect mission for design artifacts — mission timed out after partial completion (10 min wall).</li>
+<li><input type="checkbox" disabled checked> Filled 7 missing design files — research_a/agent.yaml, shared/feynman-bridge/SKILL.md, principal_sandbox/CLAUDE.md + tools.py + requirements.txt + .env.sample + plist. All 20 design artifacts now complete at <code>~/dev/projects/rnd/agent-design/</code>.</li>
+<li><input type="checkbox" disabled checked> Saved session checkpoint to claudeclaw.db memories.</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<p>| Task | Status | Blocker / Next action |</p>
+<p>|---|---|---|</p>
+<p>| Research cluster implementation | pending | Need fresh Engineer session; design artifacts ready at ~/dev/projects/rnd/agent-design/ |</p>
+<p>| Sandbox agent implementation | pending | Need E2B API key from vault first, then fresh Engineer session |</p>
+<p>| feynman-bridge skill install | pending | Needs to be symlinked into ~/.claude/skills/ and deepagents/skills/ |</p>
+<p>| E2B template build | pending | Needs E2B_API_KEY in claudeclaw .env, then run build_template.py |</p>
+<p>| Exa API key in feynman | pending | Pull from vault, add to feynman config |</p>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<p>| Decision | Rationale | Affects |</p>
+<p>|---|---|---|</p>
+<p>| Research agent: true A/B parallel testing | Same prompt, both frameworks simultaneously, automated reviewer scores both — real experimental data | research_a, research_b, principal_research |</p>
+<p>| research_b uses Claude Agents SDK (not deepagents) | deepagents needs Claude Code inside E2B — wrong dependency for sandbox; SDK is lightweight | research_b architecture |</p>
+<p>| principal_sandbox uses Claude Agents SDK | Production-appropriate, lightweight, no subprocess Claude Code dependency | principal_sandbox |</p>
+<p>| feynman = tool call (not a third flavor) | Feynman is a CLI subprocess invoked by both research agents; not a separate orchestration layer | feynman-bridge skill |</p>
+<p>| Reviewer runs inline in principal_research | Simpler than a fourth agent; principal_research waits for both, scores inline, reports | principal_research CLAUDE.md |</p>
+<p>| 4 launchd services (not scripts) | Loops from day one, Telegram interface from day one — same pattern as existing principals | all new agents |</p>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+~/.claude/skills/agent-session-summary/SKILL.md          created
+~/.claude/skills/agent-sandboxes/                         created (65 files)
+~/dev/external/agent-sandbox-skill/                       cloned
+~/dev/projects/rnd/agent-design/principal_research/       4 files (Architect)
+~/dev/projects/rnd/agent-design/research_a/               4 files (Architect + Clarke)
+~/dev/projects/rnd/agent-design/research_b/               6 files (Architect)
+~/dev/projects/rnd/agent-design/principal_sandbox/        6 files (Clarke)
+~/dev/projects/rnd/agent-design/shared/feynman-bridge/    1 file (Clarke)
+/Users/alex/dev/claudeclaw/src/bot.ts                     modified (2db4028)
+/Users/alex/dev/claudeclaw/src/dashboard.ts               modified (2db4028)
+/Users/alex/dev/claudeclaw/src/dashboard-html.ts          modified (2db4028)
+afoxnyc3/pna-claude-skills (GitHub)                       created, 338 files pushed
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>Engineer (Window 1):</strong> Implement research cluster — read all files in <code>~/dev/projects/rnd/agent-design/</code>, implement principal_research + research_a + research_b + feynman-bridge skill. Wire into mission queue + launchd. Register new bot tokens first.</li>
+<li><strong>Engineer (Window 2, after E2B key):</strong> Implement principal_sandbox — read <code>~/dev/projects/rnd/agent-design/principal_sandbox/</code>, implement Python daemon, wire E2B tools + Telegram polling + launchd.</li>
+<li><strong>Alex (home tasks):</strong> Pull Exa API key → feynman config. Pull E2B API key → claudeclaw .env. Run <code>cd ~/.claude/skills/agent-sandboxes/sandbox_cli &amp;&amp; uv sync</code>. Run <code>uv run build_template.py --list-tiers</code> then build templates.</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>pna-sessions auth: Vercel password protection or keep public? Deferred.</li>
+<li>Diagram update (backlog): Update pna-library diagram to reflect observability hooks, skills git repo, skill-optimizer hardening, SkillClaw changes.</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Engineer upgrade mission (4b051321) was self-cancelled — restart-services caused a 3hr crash loop. Services recovered on their own at 14:55. Mission queue shows it as cancelled with that note. Worth reviewing the restart-services logic before next upgrade cycle.</p>
+
+<p>Architect mission timeout (10 min) is a recurring pattern for large design tasks. Consider breaking future design missions into per-agent tasks (~4 smaller missions) rather than one large one.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
