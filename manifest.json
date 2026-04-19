@@ -1,10 +1,26 @@
 [
   {
     "type": "diagram",
-    "title": "Clarke Context Architecture — Current State vs. Proposed",
+    "title": "Clarke Context Architecture \u2014 Current State vs. Proposed",
     "date": "2026-04-19",
     "agent": "principal_engineer",
     "path": "diagrams/clarke-context-architecture.html",
-    "tags": ["memory", "architecture", "context-management"]
+    "tags": [
+      "memory",
+      "architecture",
+      "context-management"
+    ]
+  },
+  {
+    "type": "session",
+    "title": "Session Status 2026-04-19",
+    "date": "2026-04-19",
+    "agent": "main",
+    "path": "sessions/2026-04-19-session-status-2026-04-19.html",
+    "tags": [
+      "session-summary",
+      "status",
+      "pna-sessions"
+    ]
   }
 ]
