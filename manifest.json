@@ -22,5 +22,17 @@
       "status",
       "pna-sessions"
     ]
+  },
+  {
+    "path": "sessions/2026-04-19-191200.html",
+    "date": "2026-04-19",
+    "title": "principal_architect session \u2014 2026-04-19 (backfill)",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-19",
+      "backfill"
+    ],
+    "type": "session"
   }
 ]

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_architect session — 2026-04-19 (backfill) — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-19</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>principal_architect session — 2026-04-19 (backfill)</h1>
+    <div class="tags"><span class="tag">principal_architect</span><span class="tag">2026-04-19</span><span class="tag">backfill</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_architect — 2026-04-19</h1>
+
+<p><strong>Agent:</strong> Principal Architect</p>
+<p><strong>Date:</strong> 2026-04-19</p>
+<p><strong>Session duration:</strong> ~3 hours (continued from prior overnight session)</p>
+<p><strong>Project(s):</strong> pna-sessions, pna-project-template, claudeclaw (hooks)</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> pna-sessions deployed to Vercel — public archive at https://pna-sessions.vercel.app (<code>/Users/alex/dev/projects/pna-sessions/</code>)</li>
+<li><input type="checkbox" disabled checked> pna-sessions index.html — dark monochrome archive UI, loads <code>manifest.json</code> (<code>pna-sessions/index.html</code>)</li>
+<li><input type="checkbox" disabled checked> pna-sessions session generator — <code>generate_session.py</code> with <code>--type session|diagram|brainstorm|design</code> (<code>pna-sessions/scripts/generate_session.py</code>)</li>
+<li><input type="checkbox" disabled checked> pna-sessions publish script — <code>publish_session.sh</code> commits + pushes on every session wrap (<code>pna-sessions/scripts/publish_session.sh</code>)</li>
+<li><input type="checkbox" disabled checked> pna-sessions manifest migration — moved from <code>sessions/index.json</code> to <code>manifest.json</code> at repo root with typed artifact support (<code>pna-sessions/manifest.json</code>)</li>
+<li><input type="checkbox" disabled checked> pna-sessions add_to_manifest.py — registers existing HTML artifacts without regenerating (<code>pna-sessions/scripts/add_to_manifest.py</code>)</li>
+<li><input type="checkbox" disabled checked> pna-sessions diagrams/ directory — <code>clarke-context-architecture.html</code> preserved and registered in manifest</li>
+<li><input type="checkbox" disabled checked> pna-project-template GitHub repo — live at https://github.com/afoxnyc3/pna-project-template, marked <code>isTemplate: true</code></li>
+<li><input type="checkbox" disabled checked> pna-project-template: 11-file scaffold — README, SPEC, ROADMAP, TASKS, ARCHITECTURE, CLAUDE.md, .gitignore, ADR-0001, GitHub issue templates (task + backlog), PR template</li>
+<li><input type="checkbox" disabled checked> pna-project-template .claude/settings.json — hooks wired for PreToolUse (Bash/Read/Write/Edit) and Stop events</li>
+<li><input type="checkbox" disabled checked> pna-project-template .claude/hooks/pre_tool_use.py — portable safety guard: rm-rf root/home, force push to main, .env access, DROP TABLE SQL</li>
+<li><input type="checkbox" disabled checked> pna-project-template .claude/hooks/stop_validator.py — warns on uncommitted work + in-progress tasks before session ends</li>
+<li><input type="checkbox" disabled checked> pna-project-template .claude/commands/task.md — <code>/task</code>: load next task, read AC from SPEC, create feature branch</li>
+<li><input type="checkbox" disabled checked> pna-project-template .claude/commands/done.md — <code>/done</code>: run tests, verify AC, stage by name, commit, update TASKS.md</li>
+<li><input type="checkbox" disabled checked> pna-project-template .claude/commands/review.md — <code>/review</code>: 5-axis code review (correctness, readability, arch, security, perf)</li>
+<li><input type="checkbox" disabled checked> pna-project-template .claude/commands/spec.md — <code>/spec</code>: line-by-line AC check against implementation</li>
+<li><input type="checkbox" disabled checked> pna-project-template .claude/commands/log.md — <code>/log</code>: 5-bullet session summary with explicit next action, saved to sessions/</li>
+<li><input type="checkbox" disabled checked> pna-project-template CLAUDE.md enriched — context init sequence, bounded shell, critic pass, scope creep, context survival, skills routing table</li>
+<li><input type="checkbox" disabled checked> pna-project-template .claude/README.md — self-documenting: every hook, command, and convention explained</li>
+<li><input type="checkbox" disabled checked> Global pre_tool_use.py — heredoc false-positive fixed: <code>strip_heredocs()</code> strips heredoc body before pattern matching (<code>~/.claude/hooks/pre_tool_use.py</code>)</li>
+<li><input type="checkbox" disabled checked> pna-project-template diagram — Blueprint dark HTML published to https://pna-project-template-diagram.vercel.app (<code>~/.agent/diagrams/pna-project-template.html</code>)</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<p>| Task | Status | Blocker / Next action |</p>
+<p>|---|---|---|</p>
+<p>| pna-sessions GitHub Projects backlog board | blocked | Needs <code>project</code> OAuth scope — Alex runs device flow at https://github.com/login/device (code A2A8-9AFA may be expired — rerun <code>gh auth refresh -s project</code> to get fresh code) |</p>
+<p>| claudeclaw-os upgrade (morning task) | not started | Alex to run: <code>git pull &amp;&amp; npm install &amp;&amp; npm run build</code> in <code>~/dev/claudeclaw</code>, add <code>AGENT_MAX_TURNS=100</code> + <code>SHOW_COST_FOOTER=off</code> to env, then <code>launchctl kickstart -k gui/$(id -u)/com.claudeclaw.*</code> for all services |</p>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<p>| Decision | Rationale | Affects |</p>
+<p>|---|---|---|</p>
+<p>| pna-sessions uses <code>manifest.json</code> at repo root with <code>type</code> field | Supports 4 artifact types (session/diagram/brainstorm/design), filter UI, non-session paths like <code>diagrams/</code> | All future publish scripts and index UI |</p>
+<p>| pna-project-template uses <code>.claude/</code> system not just CLAUDE.md | Hooks + slash commands encode workflow as enforcement, not guidance — agents can't accidentally skip them | Every project spawned from the template |</p>
+<p>| Slash commands as workflow (not docs) | <code>/task</code> / <code>/done</code> / <code>/review</code> / <code>/spec</code> / <code>/log</code> replace ad-hoc prompting with repeatable, spec-anchored flows | Engineer and Architect agents on all projects |</p>
+<p>| Heredoc stripping in pre_tool_use.py | Regex scanning full bash command strings causes false positives on commit messages that describe hooks | Global hook reliability |</p>
+<p>| pna-sessions public (no auth for now) | Ship the system first, add Vercel password protection + home IP allowlist to backlog | pna-sessions backlog |</p>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+/Users/alex/dev/projects/pna-sessions/index.html                            modified
+/Users/alex/dev/projects/pna-sessions/manifest.json                         created
+/Users/alex/dev/projects/pna-sessions/sessions/index.json                   deleted
+/Users/alex/dev/projects/pna-sessions/diagrams/.gitkeep                     created
+/Users/alex/dev/projects/pna-sessions/diagrams/clarke-context-architecture.html  moved from root
+/Users/alex/dev/projects/pna-sessions/scripts/generate_session.py           rewritten
+/Users/alex/dev/projects/pna-sessions/scripts/publish_session.sh            rewritten
+/Users/alex/dev/projects/pna-sessions/scripts/add_to_manifest.py            created
+/Users/alex/dev/projects/pna-sessions/vercel.json                           created
+
+/Users/alex/dev/projects/pna-project-template/README.md                     created
+/Users/alex/dev/projects/pna-project-template/SPEC.md                       created
+/Users/alex/dev/projects/pna-project-template/ROADMAP.md                    created
+/Users/alex/dev/projects/pna-project-template/TASKS.md                      created
+/Users/alex/dev/projects/pna-project-template/ARCHITECTURE.md               created
+/Users/alex/dev/projects/pna-project-template/CLAUDE.md                     created+enriched
+/Users/alex/dev/projects/pna-project-template/.gitignore                    created
+/Users/alex/dev/projects/pna-project-template/docs/adr/0001-initial-stack.md  created
+/Users/alex/dev/projects/pna-project-template/.github/ISSUE_TEMPLATE/task.md  created
+/Users/alex/dev/projects/pna-project-template/.github/ISSUE_TEMPLATE/backlog.md  created
+/Users/alex/dev/projects/pna-project-template/.github/pull_request_template.md  created
+/Users/alex/dev/projects/pna-project-template/.claude/settings.json         created
+/Users/alex/dev/projects/pna-project-template/.claude/hooks/pre_tool_use.py created
+/Users/alex/dev/projects/pna-project-template/.claude/hooks/stop_validator.py  created
+/Users/alex/dev/projects/pna-project-template/.claude/commands/task.md      created
+/Users/alex/dev/projects/pna-project-template/.claude/commands/done.md      created
+/Users/alex/dev/projects/pna-project-template/.claude/commands/review.md    created
+/Users/alex/dev/projects/pna-project-template/.claude/commands/spec.md      created
+/Users/alex/dev/projects/pna-project-template/.claude/commands/log.md       created
+/Users/alex/dev/projects/pna-project-template/.claude/README.md             created
+
+/Users/alex/.claude/hooks/pre_tool_use.py                                   modified (heredoc fix)
+/Users/alex/.agent/diagrams/pna-project-template.html                       created
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>Alex (morning):</strong> Run claudeclaw-os upgrade — <code>git pull &amp;&amp; npm install &amp;&amp; npm run build</code> in <code>~/dev/claudeclaw</code>, add <code>AGENT_MAX_TURNS=100</code> + <code>SHOW_COST_FOOTER=off</code>, restart all services</li>
+<li><strong>Alex:</strong> Complete GitHub Projects OAuth — run <code>gh auth refresh -s project</code> in terminal, approve scope, then ping Clarke to finish the pna-sessions backlog board</li>
+<li><strong>Alex:</strong> Verify <code>agent_events</code> table populates on next principal agent run (open task from 2026-04-19 daily note)</li>
+<li><strong>principal_architect (next session):</strong> Push <code>~/.claude/skills/</code> to private GitHub remote for backup — <code>git remote add origin &lt;new-private-repo&gt;</code> + <code>git push -u origin main</code></li>
+<li><strong>principal_architect (next session):</strong> Enable skill registry + smart model routing after claudeclaw-os upgrade is confirmed live</li>
+<li><strong>Clarke / principal_strategy:</strong> Wire <code>publish_session.sh</code> into the <code>wrap</code> skill so sessions auto-publish without manual invocation — <code>pna-sessions/scripts/publish_session.sh</code> is ready, just needs to be called from the wrap flow</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Should <code>/done</code> hard-block on missing tests (exit 1 from stop_validator) or keep as warning? → needs: Alex decision</li>
+<li>pna-sessions auth: Vercel password + home IP vs keep public permanently? → needs: Alex decision (currently tracking as backlog issue on repo)</li>
+<li><code>AGENT_MAX_TURNS=100</code> vs claudeclaw-os default of 30 — is 100 the right ceiling or should it be per-agent? → needs: Alex decision before upgrade</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Session picked up from an overnight context-compacted session. Prior session had built: ARIS eval integrity rules, skills git repo, bounded-shell skill, critic pass in Architect CLAUDE.md, three-layer observability hooks (send_event, pre_tool_use, stop_validator at global level), visual-explainer integration.</p>
+
+<p>This session completed the pna-sessions deployment system and the pna-project-template, which together represent the two "infrastructure as code" pieces for all future P&A project work. The <code>.claude/</code> system in the template is the competitive moat — encodes P&A conventions as enforced workflow rather than optional guidance.</p>
+
+<p>The <code>strip_heredocs()</code> fix to the global hook is important: keep an eye on it. The regex <code>r"&lt;&lt;['\"-]?\w+\n.*?\n\w+\b"</code> with <code>re.DOTALL</code> should handle standard heredocs but may not catch all shell quoting variations. If false positives recur, tighten with a test suite.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
