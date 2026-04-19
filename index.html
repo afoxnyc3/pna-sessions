@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clarke Context Architecture — Current State vs. Proposed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============ THEME — Blueprint / Deep Slate ============ */
+:root {
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+  --bg: #0b0f1a;
+  --surface: #111827;
+  --surface-2: #1a2235;
+  --surface-3: #1e2a40;
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(255,255,255,0.14);
+  --text: #e2e8f0;
+  --text-dim: #64748b;
+  --text-mid: #94a3b8;
+
+  /* layer accents */
+  --session:      #3b82f6;
+  --session-dim:  rgba(59,130,246,0.12);
+  --convlog:      #a855f7;
+  --convlog-dim:  rgba(168,85,247,0.12);
+  --memory:       #22c55e;
+  --memory-dim:   rgba(34,197,94,0.12);
+  --consol:       #f59e0b;
+  --consol-dim:   rgba(245,158,11,0.12);
+  --hive:         #94a3b8;
+  --hive-dim:     rgba(148,163,184,0.10);
+
+  /* proposed additions */
+  --add1: #ef4444;
+  --add1-dim: rgba(239,68,68,0.12);
+  --add2: #eab308;
+  --add2-dim: rgba(234,179,8,0.12);
+  --add3: #14b8a6;
+  --add3-dim: rgba(20,184,166,0.12);
+
+  /* gap severity */
+  --critical: #ef4444;
+  --high:     #f97316;
+  --medium:   #eab308;
+  --low:      #22c55e;
+  --skip:     #475569;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 30% 0%, rgba(59,130,246,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 80%, rgba(20,184,166,0.05) 0%, transparent 50%),
+    radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: auto, auto, 28px 28px;
+  color: var(--text);
+  font-family: var(--font-body);
+  padding: 48px 32px 80px;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+.container { max-width: 1080px; margin: 0 auto; }
+
+/* ============ ANIMATIONS ============ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.a { animation: fadeUp 0.45s ease-out both; animation-delay: calc(var(--i,0) * 0.07s); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+}
+
+/* ============ HEADER ============ */
+.page-header { margin-bottom: 52px; }
+
+.page-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--session);
+  margin-bottom: 10px;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  line-height: 1.15;
+  margin-bottom: 12px;
+  color: #f1f5f9;
+}
+
+.lead {
+  font-size: 15px;
+  color: var(--text-mid);
+  max-width: 680px;
+  line-height: 1.75;
+}
+
+.lead code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: rgba(59,130,246,0.15);
+  color: #93c5fd;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ============ SECTION HEADERS ============ */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.section-label__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.section-label__text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  color: #f1f5f9;
+  margin-bottom: 6px;
+}
+
+.section-desc {
+  font-size: 13px;
+  color: var(--text-mid);
+  margin-bottom: 28px;
+  max-width: 640px;
+}
+
+/* ============ DIVIDER ============ */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-bright);
+  margin: 56px 0;
+  position: relative;
+}
+.divider::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg);
+  padding: 0 16px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ============ FLOW DIAGRAM (CSS-based) ============ */
+.flow-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.flow-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.flow-arrow {
+  color: var(--text-dim);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.flow-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+}
+
+/* ============ LAYER STACK ============ */
+.layer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.layer {
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  gap: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: border-color 0.2s ease;
+}
+.layer:hover { border-color: var(--border-bright); }
+
+.layer__bar { width: 4px; flex-shrink: 0; }
+
+.layer__body {
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.layer__left { flex: 1; min-width: 0; }
+
+.layer__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 3px;
+}
+
+.layer__desc {
+  font-size: 12px;
+  color: var(--text-mid);
+  line-height: 1.5;
+}
+
+.layer__desc code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--surface-2);
+  color: var(--text-mid);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.layer__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* ============ WARNING BANNERS ============ */
+.warning-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) { .warning-grid { grid-template-columns: 1fr; } }
+
+.warning-banner {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-left: 3px solid var(--critical);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 16px;
+}
+
+.warning-banner__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--critical);
+  margin-bottom: 5px;
+}
+
+.warning-banner__text {
+  font-size: 12px;
+  color: var(--text-mid);
+  line-height: 1.55;
+}
+
+/* ============ ADDITION BANDS ============ */
+.addition-stack { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+
+.addition {
+  border-radius: 10px;
+  border: 1px solid;
+  overflow: hidden;
+}
+
+.addition__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.addition__num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.addition__title {
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  color: #f1f5f9;
+}
+
+.addition__tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.addition__body {
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) { .addition__body { grid-template-columns: 1fr; } }
+
+.addition__col-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+}
+
+.addition__col-value {
+  font-size: 12px;
+  color: var(--text-mid);
+  line-height: 1.55;
+}
+
+.addition__col-value code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--surface-2);
+  color: var(--text-mid);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.addition__quote {
+  font-style: italic;
+  font-size: 12px;
+  color: #f1f5f9;
+  margin-top: 4px;
+}
+
+/* ============ HIERARCHY DIAGRAM ============ */
+.hierarchy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mid);
+  margin-top: 6px;
+}
+.hierarchy__node {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.hierarchy__arrow { color: var(--text-dim); }
+
+/* ============ COMPARISON TABLE ============ */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 600px;
+}
+
+thead tr {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-bright);
+}
+
+thead th {
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 500;
+  text-align: left;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s ease;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+tbody td {
+  padding: 13px 16px;
+  color: var(--text-mid);
+  vertical-align: middle;
+}
+
+tbody td:first-child {
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.gap-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 100px;
+  letter-spacing: 0.04em;
+}
+
+.gap-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.gap-badge.critical {
+  background: rgba(239,68,68,0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.gap-badge.critical::before { background: var(--critical); }
+
+.gap-badge.high {
+  background: rgba(249,115,22,0.15);
+  color: #fdba74;
+  border: 1px solid rgba(249,115,22,0.3);
+}
+.gap-badge.high::before { background: var(--high); }
+
+.gap-badge.medium {
+  background: rgba(234,179,8,0.12);
+  color: #fde047;
+  border: 1px solid rgba(234,179,8,0.3);
+}
+.gap-badge.medium::before { background: var(--add2); }
+
+.gap-badge.low {
+  background: rgba(34,197,94,0.12);
+  color: #86efac;
+  border: 1px solid rgba(34,197,94,0.25);
+}
+.gap-badge.low::before { background: var(--low); }
+
+.gap-badge.skip {
+  background: rgba(71,85,105,0.2);
+  color: var(--text-dim);
+  border: 1px solid rgba(71,85,105,0.3);
+}
+.gap-badge.skip::before { background: var(--skip); }
+
+.our-system { color: var(--text-mid); }
+.best-practice { color: #93c5fd; }
+
+td code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface-2);
+  color: var(--text-mid);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ============ FIELD BENCHMARKS CALLOUT ============ */
+.bench-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 640px) { .bench-grid { grid-template-columns: 1fr; } }
+
+.bench-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.bench-card__name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.bench-card__score {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.bench-card__desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* ============ PRD SECTION ============ */
+.prd {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+}
+
+.prd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) { .prd-grid { grid-template-columns: 1fr; } }
+
+.prd-section-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.prd-list {
+  list-style: none;
+  font-size: 13px;
+  color: var(--text-mid);
+  line-height: 1.7;
+}
+
+.prd-list li {
+  padding-left: 16px;
+  position: relative;
+  margin-bottom: 4px;
+}
+.prd-list li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--text-dim);
+}
+
+.prd-list li code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface-2);
+  color: var(--text-mid);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* ============ ASCII ART DECORATION ============ */
+.ascii-art {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* ============ FOOTER ============ */
+.page-footer {
+  margin-top: 60px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- HEADER -->
+<header class="page-header a" style="--i:0">
+  <p class="page-kicker">Principal &amp; Agent · Clarke</p>
+  <h1>Context Architecture</h1>
+  <p class="lead">
+    How Clarke currently manages memory across sessions — and where the gaps are relative
+    to the field's best practice (2025–2026). Three targeted additions close the critical gaps
+    without adding new infrastructure. Everything stays in SQLite.
+  </p>
+</header>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: TODAY                                             -->
+<!-- ============================================================ -->
+
+<div class="a" style="--i:1">
+  <div class="section-label">
+    <div class="section-label__dot" style="background:var(--session)"></div>
+    <span class="section-label__text">Section 01 — Current State</span>
+  </div>
+  <h2 class="section-title">Today: 5-Layer Memory Injection</h2>
+  <p class="section-desc">Every incoming message triggers <code>buildMemoryContext()</code> — a 5-pass retrieval that prepends context before Claude responds. Memory writes happen asynchronously after each turn.</p>
+</div>
+
+<!-- Flow diagram -->
+<div class="ascii-art a" style="--i:2">
+ User message
+      │
+      ▼
+ ┌─────────────────────────────────────────────────────────────────────────┐
+ │  buildMemoryContext()                                                   │
+ │                                                                         │
+ │  Pass 1 ── Semantic search   (top 5, embedding cosine similarity)       │
+ │  Pass 2 ── Recency search    (top 5, importance ≥ 0.5, accessed_at)    │
+ │  Pass 3 ── Consolidations    (top 2, pattern synthesis)                 │
+ │  Pass 4 ── Team activity     (hive_mind, last 24h, top 10)             │
+ │  Pass 5 ── Conversation history (keyword-triggered, top 7 turns)        │
+ └─────────────────────────────────────────────────────────────────────────┘
+      │
+      ▼
+ [Memory context] block prepended to prompt
+      │
+      ▼
+ Claude responds
+      │
+      ▼
+ ┌────────────────────────────────────────┐
+ │ Async (fire-and-forget, non-blocking): │
+ │  • logConversationTurn() → SQLite      │
+ │  • ingestConversationTurn() → Gemini   │
+ │    extracts facts, importance ≥ 0.5    │
+ │  • evaluateMemoryRelevance() → scores  │
+ └────────────────────────────────────────┘
+</div>
+
+<!-- Layer stack -->
+<div class="layer-stack a" style="--i:3">
+
+  <div class="layer">
+    <div class="layer__bar" style="background:var(--session)"></div>
+    <div class="layer__body">
+      <div class="layer__left">
+        <div class="layer__name">Session Context</div>
+        <div class="layer__desc">Claude Code session resumption only. Ephemeral — dies with the process. No explicit persistence beyond what the platform manages.</div>
+      </div>
+      <div class="layer__meta">
+        <span class="badge" style="background:var(--session-dim);color:#93c5fd;border:1px solid rgba(59,130,246,0.25)">Ephemeral</span>
+        <span class="badge" style="background:var(--surface-2);color:var(--text-dim);border:1px solid var(--border)">Platform</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer">
+    <div class="layer__bar" style="background:var(--convlog)"></div>
+    <div class="layer__body">
+      <div class="layer__left">
+        <div class="layer__name">Conversation Log</div>
+        <div class="layer__desc">Full turn-by-turn history in <code>conversation_log</code>. 500-row retention limit — older turns are pruned daily. Full causal chain preserved until pruned.</div>
+      </div>
+      <div class="layer__meta">
+        <span class="badge" style="background:var(--convlog-dim);color:#d8b4fe;border:1px solid rgba(168,85,247,0.25)">SQLite</span>
+        <span class="badge" style="background:var(--surface-2);color:var(--text-dim);border:1px solid var(--border)">500 row limit</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer">
+    <div class="layer__bar" style="background:var(--memory)"></div>
+    <div class="layer__body">
+      <div class="layer__left">
+        <div class="layer__name">Extracted Memories</div>
+        <div class="layer__desc">Gemini extracts lasting facts from conversation. Importance floor 0.5 — aggressive filter keeps signal clean. Deduplication via cosine similarity &gt;0.85. Currently <strong>23 records</strong>.</div>
+      </div>
+      <div class="layer__meta">
+        <span class="badge" style="background:var(--memory-dim);color:#86efac;border:1px solid rgba(34,197,94,0.25)">SQLite</span>
+        <span class="badge" style="background:var(--surface-2);color:var(--text-dim);border:1px solid var(--border)">23 records</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer">
+    <div class="layer__bar" style="background:var(--consol)"></div>
+    <div class="layer__body">
+      <div class="layer__left">
+        <div class="layer__name">Consolidations</div>
+        <div class="layer__desc">Gemini synthesizes batches of 20+ memories into pattern insights. Async, fire-and-forget — no guarantee they exist when needed. Currently <strong>8 records</strong> across 2 sessions.</div>
+      </div>
+      <div class="layer__meta">
+        <span class="badge" style="background:var(--consol-dim);color:#fde68a;border:1px solid rgba(245,158,11,0.25)">SQLite</span>
+        <span class="badge" style="background:var(--surface-2);color:var(--text-dim);border:1px solid var(--border)">8 records · async</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer">
+    <div class="layer__bar" style="background:var(--hive)"></div>
+    <div class="layer__body">
+      <div class="layer__left">
+        <div class="layer__name">Hive Mind / Team Activity</div>
+        <div class="layer__desc">Cross-agent read from <code>hive_mind</code> table. 24h rolling window, top 10 entries. Clarke reads but <strong>does not write its own outcomes</strong> — one-way visibility.</div>
+      </div>
+      <div class="layer__meta">
+        <span class="badge" style="background:var(--hive-dim);color:var(--text-mid);border:1px solid rgba(148,163,184,0.2)">SQLite</span>
+        <span class="badge" style="background:var(--surface-2);color:var(--text-dim);border:1px solid var(--border)">Reads only</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Warning banners -->
+<div class="warning-grid a" style="--i:4">
+  <div class="warning-banner">
+    <div class="warning-banner__label">Critical Gap — Compaction Void</div>
+    <div class="warning-banner__text">When the context window resets (3 compactions logged), all surfaced memory state is lost. There is no dump, no snapshot, no rebuild path. The next turn starts blind.</div>
+  </div>
+  <div class="warning-banner">
+    <div class="warning-banner__label">High Gap — Flat Structure</div>
+    <div class="warning-banner__text">All 23 memories live in a single flat table. No hierarchy, no domain grouping, no usage tracking. Time-decay only — memories never earn or lose their place based on usefulness.</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: PROPOSED ADDITIONS                                -->
+<!-- ============================================================ -->
+
+<hr class="divider a" style="--i:5" data-label="proposed additions">
+
+<div class="a" style="--i:6">
+  <div class="section-label">
+    <div class="section-label__dot" style="background:var(--add3)"></div>
+    <span class="section-label__text">Section 02 — Proposed Improvements</span>
+  </div>
+  <h2 class="section-title">Three Targeted Additions</h2>
+  <p class="section-desc">All three stay within the existing SQLite stack. No new infrastructure. No external memory service. Surgical additions that close the field's most validated gaps.</p>
+</div>
+
+<div class="addition-stack a" style="--i:7">
+
+  <!-- Addition 1: Pre-compaction Checkpoint -->
+  <div class="addition" style="border-color:rgba(239,68,68,0.3);background:var(--add1-dim)">
+    <div class="addition__header">
+      <div class="addition__num" style="background:rgba(239,68,68,0.2);color:#fca5a5">01</div>
+      <div class="addition__title">Pre-compaction Checkpoint</div>
+      <span class="addition__tag" style="background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.25)">Closes: CRITICAL</span>
+    </div>
+    <div class="addition__body" style="background:var(--surface)">
+      <div>
+        <div class="addition__col-label">Trigger</div>
+        <div class="addition__col-value">Context window hits <strong>70% of max tokens</strong>. Checked each turn via <code>token_usage</code> table. Also fires on explicit <code>checkpoint</code> command.</div>
+      </div>
+      <div>
+        <div class="addition__col-label">Action</div>
+        <div class="addition__col-value">Dump surfaced memory IDs + session decisions to vault (<code>.md</code> note) and <code>memories</code> table tagged <code>sector='checkpoint'</code>. Survives window reset.</div>
+      </div>
+      <div>
+        <div class="addition__col-label">Outcome</div>
+        <div class="addition__col-value"><span class="addition__quote">"Nothing is lost when the window resets."</span> Next session opens with the checkpoint injected as highest-priority context.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Addition 2: Usage-Based Salience -->
+  <div class="addition" style="border-color:rgba(234,179,8,0.3);background:var(--add2-dim)">
+    <div class="addition__header">
+      <div class="addition__num" style="background:rgba(234,179,8,0.2);color:#fde68a">02</div>
+      <div class="addition__title">Usage-Based Salience Scoring</div>
+      <span class="addition__tag" style="background:rgba(234,179,8,0.15);color:#fde68a;border:1px solid rgba(234,179,8,0.3)">Closes: HIGH</span>
+    </div>
+    <div class="addition__body" style="background:var(--surface)">
+      <div>
+        <div class="addition__col-label">Track</div>
+        <div class="addition__col-value">How often each memory is <strong>surfaced</strong> (retrieved) vs. <strong>used</strong> (referenced in response). New columns: <code>surface_count</code>, <code>use_count</code>.</div>
+      </div>
+      <div>
+        <div class="addition__col-label">Formula</div>
+        <div class="addition__col-value"><code>salience = f(importance, recency, use_count, correction_count)</code>. Memories cited in responses score up. Memories repeatedly surfaced but ignored score down.</div>
+      </div>
+      <div>
+        <div class="addition__col-label">Outcome</div>
+        <div class="addition__col-value"><span class="addition__quote">"Memories earn their place."</span> Dead memories decay faster. High-signal memories resist decay regardless of age.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Addition 3: Lightweight Hierarchy -->
+  <div class="addition" style="border-color:rgba(20,184,166,0.3);background:var(--add3-dim)">
+    <div class="addition__header">
+      <div class="addition__num" style="background:rgba(20,184,166,0.2);color:#5eead4">03</div>
+      <div class="addition__title">Lightweight Hierarchical Consolidation</div>
+      <span class="addition__tag" style="background:rgba(20,184,166,0.15);color:#5eead4;border:1px solid rgba(20,184,166,0.3)">Closes: MEDIUM</span>
+    </div>
+    <div class="addition__body" style="background:var(--surface)">
+      <div>
+        <div class="addition__col-label">Structure</div>
+        <div class="addition__col-value">
+          <div class="hierarchy">
+            <span class="hierarchy__node" style="background:rgba(20,184,166,0.15);color:#5eead4">Domain</span>
+            <span class="hierarchy__arrow">›</span>
+            <span class="hierarchy__node" style="background:rgba(20,184,166,0.10);color:#94a3b8">Category</span>
+            <span class="hierarchy__arrow">›</span>
+            <span class="hierarchy__node" style="background:var(--surface-2);color:var(--text-dim)">Memory</span>
+            <span class="hierarchy__arrow">›</span>
+            <span class="hierarchy__node" style="background:var(--surface-2);color:var(--text-dim)">Episode</span>
+          </div>
+          <div style="margin-top:6px;font-size:12px;color:var(--text-mid)">Add <code>domain</code> + <code>category</code> tags to existing <code>memories</code> table. No schema migration needed.</div>
+        </div>
+      </div>
+      <div>
+        <div class="addition__col-label">Mechanism</div>
+        <div class="addition__col-value">Domain-level consolidation runs alongside flat consolidation. When 5+ memories share a domain tag, synthesize a domain summary. Prevents individual memory noise from polluting category-level signals.</div>
+      </div>
+      <div>
+        <div class="addition__col-label">Outcome</div>
+        <div class="addition__col-value"><span class="addition__quote">"Prevents consolidation rot."</span> Matches H-MEM's index-based routing pattern. Retrieval precision improves as memory count grows.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: FIELD COMPARISON                                  -->
+<!-- ============================================================ -->
+
+<hr class="divider a" style="--i:8" data-label="field comparison">
+
+<div class="a" style="--i:9">
+  <div class="section-label">
+    <div class="section-label__dot" style="background:var(--add2)"></div>
+    <span class="section-label__text">Section 03 — Gap Analysis vs. Field Best Practice</span>
+  </div>
+  <h2 class="section-title">Where We Stand Against 2025–2026 Production Systems</h2>
+  <p class="section-desc">Key datapoints: Zep's Graphiti engine scores 85.2% on LoCoMo. Mem0 scores 49%. Our system isn't benchmarked — but the structural gaps are visible. Three are worth closing now.</p>
+</div>
+
+<!-- Benchmark cards -->
+<div class="bench-grid a" style="--i:10">
+  <div class="bench-card">
+    <div class="bench-card__name">Zep / Graphiti</div>
+    <div class="bench-card__score" style="color:#93c5fd">85.2%</div>
+    <div class="bench-card__desc">LoCoMo benchmark. Vector + BM25 + graph traversal. Bi-temporal knowledge graphs.</div>
+  </div>
+  <div class="bench-card">
+    <div class="bench-card__name">Mem0</div>
+    <div class="bench-card__score" style="color:#a5b4fc">49.0%</div>
+    <div class="bench-card__desc">LongMemEval benchmark. Passive extraction + vector store. Good for rapid integration.</div>
+  </div>
+  <div class="bench-card">
+    <div class="bench-card__name">SimpleMem</div>
+    <div class="bench-card__score" style="color:#86efac">30×</div>
+    <div class="bench-card__desc">Token reduction vs. naive context. Entropy-aware compression + recursive consolidation. Research paper, not production-hardened yet.</div>
+  </div>
+</div>
+
+<!-- Comparison table -->
+<div class="table-wrap a" style="--i:11">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:180px">Aspect</th>
+        <th>Our System</th>
+        <th>Field Best Practice</th>
+        <th>Proposed Fix</th>
+        <th style="width:110px">Gap</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Compaction recovery</td>
+        <td class="our-system">None — context resets silently with no memory dump</td>
+        <td class="best-practice">Pre-dump snapshot before window resets; rebuild on next session</td>
+        <td>Addition 01: pre-compaction checkpoint</td>
+        <td><span class="gap-badge critical">CRITICAL</span></td>
+      </tr>
+      <tr>
+        <td>Usage-based salience</td>
+        <td class="our-system">Time-decay only via <code>runDecaySweep()</code>. Use frequency not tracked.</td>
+        <td class="best-practice">Salience = f(importance, recency, use_count). Memories earn retention through use.</td>
+        <td>Addition 02: usage-based salience scoring</td>
+        <td><span class="gap-badge high">HIGH</span></td>
+      </tr>
+      <tr>
+        <td>Memory tiers</td>
+        <td class="our-system">Flat single table. No domain grouping, no hierarchy.</td>
+        <td class="best-practice">3–4 layer hierarchy: Domain → Category → Memory → Episode (H-MEM, GAM patterns)</td>
+        <td>Addition 03: lightweight hierarchy tags</td>
+        <td><span class="gap-badge medium">MEDIUM</span></td>
+      </tr>
+      <tr>
+        <td>Cross-agent memory</td>
+        <td class="our-system">Clarke reads hive_mind. Principals have isolated memory silos.</td>
+        <td class="best-practice">Shared memory pool accessible to all agents with role-scoped filtering</td>
+        <td>Shared <code>team_memories</code> table — future project</td>
+        <td><span class="gap-badge medium">MEDIUM</span></td>
+      </tr>
+      <tr>
+        <td>Consolidation triggers</td>
+        <td class="our-system">Async, fire-and-forget. No trigger policy. No guarantee of freshness.</td>
+        <td class="best-practice">Threshold-triggered: run consolidation when unconsolidated count &gt; N</td>
+        <td>Add consolidation trigger to memory ingest path</td>
+        <td><span class="gap-badge medium">MEDIUM</span></td>
+      </tr>
+      <tr>
+        <td>Graph relationships</td>
+        <td class="our-system">None. Memories are independent atomic records.</td>
+        <td class="best-practice">Bi-temporal knowledge graphs (Zep/Graphiti). 36-pt LoCoMo lift over vector-only.</td>
+        <td>Skip for now — overkill for single-user system</td>
+        <td><span class="gap-badge skip">SKIP</span></td>
+      </tr>
+      <tr>
+        <td>External doc ingestion</td>
+        <td class="our-system">Conversation-only source. No PDF, note, or external KB ingestion.</td>
+        <td class="best-practice">Any-source ingestion (Mem0, Cognee). Second-brain vault not injected.</td>
+        <td>Wire second-brain vault injection — low complexity</td>
+        <td><span class="gap-badge low">LOW</span></td>
+      </tr>
+      <tr>
+        <td>Prompt compression</td>
+        <td class="our-system">No compression. Full memory block prepended each turn.</td>
+        <td class="best-practice">LLMLingua-style compression: 3–20× reduction, &lt;5% quality loss</td>
+        <td>Evaluate if context pressure increases — not needed yet</td>
+        <td><span class="gap-badge low">LOW</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: PRD FOR NEW SKILLS                                -->
+<!-- ============================================================ -->
+
+<hr class="divider a" style="--i:12" data-label="prd — if new skills needed">
+
+<div class="a" style="--i:13">
+  <div class="section-label">
+    <div class="section-label__dot" style="background:var(--consol)"></div>
+    <span class="section-label__text">Section 04 — PRD: New Skill Needed</span>
+  </div>
+  <h2 class="section-title">context-health Skill</h2>
+  <p class="section-desc">The three proposed additions require a lightweight monitoring skill that wraps the checkpoint + salience logic. One skill, three jobs.</p>
+</div>
+
+<div class="prd a" style="--i:14">
+  <div class="prd-grid">
+    <div>
+      <div class="prd-section-title">Business Problem</div>
+      <ul class="prd-list">
+        <li>Context window compactions silently destroy session state — no recovery path exists</li>
+        <li>Memory salience is purely time-based; high-value memories decay alongside low-value ones</li>
+        <li>No automated trigger to save session state before handing off to a principal or ending a long session</li>
+        <li>convolife is manual — no automatic pressure monitoring</li>
+      </ul>
+    </div>
+    <div>
+      <div class="prd-section-title">Technical Solution</div>
+      <ul class="prd-list">
+        <li>New skill: <code>context-health</code></li>
+        <li>Reads <code>token_usage</code> table to compute % of context window used</li>
+        <li>At 70% threshold: fires pre-compaction checkpoint to vault + SQLite</li>
+        <li>After each turn: increments <code>surface_count</code> / <code>use_count</code> for referenced memories</li>
+        <li>Nightly: re-ranks salience using usage data; updates <code>memories.salience</code></li>
+        <li>Trigger: <code>context health</code>, <code>how is my context?</code>, auto on threshold</li>
+      </ul>
+    </div>
+    <div>
+      <div class="prd-section-title">Constraints</div>
+      <ul class="prd-list">
+        <li>No new dependencies — stays within SQLite + existing Gemini extraction path</li>
+        <li>Must not block response latency (async where possible)</li>
+        <li>Checkpoint must be idempotent — safe to run multiple times per session</li>
+        <li>Salience re-ranking must not alter the 0.5 importance floor (separate field)</li>
+      </ul>
+    </div>
+    <div>
+      <div class="prd-section-title">Done Criteria</div>
+      <ul class="prd-list">
+        <li>Checkpoint saved to vault within 2 turns of hitting 70% threshold</li>
+        <li>New session opens with checkpoint injected as first memory</li>
+        <li><code>surface_count</code> and <code>use_count</code> fields populate correctly</li>
+        <li>After 7 days: memory retrieval precision visibly improves (subjective review)</li>
+        <li>Skill documented and passing eval harness</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUICK REFERENCE: What to build and when                      -->
+<!-- ============================================================ -->
+
+<div class="a" style="--i:15">
+  <div class="section-label">
+    <div class="section-label__dot" style="background:var(--memory)"></div>
+    <span class="section-label__text">Quick Reference — Build Order</span>
+  </div>
+</div>
+
+<div class="ascii-art a" style="--i:16">
+ Priority   Addition                         Effort    Dependency
+ ─────────────────────────────────────────────────────────────────
+ [CRITICAL] Pre-compaction checkpoint        ~2h       None
+ [HIGH]     Usage-based salience scoring     ~3h       token_usage schema
+ [MEDIUM]   Lightweight hierarchy tags       ~2h       After salience (same schema pass)
+ ─────────────────────────────────────────────────────────────────
+ [FUTURE]   Cross-agent memory sharing       ~1d       After above three are stable
+ [FUTURE]   Consolidation trigger policy     ~2h       After hierarchy tags
+ [SKIP]     Graph-based memory (Zep/GAM)     Large     Not worth the complexity for 1 user
+ [LOW]      Second-brain vault injection     ~1h       None (quick win, do this first)
+ [LOW]      Prompt compression (LLMLingua)   ~2h       Only if context pressure increases
+</div>
+
+<!-- FOOTER -->
+<footer class="page-footer a" style="--i:17">
+  <span>Clarke Context Architecture · Principal &amp; Agent</span>
+  <span>2026-04-19 · Research sources: arXiv:2604.12285 (GAM), arXiv:2507.22925 (H-MEM), arXiv:2510.00615 (ACON), Zep/Graphiti, SimpleMem</span>
+</footer>
+
+</div><!-- /.container -->
+</body>
+</html>
