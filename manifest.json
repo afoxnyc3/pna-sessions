@@ -122,5 +122,19 @@
       "2026-04-20"
     ],
     "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-124244.html",
+    "date": "2026-04-20",
+    "title": "SWOT Analysis: Extract skills from video/audio (research_a vs research_b)",
+    "agent": "clarke",
+    "tags": [
+      "research",
+      "comparative",
+      "swot",
+      "video-to-skill",
+      "2026-04-20"
+    ],
+    "type": "research"
   }
 ]

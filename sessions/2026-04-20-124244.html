@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SWOT Analysis: Extract skills from video/audio (research_a vs research_b) — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    /* ── Research-specific styles ── */
+    .research-meta {
+      max-width: 860px; margin: 0 auto;
+      padding: 20px 32px 0;
+      display: flex; flex-wrap: wrap; gap: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+    .meta-field { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+    .meta-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); font-family: 'SF Mono', monospace;
+    }
+    .meta-value { font-size: 12px; color: var(--text); }
+    .confidence-badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 3px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .confidence-high   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    .confidence-medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .confidence-low    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .confidence-unknown { background: rgba(102,102,102,0.2); color: var(--muted); }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; margin: 12px 0 16px; }
+    article table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    article table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    article table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    article table tr:nth-child(even) td { background: var(--surface); }
+    article table.table-source td, article table.table-source th { font-size: 11px; }
+    /* Section cards */
+    .section-executive {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 16px 20px; margin: 4px 0 20px;
+    }
+    .section-executive p { font-size: 15px; line-height: 1.8; margin-bottom: 0; }
+    .section-executive h2 { margin-top: 0; }
+    .section-feynman {
+      border-left: 3px solid #06b6d4;
+      padding-left: 16px; margin: 4px 0 20px;
+    }
+    .section-feynman h2 { color: #06b6d4; }
+    article ol.insights-list { margin: 8px 0 12px 20px; }
+    article ol.insights-list li { margin-bottom: 10px; line-height: 1.65; }
+    /* Mobile */
+    @media (max-width: 640px) {
+      article { font-size: 15px; padding: 20px 16px; }
+      .research-meta { padding: 16px 16px 16px; gap: 12px; }
+      .meta-field { min-width: 120px; }
+      article table.table-source td,
+      article table.table-source th { font-size: 11px; padding: 5px 6px; }
+      article table td, article table th { padding: 6px 8px; }
+    }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>research</div>
+    <div class="agent-label">clarke</div>
+    <h1>SWOT Analysis: Extract skills from video/audio (research_a vs research_b)</h1>
+    <div class="tags"><span class="tag">research</span><span class="tag">comparative</span><span class="tag">swot</span><span class="tag">video-to-skill</span><span class="tag">2026-04-20</span></div>
+  </div>
+  <div class="research-meta">
+    <div class="meta-field">
+      <span class="meta-label">Query</span>
+      <span class="meta-value">"Workflow: extract skills from video/audio transcriptions"</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Agent</span>
+      <span class="meta-value">clarke</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Completed</span>
+      <span class="meta-value">2026-04-20T00:00:00Z</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Confidence</span>
+      <span class="meta-value"><span class="confidence-badge confidence-medium">medium</span></span>
+    </div>
+  </div>
+  <article>
+    
+<h1>SWOT Analysis: Extract skills from video/audio transcriptions</h1>
+<h2>research_a vs research_b — A/B Comparative Review</h2>
+
+<hr>
+
+<h2>Executive Summary</h2>
+
+<p><strong>Winner: research_a</strong> — by a significant margin.</p>
+
+<p>Both agents ran in degraded environments (Exa MCP, feynman, and alpha CLIs unavailable). Both were honest about it. That's where the similarity ends.</p>
+
+<p>research_a produced a 10-step, tool-specific, validated pipeline with 15 cited sources (all canonical: GitHub repos, arXiv papers, official docs), a Pydantic schema for extraction, a concrete cost model, and a validation harness. Its confidence was correctly rated medium.</p>
+
+<p>research_b produced a well-reasoned design sketch, the same two-pass idea (scaffolding + densification), and a solid Feynman Bridge — but zero external sources retrieved, low confidence declared, and shallower specificity throughout.</p>
+
+<p><strong>Single most important finding (from research_a):</strong> The narrated-event → general-procedure modality shift is the only truly hard engineering problem in this pipeline. Transcription is solved. Extraction tooling exists. The gap no existing tool covers is forcing the LLM to transform "I noticed the port was in use, so I killed the old process" into "Before starting the server, check port occupancy; if occupied, confirm with the user before killing the holder." This is where 60% of LLM budget and 80% of prompt-engineering effort should go. Both agents identified this; research_a named it precisely, gave it a hedge-classification taxonomy, and called it the key differentiator.</p>
+
+<hr>
+
+<h2>SWOT Matrix</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Dimension</th>
+<th>research_a</th>
+<th>research_b</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>Strengths</strong></td>
+<td>15 cited canonical sources (GitHub, arXiv, official docs); full Pydantic schema; 10-step concrete MVP; self-consistency voting; cost modelling ($0.19/45-min talk); hedge-classification taxonomy; description-as-router insight; validation harness (triggers.yaml, golden replay, LLM-as-judge)</td>
+<td>Honest confidence (low); clean two-pass mental model (scaffolding + densification); strong Feynman Bridge analogy; idempotency insight (hash + re-run); source-anchor coverage contract; "rejected scaffolds log" recommendation; concise and actionable even without sources</td>
+</tr>
+<tr>
+<td><strong>Weaknesses</strong></td>
+<td>No live web verification (explicitly flagged); Pydantic schema may be slightly over-engineered for an MVP; 10-step plan could overwhelm if shipped all at once; does not propose a minimum viable version before the full pipeline</td>
+<td>No external sources at all; low confidence limits credibility for external sharing; thinner on specific tooling choices (WhisperX vs Deepgram comparison absent); no schema definition; no cost estimates; no validation harness; pipeline steps less actionable</td>
+</tr>
+<tr>
+<td><strong>Opportunities</strong></td>
+<td>Ship as <code>video-to-skill</code> Claude Code skill immediately — the pipeline doubles as dogfood; <code>anthropics/skills</code> GitHub repo exists and can be mined for real SKILL.md patterns; hedge-classification is a generalizable primitive for other extraction tasks</td>
+<td>"Rejected scaffolds log" idea is unique and useful for dataset building; minimum-viable-first framing (step 1 is just yt-dlp + one prompt) is a better on-ramp for Alex to test before investing further</td>
+</tr>
+<tr>
+<td><strong>Threats</strong></td>
+<td>Exact Anthropic SKILL.md schema may have drifted since training data cutoff; WhisperX vs Deepgram recommendation may be stale; over-engineering risk if full 10-step plan is implemented before MVP validation</td>
+<td>Design sketch without source backing is harder to defend if Anthropic's schema has changed; low confidence rating makes this unsuitable as a standalone deliverable; could mislead if treated as authoritative</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Side-by-Side: Key Findings</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Finding</th>
+<th>research_a</th>
+<th>research_b</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>1. Transcription tooling</strong></td>
+<td>Detailed: WhisperX large-v3 (local, ~5 min / 45-min video, $0) vs Deepgram Nova-3 (managed, ~$0.19/45-min, Keyterm Prompting for jargon). Clear winner per use case.</td>
+<td>Covered: same three tiers (YouTube captions → local Whisper → API). Recommends custom vocabulary with AssemblyAI/Deepgram. Less specific on which to choose, no cost model.</td>
+</tr>
+<tr>
+<td><strong>2. Extraction pattern</strong></td>
+<td>Three-pass: skeleton extraction (T=0.3, N=3 samples) → self-consistency voting (≥2/3 majority) → enrichment (Chain-of-Density style). Pydantic schema with <code>source_quote</code> string-match validation.</td>
+<td>Two-pass: scaffolding (list candidate skills across full transcript) → densification (one LLM call per candidate from local slice). Simpler, still sound. No schema definition, no voting.</td>
+</tr>
+<tr>
+<td><strong>3. Modality shift (narrated → general)</strong></td>
+<td>Named explicitly as the frontier problem. Hedge-classification taxonomy (prescriptive / default / situational / preference) with routing into steps[] vs branches[]. Separate rewrite pass required.</td>
+<td>Named explicitly ("the tension is real"). Resolution: keep speaker voice in Examples/Source Anchors, rewrite ruthlessly in Protocol. Voice-check prompt to catch hallucinated steps. Slightly less mechanistic.</td>
+</tr>
+<tr>
+<td><strong>4. SKILL.md <code>description</code> field</strong></td>
+<td>Key insight: description is a router rule, authored <em>last</em> from the generalized rule, not the transcript. Template given: <code>&lt;what&gt;. Use when &lt;trigger&gt;. Not for &lt;negative&gt;.</code></td>
+<td>Not explicitly foregrounded. Mentions trigger surface but does not emphasize description authoring as a separate, critical step.</td>
+</tr>
+<tr>
+<td><strong>5. Validation</strong></td>
+<td>Three-test harness: triggers.yaml (routing precision/recall), golden transcript replay, LLM-as-judge faithfulness check vs source. Specified as pre-commit gates.</td>
+<td>Source-anchor coverage contract (80% threshold). Rejected scaffolds log. Voice-check prompt. No routing precision test proposed.</td>
+</tr>
+<tr>
+<td><strong>6. Pipeline length</strong></td>
+<td>10 steps, named tools at each step, includes orchestration advice (expose as MCP tool or Claude Code skill).</td>
+<td>7 steps (conceptual), fewer named tools. More readable but less executable.</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Side-by-Side: Feynman Bridge Quality</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Criterion</th>
+<th>research_a</th>
+<th>research_b</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>Clarity</strong></td>
+<td>Excellent. Cooking show → recipe card factory with per-station breakdown (ingest, transcribe, sort, hard station). Each station named.</td>
+<td>Excellent. Same cooking show metaphor, arrived independently. Slightly simpler — one chef, one dish, recipe card reader.</td>
+</tr>
+<tr>
+<td><strong>Accuracy</strong></td>
+<td>High. The "fourth station is the only part not already built" is precisely correct and matches the technical analysis.</td>
+<td>High. "Throw away the one-time story, keep the general rule" maps exactly to the modality-shift problem.</td>
+</tr>
+<tr>
+<td><strong>Analogy quality</strong></td>
+<td>Marginally stronger: factory metaphor enables multi-station decomposition and identifies the assembly-line structure. Better for communicating to non-technical stakeholders.</td>
+<td>Slightly more vivid for the core tension: "the chef warning about resting the dough" is a concrete example of the exact failure mode (a speaker aside that IS the important rule).</td>
+</tr>
+<tr>
+<td><strong>Verdict</strong></td>
+<td>research_a edges out for architectural communication. research_b edges out for the one key analogy. Call it a draw on Feynman quality.</td>
+<td>Draw.</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Side-by-Side: Actionable Insights</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Criterion</th>
+<th>research_a</th>
+<th>research_b</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>Specificity</strong></td>
+<td>High. Named tools, shell commands, Python class definitions, cost figures, timing estimates.</td>
+<td>Moderate. Named tools (WhisperX, Deepgram, AssemblyAI), pipeline steps, but no schema, no cost model, no shell commands.</td>
+</tr>
+<tr>
+<td><strong>Novelty</strong></td>
+<td>High. <code>description</code> as router rule authored last; hedge taxonomy; three-pass extraction with self-consistency voting; triggers.yaml validation harness; <code>video-to-skill</code> as the first produced skill. All of these are not obvious.</td>
+<td>Moderate. Two-pass scaffolding + densification is a clean mental model. Idempotency on re-run (hash transcript) is a practical insight research_a missed. Rejected scaffolds log is novel.</td>
+</tr>
+<tr>
+<td><strong>Actionability</strong></td>
+<td>High. 10-step pipeline is executable. Week-1 MVP is defined ("yt-dlp + WhisperX + Instructor + Claude Sonnet").</td>
+<td>Moderate. Step 1 (yt-dlp + one prompt) is the minimal viable starting point but under-specified compared to research_a's MVP.</td>
+</tr>
+<tr>
+<td><strong>What research_b adds that research_a missed</strong></td>
+<td>—</td>
+<td>Idempotency (hash-based skip on re-run). Rejected scaffolds log (signal preservation). Minimum-viable-first framing as an explicit recommendation.</td>
+</tr>
+<tr>
+<td><strong>What research_a adds that research_b missed</strong></td>
+<td><code>description</code> as router, authored separately. Pydantic extraction schema. Self-consistency voting. Triggers.yaml validation. LLM-as-judge check. Cost model. Source ledger with 15 entries.</td>
+<td>—</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Winner</h2>
+
+<p><strong>research_a</strong> — decisively.</p>
+
+<p>research_a produced a publishable, source-backed, schema-specific, validated pipeline design with actionable tool choices, cost model, and a week-1 MVP definition. It correctly foregrounded the <code>description</code> field as the key product of skill extraction (not just the body), which is the most important architectural insight for building a high-quality skill library. Its hedge-classification taxonomy is the right abstraction for the modality-shift problem.</p>
+
+<p>research_b produced a sound design sketch and is a good sanity-check that the two agents converged on the same core ideas independently. But it would not be publishable without the sources and schema that research_a provided.</p>
+
+<p>The one legitimate addition from research_b that research_a missed: <strong>hash-based idempotency</strong> (skip re-extraction if transcript unchanged) and the <strong>rejected scaffolds log</strong> (preserve low-confidence candidates for human review). Both should be incorporated into the final pipeline.</p>
+
+<hr>
+
+<h2>Recommendation</h2>
+
+<p>Alex should build this in three phases, in this order:</p>
+
+<p><strong>Phase 1 (this week — ~2 days): Ingest + Transcription MVP</strong></p>
+<p>Run research_a's steps 1-3 on three test videos (one dense tech talk, one podcast, one short tutorial). Measure technical-term word error rate between WhisperX output and YouTube auto-captions. This validates the transcription layer before investing in extraction. Tools: <code>yt-dlp</code>, <code>WhisperX large-v3-turbo</code>, Claude Sonnet post-pass.</p>
+
+<p><strong>Phase 2 (next week — ~3 days): Extraction + Schema</strong></p>
+<p>Implement the Pydantic extraction schema from research_a. Start with the two-pass version from research_b (simpler to reason about), then add self-consistency voting if quality is insufficient. Incorporate research_b's hash-based idempotency from the start. Prototype hedge-classification on 5 hand-annotated segments before committing to the taxonomy. Tool: <code>Instructor</code> + <code>Claude Sonnet</code>.</p>
+
+<p><strong>Phase 3 (sprint 3 — ~2 days): Rewrite + Validation + Ship as <code>video-to-skill</code></strong></p>
+<p>Build the rewrite pass with the explicit three-axis transformation (person, register, modality). Author <code>description</code> as a separate final pass using research_a's template. Add triggers.yaml validation harness. Ship the whole pipeline as a single Claude Code skill (<code>video-to-skill</code>) that accepts a YouTube URL and emits a <code>~/.claude/skills/&lt;slug&gt;/</code> directory with SKILL.md, reference/source.md, and tests/triggers.yaml.</p>
+
+<p><strong>Do not build the pipeline and the skill library in parallel.</strong> The extraction quality needs empirical validation on real content before the skill library accumulates junk. Ship the pipeline first, test on 10 videos manually, then open it to higher-volume use.</p>
+
+<p><strong>Tool recommendation (final):</strong></p>
+<ul>
+<li>Ingest: <code>yt-dlp</code> (no alternative)</li>
+<li>Transcription: <code>WhisperX large-v3-turbo</code> self-hosted (if GPU available), else <code>Deepgram Nova-3</code> with Keyterm Prompting</li>
+<li>Extraction: <code>Instructor</code> + <code>Pydantic</code> + <code>Claude Sonnet</code> (match training distribution for Claude Code target)</li>
+<li>Orchestration: single Python script exposed as a Claude Code skill and optionally as an MCP tool</li>
+</ul>
+
+<hr>
+
+<h2>Confidence Assessment</h2>
+
+<ul>
+<li><strong>Overall</strong>: medium (both agents ran without live web verification; all source URLs are from training knowledge and require re-verification before implementation)</li>
+</ul>
+
+<ul>
+<li><strong>Coverage gaps</strong>:</li>
+</ul>
+<p>  - Anthropic SKILL.md schema not verified against live docs. Must check <code>anthropics/skills</code> repo before implementing frontmatter fields.</p>
+<p>  - Current Deepgram Nova-3 and WhisperX large-v3-turbo benchmarks not verified. Pricing ($0.0043/min) requires confirmation.</p>
+<p>  - No live search for prior art. An open-source "transcript-to-agent-skill" tool may exist on GitHub; not found because search was unavailable, not because it doesn't exist. Re-run with Exa MCP enabled and search GitHub <code>topic:claude-skills</code>.</p>
+<p>  - Modality-shift hedge-classification taxonomy (prescriptive / default / situational / preference) is practitioner inference, not from a published paper. Prototype before committing.</p>
+
+<ul>
+<li><strong>Conflicting signals</strong>:</li>
+</ul>
+<p>  - WhisperX vs Deepgram for 2-speaker podcast diarization: research_a says test it empirically rather than declaring a winner. Correct call.</p>
+<p>  - Chunking vs single-pass for ~12k-token transcripts: RULER benchmark (research_a, Source 13) says aggregation tasks degrade earlier than retrieval even in long-context models. Run the empirical test before assuming Claude can do single-pass on hour-long content.</p>
+
+<ul>
+<li><strong>Recommended follow-up</strong>:</li>
+</ul>
+<p>  1. Re-run both missions with Exa MCP enabled. Fix the <code>Invalid option: 'use_autoprompt'</code> Exa client error before the next research sprint.</p>
+<p>  2. Clone <code>anthropics/skills</code> and inspect 3-5 real SKILL.md files. Confirm frontmatter schema matches research_a's proposal.</p>
+<p>  3. Build Phase 1 MVP this week and test on 3 known-good developer talks before proceeding.</p>
+<p>  4. Consider merging the best of both: research_a's schema + research_b's idempotency and rejected-scaffolds pattern into a single reference design doc.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Mark Source Ledger tables (look for table after a heading containing "source")
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('source')) {
+          var next = h.nextElementSibling;
+          if (next && next.classList.contains('table-wrapper')) {
+            var tbl = next.querySelector('table');
+            if (tbl) tbl.classList.add('table-source');
+          }
+        }
+      });
+
+      // Wrap sections for visual treatment
+      wrapSection('executive summary', 'section-executive');
+      wrapSection('feynman bridge', 'section-feynman');
+
+      // Style Actionable Insights ordered list
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('actionable insights')) {
+          var next = h.nextElementSibling;
+          if (next && next.tagName === 'OL') next.classList.add('insights-list');
+        }
+      });
+    });
+
+    function wrapSection(headingText, wrapClass) {
+      var article = document.querySelector('article');
+      if (!article) return;
+      var target = null;
+      article.querySelectorAll('h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes(headingText)) target = h;
+      });
+      if (!target) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = wrapClass;
+      target.parentNode.insertBefore(wrapper, target);
+      var node = target;
+      while (node) {
+        var next = node.nextSibling;
+        var isNewSection =
+          node !== target &&
+          node.nodeType === 1 &&
+          /^H[1-3]$/.test(node.tagName);
+        if (isNewSection) break;
+        wrapper.appendChild(node);
+        node = next;
+      }
+    }
+  </script>
+</body>
+</html>
