@@ -96,5 +96,18 @@
       "2026-04-19"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-20-124232.html",
+    "date": "2026-04-20",
+    "title": "Extract skills from video/audio \u2014 research_b",
+    "agent": "research_b",
+    "tags": [
+      "research",
+      "research_b",
+      "video-to-skill",
+      "2026-04-20"
+    ],
+    "type": "research"
   }
 ]
