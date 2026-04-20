@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_architect session — 2026-04-19 evening — The Library operational — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>principal_architect session — 2026-04-19 evening — The Library operational</h1>
+    <div class="tags"><span class="tag">principal_architect</span><span class="tag">2026-04-19</span><span class="tag">library</span><span class="tag">bootstrap</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_architect — 2026-04-19 (evening)</h1>
+
+<p><strong>Agent:</strong> Principal Architect</p>
+<p><strong>Date:</strong> 2026-04-19 (evening continuation)</p>
+<p><strong>Session duration:</strong> ~45 min</p>
+<p><strong>Project(s):</strong> pna-library, pna-project-template, pna-sessions</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> <strong>Library skill restoration</strong> — <code>~/.claude/skills/library/SKILL.md</code> was missing on disk while tracked in git (blob <code>7b60fa8b</code>, typechange from symlink). Ran <code>git restore SKILL.md</code>. Registry now loads the <code>library</code> skill with full description. (<code>~/.claude/skills/library/SKILL.md</code>)</li>
+<li><input type="checkbox" disabled checked> <strong>library.yaml wrap description update</strong> committed and pushed. (<code>afoxnyc3/pna-library@ab73089</code>)</li>
+<li><input type="checkbox" disabled checked> <strong>Vercel explainer page</strong> shipped. Blueprint aesthetic, mobile-first, documents the library architecture, 61-entry catalog, fix applied, integration points, and next moves. (<code>~/.agent/diagrams/pna-library-explainer.html</code> → https://pna-library-explainer-deploy.vercel.app)</li>
+<li><input type="checkbox" disabled checked> <strong><code>/bootstrap</code> slash command</strong> added to pna-project-template. Verifies The Library is globally installed, clones <code>afoxnyc3/pna-library</code> if missing, pulls default 6-skill engineering set into <code>.claude/skills/</code>. Idempotent. README and CLAUDE.md updated. (<code>afoxnyc3/pna-project-template@66f31d0</code>)</li>
+<li><input type="checkbox" disabled checked> <strong><code>bootstrap-agent.sh</code></strong> published in pna-library. Three modes (sync-only, <code>--skills</code> list, <code>--roster</code> YAML). Symlinks source directories for live updates. Self-heals SKILL.md typechange. Smoke-tested — installed <code>eli5</code> and <code>peer-review</code> cleanly. (<code>afoxnyc3/pna-library@b14d9f4</code>, <code>bootstrap-agent.sh</code>)</li>
+<li><input type="checkbox" disabled checked> <strong><code>cookbook/bootstrap-agent.md</code></strong> published. Documents launchd/plist wiring, E2B sandbox bootstrap pattern, and suggested rosters: 12 skills for research_a/b, 10 skills for principal_sandbox. (<code>afoxnyc3/pna-library@b14d9f4</code>, <code>cookbook/bootstrap-agent.md</code>)</li>
+<li><input type="checkbox" disabled checked> <strong>Three Claude Code drop-in execution plans</strong> drafted earlier in session (claudeclaw-os upgrade, wrap automation, skills GitHub backup). All atomic, step-numbered, ready for desktop execution. (<code>~/dev/projects/tasks/01-claudeclaw-upgrade.md</code>, <code>02-wrap-automation.md</code>, <code>03-skills-github-backup.md</code>)</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<p>| Task | Status | Blocker / Next action |</p>
+<p>|---|---|---|</p>
+<p>| claudeclaw-os upgrade (env vars + service restart) | pending | Run <code>01-claudeclaw-upgrade.md</code> in morning on Mac Studio |</p>
+<p>| principal_sandbox implementation | blocked | E2B API key, sandbox_cli clone from disler/agent-sandbox-skill, build_template.py run |</p>
+<p>| research_a deepagents worker | blocked | Telegram token, Exa key |</p>
+<p>| Skill sprawl pruning (Development Lifecycle over-saturated at 24 skills) | deferred | Run <code>meta-optimize</code> against catalog after registry is live |</p>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<p>| Decision | Rationale | Affects |</p>
+<p>|---|---|---|</p>
+<p>| Restore SKILL.md via <code>git restore</code> rather than rewrite | File was canonical in git (blob 7b60fa8b), just missing from working tree. Pure restoration, zero augmentation risk. | The Library became operational. |</p>
+<p>| <code>/bootstrap</code> as a slash command, not a shell script | Keeps the new-project UX inside Claude Code. Script-form added separately as <code>bootstrap-agent.sh</code> for headless agents. | Every new project from pna-project-template ships with a one-line library install. |</p>
+<p>| <code>bootstrap-agent.sh</code> uses symlinks to source directories | Keeps installed skills in sync with source repos with zero sync overhead. Fallback copy only when source is a GitHub URL. | research_a/b and principal_sandbox get live-updating skill rosters from a single catalog. |</p>
+<p>| Publish <code>bootstrap-agent.sh</code> in pna-library itself | Tool travels with the distribution system. One clone gets both the catalog and the installer. | Any future headless agent in any environment can bootstrap with a single known-path invocation. |</p>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+~/.claude/skills/library/SKILL.md                         modified (restored from git)
+~/.claude/skills/library/library.yaml                     modified (wrap description)
+~/.claude/skills/library/bootstrap-agent.sh               created
+~/.claude/skills/library/cookbook/bootstrap-agent.md      created
+~/.agent/diagrams/pna-library-explainer.html              created
+/tmp/pna-library-explainer-deploy/index.html              created (deploy staging)
+~/dev/projects/pna-project-template/.claude/commands/bootstrap.md  created
+~/dev/projects/pna-project-template/README.md             modified
+~/dev/projects/pna-project-template/CLAUDE.md             modified
+~/dev/projects/rnd/deepagents/sessions/2026-04-19-principal_architect-summary-evening.md  created
+</code></pre>
+
+<p>Commits:</p>
+<pre><code class="lang-text">
+afoxnyc3/pna-library            ab73089  chore: update wrap prompt description + skill reference
+afoxnyc3/pna-library            b14d9f4  feat: add bootstrap-agent.sh for headless agent installs
+afoxnyc3/pna-project-template   66f31d0  feat(.claude): add /bootstrap command for one-time library install
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>Alex (morning):</strong> Run <code>~/dev/projects/tasks/01-claudeclaw-upgrade.md</code> on the Mac Studio. Unblocks skill registry + smart model routing.</li>
+<li><strong>Engineer:</strong> Once Exa key and Telegram tokens are available, scaffold research_a deepagents worker. Use <code>bootstrap-agent.sh --roster skill_roster.yaml</code> in its plist.</li>
+<li><strong>Engineer:</strong> Once E2B key lands, clone <code>disler/agent-sandbox-skill</code> and run <code>build_template.py</code> for principal_sandbox.</li>
+<li><strong>Architect (next session):</strong> After claudeclaw-os upgrade is live, run <code>meta-optimize</code> against <code>library.yaml</code> to prune the 24-skill Development Lifecycle category.</li>
+<li><strong>Clarke:</strong> Close Obsidian daily note items that are now done (skills GitHub backup is live as <code>pna-claude-skills</code>).</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Should the 6-skill default in <code>/bootstrap</code> be configurable per-project (e.g., read from a <code>.claude/project.yaml</code>)? → needs: decision from Alex on whether project-specific rosters are worth the extra config surface.</li>
+<li>Should <code>bootstrap-agent.sh</code> also push to <code>agents:</code> and <code>prompts:</code> sections of the catalog, not just <code>skills:</code>? → needs: decision on whether headless agents need sub-agent or prompt installs at boot.</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Restoration pattern worth codifying: both <code>agent-session-summary</code> (fixed earlier today) and <code>library/SKILL.md</code> (fixed this session) hit the same bug class — a <code>SKILL.md</code> file going missing while a lowercase <code>skill.md</code> symlink remains. Root cause likely macOS case-insensitive filesystem interacting with git checkout/restore in unexpected ways. The <code>bootstrap-agent.sh</code> script now heals this automatically on every run. Consider adding a preflight check to <code>daily</code> or <code>/bootstrap</code> that scans all skill directories for the same pattern.</p>
+
+<p>Library skill is now a real piece of infrastructure, not a half-installed template. That was the missing piece tying together the skill catalog, the per-project <code>.claude/skills/</code> pulls, and the headless-agent installs. With <code>/bootstrap</code> in the template and <code>bootstrap-agent.sh</code> in the library, the full distribution loop is closed: build a skill → register it → pull it anywhere → improve it → push it back.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
