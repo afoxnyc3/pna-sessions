@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_engineer session — 2026-04-19 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_engineer</div>
+    <h1>principal_engineer session — 2026-04-19</h1>
+    <div class="tags"><span class="tag">principal_engineer</span><span class="tag">2026-04-19</span><span class="tag">research-cluster</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_engineer — 2026-04-19</h1>
+
+<p><strong>Agent:</strong> Principal Engineer</p>
+<p><strong>Date:</strong> 2026-04-19 (evening, continued)</p>
+<p><strong>Session duration:</strong> ~3 hours across compaction boundary</p>
+<p><strong>Project(s):</strong> research-agent-sdk, deepagents (research_a), principal_research activation</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> <strong>research_b (Claude Agents SDK daemon) scaffolded</strong> — 51/51 tests passing, ruff clean, committed as root commit <code>84f4962</code> on its own git repo at <code>/Users/alex/dev/projects/rnd/research-agent-sdk/</code></li>
+<li><input type="checkbox" disabled checked> <strong>feynman-bridge skill installed</strong> — copied design artifact to <code>~/.claude/skills/feynman-bridge/SKILL.md</code>, now in agent skill registry</li>
+<li><input type="checkbox" disabled checked> <strong>research_b daemon activated</strong> — plist loaded at <code>~/Library/LaunchAgents/com.claudeclaw.research_b.plist</code>, daemon polling every 30s with real secrets</li>
+<li><input type="checkbox" disabled checked> <strong>deepagents .env populated</strong> — synced real <code>ANTHROPIC_API_KEY</code> and <code>EXA_API_KEY</code> from research-agent-sdk/.env (previously placeholders). Backup at <code>.env.bak.1776653891</code></li>
+<li><input type="checkbox" disabled checked> <strong>principal_research verified live</strong> — Telegram bot <code>@pna_research_bot</code>, PIN-unlocked, processing messages with Opus 4.7</li>
+<li><input type="checkbox" disabled checked> <strong>research_a worker activated end-to-end</strong> — installed <code>com.claudeclaw.research_a.plist</code>, fixed <code>sys.path</code> bug by switching invocation to <code>python -m workers.research_a_worker</code>, smoke mission <code>bd21b225</code> completed in 26s with valid Standard Research Schema output (3801 chars)</li>
+<li><input type="checkbox" disabled checked> <strong>research_a CLAUDE.md prompt tweak</strong> — added explicit instruction for real UTC <code>completed_at</code> (was stamping 2025 from training cutoff)</li>
+<li><input type="checkbox" disabled checked> <strong>Design-artifact plist template updated</strong> to match the <code>-m</code> invocation so future re-installs don't regress</li>
+<li><input type="checkbox" disabled checked> <strong>hive_mind entries</strong> — ids 12 (commit) and 13 (deploy) for principal_engineer</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<p>| Task | Status | Blocker / Next action |</p>
+<p>|---|---|---|</p>
+<p>| research_b ↔ principal_research A/B test | untested | Dispatch a real dual-fan mission through principal_research and observe peer-review scoring on A vs B |</p>
+<p>| research_b CLAUDE.md UTC timestamp tweak | pending | Mirror the research_a prompt fix into research-agent-sdk/research_prompt.md for A/B consistency |</p>
+<p>| principal_sandbox + E2B | not started | Blocked on E2B API key and sandbox_cli clone (noted in prior checkpoint) |</p>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<p>| Decision | Rationale | Affects |</p>
+<p>|---|---|---|</p>
+<p>| Switch research_a plist from <code>workers/research_a_worker.py</code> to <code>python -m workers.research_a_worker</code> | Direct script invocation puts only <code>workers/</code> on sys.path; <code>-m</code> adds cwd → resolves <code>from agents.research_a</code> import | research_a daemon reliability; applied to both installed and design-artifact plist |</p>
+<p>| Don't augment worker code, only plist | Avoid touching Python source in a session with strict system-reminder constraints; <code>-m</code> is a plist-level fix | research_a activation strategy |</p>
+<p>| research-agent-sdk is its own git repo | Matches deepagents pattern (standalone subdirs in rnd/) | Future PRs and CI/CD per project |</p>
+<p>| Log spec bugs in commit message instead of blocking on Architect | Bugs were unambiguous (verified against live schema): table name, status enum, error column, list-parse bug | research_b delivery; Architect can backport into agent-design/ later |</p>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+/Users/alex/dev/projects/rnd/research-agent-sdk/                    created (16 files, commit 84f4962)
+  ├── pyproject.toml, uv.lock, .gitignore, README.md
+  ├── mission_queue.py, tools.py, agent_runner.py, daemon.py
+  ├── research_prompt.md, com.claudeclaw.research_b.plist, .env.sample, .env
+  └── tests/{__init__.py, conftest.py, test_mission_queue.py, test_tools.py, test_agent_runner.py}
+
+/Users/alex/.claude/skills/feynman-bridge/SKILL.md                  created
+/Users/alex/dev/projects/rnd/deepagents/.env                        modified (real keys)
+/Users/alex/dev/projects/rnd/deepagents/.env.bak.1776653891         created (backup)
+/Users/alex/Library/LaunchAgents/com.claudeclaw.research_a.plist    created then modified (PYTHONPATH, -m invocation)
+/Users/alex/dev/projects/rnd/agent-design/research_a/CLAUDE.md      modified (UTC timestamp tweak)
+/Users/alex/dev/projects/rnd/agent-design/research_a/com.claudeclaw.research_a.plist  modified (-m invocation)
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>principal_research:</strong> run a real dual-fan A/B mission through the orchestrator — same prompt to research_a and research_b, observe peer-review scoring. This is the first true test of the A/B comparison loop.</li>
+<li><strong>principal_engineer (self):</strong> mirror the UTC-timestamp prompt tweak into <code>research-agent-sdk/research_prompt.md</code> next time a mission touches research_b, so both workers behave consistently.</li>
+<li><strong>principal_engineer (self):</strong> build principal_sandbox once E2B API key is provisioned and <code>sandbox_cli</code> cloned from <code>disler/agent-sandbox-skill</code>.</li>
+<li><strong>Architect:</strong> backport research_b spec bugs into <code>agent-design/research_b/</code> — mission_tasks vs missions, status enum <code>queued/running/completed/failed/cancelled</code>, error column separation, academic_search list-parse bug in <code>tools.py</code>.</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Does principal_research's peer-review rubric need any calibration once it sees real A/B outputs side by side? → needs: empirical run</li>
+<li>Should <code>-m workers.research_a_worker</code> invocation pattern become a convention across future deepagents workers? → needs: Alex's call on project layout</li>
+<li>Is there appetite to make the research worker idempotent to completed_at regeneration (e.g. stamp it in the worker, not the prompt)? → needs: design decision</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Approximately 4 Opus 4.7 smoke-test missions were burned proving the research_a path (3 failed on sys.path, 1 succeeded). Cost is non-zero but bounded. The successful mission <code>bd21b225</code> is readable via <code>sqlite3 claudeclaw.db "SELECT result FROM mission_tasks WHERE id='bd21b225';"</code> if wanted as a reference output shape.</p>
+
+<p>Final cluster state (all live, per <code>launchctl list | grep claudeclaw</code>):</p>
+<ul>
+<li>principal_research (PID 87716) — @pna_research_bot, Telegram-facing</li>
+<li>research_a (PID 6436) — deepagents worker, polling</li>
+<li>research_b (PID 87925) — Claude Agents SDK daemon, polling</li>
+</ul>
+
+<p>The A/B comparison loop is wired end-to-end for the first time. Next session, run it with a real prompt.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
