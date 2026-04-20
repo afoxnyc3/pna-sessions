@@ -49,5 +49,16 @@
       "wrap-fix"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-20-032746.html",
+    "date": "2026-04-20",
+    "title": "clarke session \u2014 2026-04-19",
+    "agent": "clarke",
+    "tags": [
+      "clarke",
+      "2026-04-19"
+    ],
+    "type": "session"
   }
 ]

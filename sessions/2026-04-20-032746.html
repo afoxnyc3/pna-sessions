@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>clarke session — 2026-04-19 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">clarke</div>
+    <h1>clarke session — 2026-04-19</h1>
+    <div class="tags"><span class="tag">clarke</span><span class="tag">2026-04-19</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — clarke — 2026-04-19</h1>
+
+<p><strong>Agent:</strong> Clarke (Chief of Staff)</p>
+<p><strong>Date:</strong> 2026-04-19</p>
+<p><strong>Session duration:</strong> ~4 hours (evening, post-dinner)</p>
+<p><strong>Project(s):</strong> claudeclaw, research-agent-sdk, sandbox-agent, deepagents</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> E2B key wired — added to <code>~/dev/claudeclaw/.env</code> and <code>~/dev/projects/rnd/research-agent-sdk/.env</code></li>
+<li><input type="checkbox" disabled checked> research_b env fixed — added <code>CLAUDECLAW_DB_PATH</code>, <code>RESEARCH_B_MODEL</code>, <code>POLL_INTERVAL</code>, <code>LOG_LEVEL</code>; daemon now boots and polls clean</li>
+<li><input type="checkbox" disabled checked> principal_research + principal_sandbox agent configs installed — <code>~/.claudeclaw/agents/</code></li>
+<li><input type="checkbox" disabled checked> principal_research plist installed and loaded (PID 87716)</li>
+<li><input type="checkbox" disabled checked> research_b plist installed and loaded (PID 87927)</li>
+<li><input type="checkbox" disabled checked> research_a scaffold (Engineer) — <code>agents/research_a.py</code>, <code>workers/research_a_worker.py</code>, 12 skill symlinks, skill_roster.yaml updated, 11 tests green, plist loaded (PID 4488), smoke test passed end-to-end in 26s with valid Standard Research Schema output</li>
+<li><input type="checkbox" disabled checked> principal_sandbox scaffold (Engineer) — full project at <code>~/dev/projects/rnd/sandbox-agent/</code>, uv sync done, ruff clean, plist loaded (PID 3765)</li>
+<li><input type="checkbox" disabled checked> Gemini key wired — <code>~/.feynman/agent/auth.json</code> google block + <code>research-agent-sdk/.env</code></li>
+<li><input type="checkbox" disabled checked> Tavily key wired — <code>~/.feynman/agent/auth.json</code> tavily block + <code>research-agent-sdk/.env</code></li>
+<li><input type="checkbox" disabled checked> Key security — all keys written directly to files by user in Zed, never pasted to LLM</li>
+<li><input type="checkbox" disabled checked> Full cluster live — all 10 claudeclaw services running and healthy</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<p>| Task | Status | Blocker / Next action |</p>
+<p>|---|---|---|</p>
+<p>| principal_research fan-out routing | not started | CLAUDE.md has the spec but parallel dispatch + peer-review scoring not yet implemented — needs Engineer session |</p>
+<p>| deepagents/.env real keys | deferred | Shell env inheritance via dotenv non-override should work; test with a real research_a mission |</p>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<p>| Decision | Rationale | Affects |</p>
+<p>|---|---|---|</p>
+<p>| BotFather token not a blocker for implementation | Token only needed at runtime; code can be built with placeholder | build order |</p>
+<p>| principal_sandbox uses raw anthropic SDK tool loop | Simpler and more predictable than Claude Agents SDK for sync Telegram bot | sandbox-agent/agent_runner.py |</p>
+<p>| research_a invoked as python -m workers.research_a_worker | launchd cwd not in sys.path with direct script invocation; module invocation fixes it | com.claudeclaw.research_a.plist |</p>
+<p>| Keys never pasted to LLM | Security practice — write directly to files in Zed/Warp | all future key operations |</p>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+~/dev/claudeclaw/.env                                          modified  (E2B, GOOGLE, TAVILY added)
+~/dev/projects/rnd/research-agent-sdk/.env                    modified  (DB path, model, GOOGLE, TAVILY added)
+~/.feynman/agent/auth.json                                     modified  (google + tavily blocks)
+~/.claudeclaw/agents/principal_research/                       created   (CLAUDE.md, agent.yaml)
+~/.claudeclaw/agents/principal_sandbox/                        created   (CLAUDE.md, agent.yaml)
+~/Library/LaunchAgents/com.claudeclaw.principal_research.plist created
+~/Library/LaunchAgents/com.claudeclaw.research_b.plist         created
+~/Library/LaunchAgents/com.claudeclaw.research_a.plist         created
+~/Library/LaunchAgents/com.claudeclaw.principal_sandbox.plist  created
+~/dev/projects/rnd/deepagents/agents/research_a.py             created
+~/dev/projects/rnd/deepagents/workers/research_a_worker.py     created
+~/dev/projects/rnd/deepagents/.env + .env.sample               created
+~/dev/projects/rnd/deepagents/skills/ (x12 symlinks)           modified
+~/dev/projects/rnd/deepagents/config/skill_roster.yaml         modified  (research_a block)
+~/dev/projects/rnd/deepagents/tests/test_research_a_worker.py  created
+~/dev/projects/rnd/sandbox-agent/ (full project)               created
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>Alex:</strong> Test principal_sandbox — send coding task to pna_sandbox_bot, verify E2B sandbox spins up</li>
+<li><strong>Alex:</strong> Test principal_research — send research query to pna_research_bot, verify it routes</li>
+<li><strong>Engineer (next session):</strong> Implement principal_research fan-out — dispatch same prompt to research_a + research_b in parallel, collect both results, run rubric scoring, report winner to Telegram</li>
+<li><strong>Alex:</strong> Verify feynman recognises <code>tavily</code> key slug — run <code>feynman doctor</code> or a test query</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Does feynman support the <code>tavily</code> slug natively in auth.json?</li>
+<li>Does research_a successfully inherit ANTHROPIC_API_KEY from shell env without explicit .env entry?</li>
+<li>Is the principal_research CLAUDE.md routing logic sufficient for A/B fan-out, or does it need code-level implementation?</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Full cluster live as of 2026-04-19 ~11pm:</p>
+<ul>
+<li>Original 6: main (Clarke), pipeline, delivery, strategy, architect, engineer</li>
+<li>New 4: principal_research, principal_sandbox, research_a, research_b</li>
+</ul>
+
+<p>research_a smoke test: mission bd21b225, 26s, Standard Research Schema output confirmed valid.</p>
+<p>Key security rule established: all API keys to be written directly by user into files — never through Telegram/LLM context.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
