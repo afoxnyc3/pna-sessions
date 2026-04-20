@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video/audio → SKILL.md workflow — research_b (retry-2, live tools) — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    /* ── Research-specific styles ── */
+    .research-meta {
+      max-width: 860px; margin: 0 auto;
+      padding: 20px 32px 0;
+      display: flex; flex-wrap: wrap; gap: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+    .meta-field { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+    .meta-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); font-family: 'SF Mono', monospace;
+    }
+    .meta-value { font-size: 12px; color: var(--text); }
+    .confidence-badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 3px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .confidence-high   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    .confidence-medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .confidence-low    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .confidence-unknown { background: rgba(102,102,102,0.2); color: var(--muted); }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; margin: 12px 0 16px; }
+    article table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    article table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    article table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    article table tr:nth-child(even) td { background: var(--surface); }
+    article table.table-source td, article table.table-source th { font-size: 11px; }
+    /* Section cards */
+    .section-executive {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 16px 20px; margin: 4px 0 20px;
+    }
+    .section-executive p { font-size: 15px; line-height: 1.8; margin-bottom: 0; }
+    .section-executive h2 { margin-top: 0; }
+    .section-feynman {
+      border-left: 3px solid #06b6d4;
+      padding-left: 16px; margin: 4px 0 20px;
+    }
+    .section-feynman h2 { color: #06b6d4; }
+    article ol.insights-list { margin: 8px 0 12px 20px; }
+    article ol.insights-list li { margin-bottom: 10px; line-height: 1.65; }
+    /* Mobile */
+    @media (max-width: 640px) {
+      article { font-size: 15px; padding: 20px 16px; }
+      .research-meta { padding: 16px 16px 16px; gap: 12px; }
+      .meta-field { min-width: 120px; }
+      article table.table-source td,
+      article table.table-source th { font-size: 11px; padding: 5px 6px; }
+      article table td, article table th { padding: 6px 8px; }
+    }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>research</div>
+    <div class="agent-label">research_b</div>
+    <h1>Video/audio → SKILL.md workflow — research_b (retry-2, live tools)</h1>
+    <div class="tags"><span class="tag">research</span><span class="tag">research_b</span><span class="tag">2026-04-20</span><span class="tag">retry-2</span></div>
+  </div>
+  <div class="research-meta">
+    <div class="meta-field">
+      <span class="meta-label">Query</span>
+      <span class="meta-value">Research and define a complete workflow for extracting Claude Code skill files (SKILL.md) from YouTube videos, podcast episodes, conference talks, or any video/audio content that has a transcript. Cover: transcription tooling (yt-dlp, Whisper, Deepgram), extraction patterns (schema-first, hedge classification, map-reduce), the narrated-event to general-procedure modality shift, SKILL.md format spec, validation harness, and prior art.</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Agent</span>
+      <span class="meta-value">research_b</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Completed</span>
+      <span class="meta-value">2025-01-27T00:00:00Z</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Confidence</span>
+      <span class="meta-value"><span class="confidence-badge confidence-medium">medium</span></span>
+    </div>
+  </div>
+  <article>
+    
+<h1>Research: Extracting SKILL.md Files from Video/Audio Transcripts</h1>
+
+<h2>Executive Summary</h2>
+<p>A robust pipeline chains three stages: (1) audio acquisition and transcription via yt-dlp plus Whisper or Deepgram, (2) schema-first structured extraction of procedural atoms from the transcript using map-reduce over chunks with hedge classification to filter uncertain claims, and (3) a modality shift pass that converts first-person narrated events into imperative general procedures formatted as SKILL.md with YAML frontmatter. Prior art exists in fragmented form (ytpipe, TubeScribe, youtube-knowledge-extractor skill, cefriel's procedural-KG pipeline, How2Everything), but no open tool combines all stages end-to-end with a validation harness (skillcheck, skrills-validate, claudelint cover the linting layer).</p>
+
+<h2>Key Findings</h2>
+
+<ol>
+<li><strong>SKILL.md is a progressive-disclosure format with a strict YAML contract</strong></li>
+</ol>
+<p>   A SKILL.md folder requires exactly one <code>SKILL.md</code> file (case-sensitive) with YAML frontmatter containing <code>name</code> (kebab-case, must match parent directory) and <code>description</code>. Optional folders: <code>scripts/</code>, <code>references/</code>, <code>assets/</code>. Only the name and description (~200 bytes) are loaded at agent startup; the body loads on match.</p>
+<p>   Source: <a href="https://www.mintlify.com/anthropics/skills/creating-skills/frontmatter" target="_blank">YAML Frontmatter - Anthropic Skills</a> and <a href="https://github.com/corca-ai/claude-plugins/blob/main/references/anthropic-skills-guide/03-skill-structure.md" target="_blank">Skill Structure reference</a> -- official and mirrored Anthropic docs.</p>
+
+<ol>
+<li><strong>yt-dlp + Whisper/Deepgram is the dominant transcription stack</strong></li>
+</ol>
+<p>   Multiple open pipelines (ytpipe, youwhisper-cli, TubeScribe, yt-text) converge on yt-dlp for audio extraction followed by faster-whisper, whisper.cpp, or a cloud engine (Deepgram Nova, OpenAI, Gemini). Deepgram Nova wins on latency and streaming; Whisper large-v3 wins on cost at rest and language breadth. Deepgram's own benchmark claims accuracy and speed advantages but is a vendor document.</p>
+<p>   Source: <a href="https://github.com/prateekjain24/TubeScribe" target="_blank">TubeScribe repo</a>, <a href="https://pypi.org/project/ytpipe/" target="_blank">ytpipe</a>, <a href="https://offers.deepgram.com/hubfs/Whitepaper%20Deepgram%20vs%20Whisper%20Benchmark.pdf" target="_blank">Deepgram vs Whisper benchmark (vendor)</a>, <a href="https://research.aimultiple.com/speech-to-text/" target="_blank">aimultiple independent benchmark</a>.</p>
+
+<ol>
+<li><strong>Map-reduce is the canonical pattern for long transcripts</strong></li>
+</ol>
+<p>   Podcasts and conference talks regularly exceed single-context windows. The map step chunks transcript into overlapping windows (typically 1.5k-4k tokens), emits structured candidate steps per chunk, and the reduce step merges, deduplicates, and resolves conflicts into a unified procedure graph. Stuffing fails above ~30 min of audio; refine preserves coherence but costs more.</p>
+<p>   Source: <a href="https://python.langchain.com/docs/how_to/summarize_map_reduce" target="_blank">LangChain summarize_map_reduce docs</a>, <a href="https://medium.com/@sonimegha1602/scaling-document-summarization-with-llms-stuffing-map-reduce-and-refine-a8a468d479c3" target="_blank">Scaling Document Summarization (Soni)</a>.</p>
+
+<ol>
+<li><strong>Hedge detection is a well-studied primitive for filtering uncertain claims</strong></li>
+</ol>
+<p>   Speakers hedge constantly ("I think you could maybe try..."). The CoNLL-2010 shared task and downstream work (HedgeHunter, HEDGEhog) provide token-level classifiers that label spans as epistemic, doxatic, investigation, or condition hedges with ~0.89 F1. Using a hedge classifier as a gate lets the extractor promote only asserted steps to the SKILL.md body and demote hedged content to a "Notes / caveats" section.</p>
+<p>   Source: <a href="https://arxiv.org/html/2405.13319v1" target="_blank">"You should probably read this": Hedge Detection in Text</a>, <a href="https://aclanthology.org/W10-3017/" target="_blank">HedgeHunter</a>, <a href="https://huggingface.co/jeniakim/hedgehog" target="_blank">HEDGEhog model</a>.</p>
+
+<ol>
+<li><strong>Schema-first extraction with Pydantic or JSON Schema beats freeform generation</strong></li>
+</ol>
+<p>   Rather than asking the LLM for markdown directly, define a Pydantic model (ProcedureStep with fields: action_verb, object, preconditions, rationale, hedge_level, timestamp, source_quote). The model emits validated JSON; a deterministic renderer converts JSON to SKILL.md. This separation is what Sourcery, LangExtract, and LlamaIndex's PydanticProgramExtractor all implement.</p>
+<p>   Source: <a href="https://github.com/jolovicdev/sourcery" target="_blank">Sourcery: schema-first extraction framework</a>, <a href="https://docs.llamaindex.ai/en/stable/examples/metadata_extraction/PydanticExtractor/" target="_blank">LlamaIndex PydanticExtractor</a>, <a href="https://myengineeringpath.dev/genai-engineer/structured-outputs/" target="_blank">Structured Outputs guide</a>.</p>
+
+<ol>
+<li><strong>The narrated-event to general-procedure shift is an abstraction operation</strong></li>
+</ol>
+<p>   Narrators say "so then I ran npm install and it broke because I had node 18." A SKILL.md requires "1. Verify Node >= 20 before running <code>npm install</code>." The shift has four moves: (a) detach from past tense and first person (strip "I did"), (b) lift particulars to preconditions ("node 18" becomes "older Node versions"), (c) recast failures as guardrails, (d) convert temporal sequence into dependency order. Work on goal-oriented script construction and WikiHow hierarchies formalizes this as script induction from narrative.</p>
+<p>   Source: <a href="https://arxiv.org/abs/2203.07264" target="_blank">Show Me More Details (ACL 2022)</a>, <a href="https://paperswithcode.com/paper/goal-oriented-script-construction" target="_blank">Goal-Oriented Script Construction</a>, <a href="https://allenai.org/papers/how2everything" target="_blank">How2Everything (2026)</a>.</p>
+
+<ol>
+<li><strong>Procedural KG extraction gives a sound intermediate representation</strong></li>
+</ol>
+<p>   Cefriel's prompt-based pipeline extracts steps, actions, objects, equipment, and temporal relations into a typed graph, then serializes. This intermediate KG layer is exactly what you want between the raw transcript and the final SKILL.md: it makes the reduce step a graph merge (not a text diff) and makes validation inspectable.</p>
+<p>   Source: <a href="https://github.com/cefriel/procedural-kg-llm" target="_blank">cefriel/procedural-kg-llm</a>, <a href="https://www.arxiv.org/pdf/2412.03589" target="_blank">Human Evaluation paper</a>.</p>
+
+<ol>
+<li><strong>Validation harnesses already exist and enforce cross-agent portability</strong></li>
+</ol>
+<p>   skillcheck, skill-tools-plugin, skrills-validate, and claudelint all lint SKILL.md: frontmatter schema, name/folder match, description discoverability scoring, token budget tiers, file-reference integrity, and cross-agent compatibility (Claude Code is permissive, Codex CLI and Copilot CLI are strict). A reddit-reported failure mode: skills that load in Claude Code fail silently in VS Code when <code>name</code> does not match the parent directory.</p>
+<p>   Source: <a href="https://github.com/moonrunnerkc/skillcheck" target="_blank">skillcheck</a>, <a href="https://github.com/skill-tools/skill-tools-plugin" target="_blank">skill-tools-plugin</a>, <a href="https://docs.rs/skrills-validate/latest/skrills_validate/" target="_blank">skrills-validate crate</a>, <a href="https://claudelint.com/integrations/claude-code-plugin" target="_blank">claudelint</a>.</p>
+
+<ol>
+<li><strong>Direct prior art: youtube-knowledge-extractor skill</strong></li>
+</ol>
+<p>   The <code>sdrabent/youtube-knowledge-extractor</code> skill on ClawHub/OpenClaw already does multimodal YouTube analysis via transcript plus frame extraction, producing step-by-step guides. It declares yt-dlp, ffmpeg, python3, and curl as required binaries. A simpler cousin <code>abe238/youtube-summarizer</code> only summarizes. Neither performs an explicit hedge-classification pass or emits a nested SKILL.md, so there is an open gap.</p>
+<p>   Source: <a href="https://clawhub.ai/sdrabent/youtube-knowledge-extractor" target="_blank">youtube-knowledge-extractor on ClawHub</a>, <a href="https://github.com/openclaw/skills/blob/main/skills/abe238/youtube-summarizer/SKILL.md" target="_blank">youtube-summarizer SKILL.md</a>.</p>
+
+<h2>Deep Dive</h2>
+
+<p><strong>Stage 1: Acquisition and transcription.</strong> yt-dlp handles YouTube, podcast RSS enclosures, Vimeo, and most other sources via <code>--extract-audio --audio-format wav</code>. If the source already has captions (YouTube auto-captions, conference <code>.vtt</code>), pull them first and skip ASR [Source 4, yt-text]. Otherwise choose a transcriber by workload: local <code>faster-whisper</code> with <code>large-v3</code> for privacy or scale at rest, Deepgram Nova-3 for speaker diarization and low-latency streaming [Source 10, 11]. Store transcripts as JSON with word-level timestamps so later stages can cite source quotes into the SKILL.md "provenance" section.</p>
+
+<p><strong>Stage 2: Schema-first extraction over map-reduce.</strong> Define a Pydantic schema with fields for the atomic procedure step (action, object, tool, precondition, expected outcome, failure mode, hedge level, source timestamp). Chunk the transcript with 10-20% overlap so step boundaries are not severed; LangChain's <code>MapReduceDocumentsChain</code> or a hand-rolled asyncio fanout both work [Source 7]. Map step prompt: "Extract ProcedureStep instances from this chunk; return [] if the chunk is pure narration with no action." Reduce step performs entity alignment, dedupe, and dependency ordering, ideally against a procedural KG intermediate [Source 8, cefriel]. Run hedge classification (HEDGEhog or a GPT-class zero-shot classifier trained on CoNLL-2010 labels) on each extracted step's supporting span [Source 5, 6]. Steps with epistemic/doxatic hedge level above threshold get routed to a <code>## Caveats</code> section rather than the main imperative body.</p>
+
+<p><strong>Stage 3: Modality shift.</strong> This is the linguistically hardest move and the one no existing open tool does well. The input is past-tense first-person narration of a particular event; the output must be present-tense imperative general procedure. Concretely: "I ran <code>npm install</code> and got ERESOLVE" becomes "Run <code>npm install</code>. If ERESOLVE appears, pin peer deps with <code>--legacy-peer-deps</code> or upgrade the conflicting package." This requires four operations grounded in the script-induction literature [Source, ACL 2022 wikihow_hierarchy; How2Everything]: tense/person normalization, variable lifting (proper nouns to role names), failure-to-guardrail conversion, and dependency reordering. Implement it as a dedicated LLM pass with a few-shot prompt containing paired narration/procedure examples, then validate the output contains no first-person pronouns and every verb is imperative or infinitive.</p>
+
+<p><strong>Stage 4: SKILL.md rendering.</strong> Deterministic Jinja template consumes the validated JSON/KG and emits:</p>
+
+<pre><code class="lang-yaml">
+---
+name: &lt;kebab-case derived from video title&gt;
+description: &lt;when to use, first-person neutral, &lt;=1024 chars&gt;
+version: 0.1.0
+source:
+  url: &lt;video URL&gt;
+  transcribed_by: whisper-large-v3 | deepgram-nova-3
+  extracted_at: &lt;ISO timestamp&gt;
+---
+
+# &lt;Title&gt;
+
+## When to Use
+...
+
+## Prerequisites
+...
+
+## Procedure
+1. ...
+2. ...
+
+## Caveats
+&lt;hedged content with source timestamps&gt;
+
+## Provenance
+&lt;quoted transcript spans with HH:MM:SS links&gt;
+</code></pre>
+
+<p>The <code>name</code> field must match the parent directory or VS Code will silently ignore it [Source 9, skillcheck reddit]. Description must be discoverable: include the triggering verbs the agent should match on ("This skill should be used when..." pattern from anthropics/claude-plugins-official skill-development skill).</p>
+
+<p><strong>Stage 5: Validation harness.</strong> Run skillcheck or skrills-validate as a post-hook: frontmatter schema, name/folder match, description length, file references exist, token budget within tier. Add project-specific checks: (a) no first-person pronouns in the procedure section (regex), (b) every step has a cited timestamp in Provenance, (c) hedge-classifier reports < X% hedge density on main body. Running the generated skill against a held-out test prompt ("do the thing this skill claims to teach") and scoring the result with an LLM judge gives an end-to-end quality signal analogous to How2Judge in the How2Everything framework [Source, How2Everything].</p>
+
+<p><strong>Prior-art gap.</strong> youtube-knowledge-extractor and youtube-summarizer produce guides or summaries but not self-contained SKILL.md files with the schema-first, hedge-gated, modality-shifted pipeline described here. Procedural-kg-llm does the extraction graph but not the SKILL.md output. skillcheck validates but does not generate. The opportunity is a glue skill that orchestrates all five stages.</p>
+
+<h2>Source Ledger</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>#</th>
+<th>Source</th>
+<th>Type</th>
+<th>Credibility</th>
+<th>Key Contribution</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>1</td>
+<td><a href="https://docs.claude.com/en/docs/claude-code/skills.md" target="_blank">Anthropic Skills docs</a></td>
+<td>Official docs</td>
+<td>High</td>
+<td>SKILL.md semantics, progressive disclosure</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://www.mintlify.com/anthropics/skills/creating-skills/frontmatter" target="_blank">YAML Frontmatter spec (Mintlify/Anthropic)</a></td>
+<td>Official docs</td>
+<td>High</td>
+<td>Required frontmatter fields</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://github.com/corca-ai/claude-plugins/blob/main/references/anthropic-skills-guide/03-skill-structure.md" target="_blank">Skill Structure reference</a></td>
+<td>Mirror of Anthropic guide</td>
+<td>High</td>
+<td>Folder layout, naming rules</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://github.com/anthropics/claude-plugins-official/blob/b664e152/plugins/plugin-dev/skills/skill-development/SKILL.md" target="_blank">anthropics/claude-plugins-official skill-development</a></td>
+<td>Anthropic repo</td>
+<td>High</td>
+<td>Canonical SKILL.md example</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://sundial.md/docs/specification" target="_blank">Sundial specification</a></td>
+<td>Registry docs</td>
+<td>Medium</td>
+<td>Cross-agent SKILL.md format</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="https://github.com/prateekjain24/TubeScribe" target="_blank">TubeScribe</a></td>
+<td>OSS repo</td>
+<td>Medium</td>
+<td>yt-dlp + Whisper/Deepgram/Gemini CLI</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="https://pypi.org/project/ytpipe/" target="_blank">ytpipe</a></td>
+<td>Published package</td>
+<td>Medium</td>
+<td>yt-dlp + faster-whisper minimal pipeline</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="https://github.com/nijaru/yt-text" target="_blank">yt-text</a></td>
+<td>OSS repo</td>
+<td>Low-Medium</td>
+<td>Caption-first fallback pattern</td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://offers.deepgram.com/hubfs/Whitepaper%20Deepgram%20vs%20Whisper%20Benchmark.pdf" target="_blank">Deepgram vs Whisper benchmark</a></td>
+<td>Vendor whitepaper</td>
+<td>Low (biased)</td>
+<td>Feature matrix</td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="https://research.aimultiple.com/speech-to-text/" target="_blank">aimultiple STT benchmark</a></td>
+<td>Independent</td>
+<td>Medium</td>
+<td>Independent accuracy numbers</td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="https://python.langchain.com/docs/how_to/summarize_map_reduce" target="_blank">LangChain map-reduce docs</a></td>
+<td>Framework docs</td>
+<td>High</td>
+<td>Canonical map-reduce chain</td>
+</tr>
+<tr>
+<td>12</td>
+<td><a href="https://medium.com/@sonimegha1602/scaling-document-summarization-with-llms-stuffing-map-reduce-and-refine-a8a468d479c3" target="_blank">Scaling Document Summarization (Soni)</a></td>
+<td>Blog</td>
+<td>Medium</td>
+<td>Stuffing vs map-reduce vs refine tradeoffs</td>
+</tr>
+<tr>
+<td>13</td>
+<td><a href="https://arxiv.org/html/2405.13319v1" target="_blank">"You should probably read this" Hedge Detection</a></td>
+<td>arXiv</td>
+<td>High</td>
+<td>SOTA hedge detector on CoNLL-2010</td>
+</tr>
+<tr>
+<td>14</td>
+<td><a href="https://aclanthology.org/W10-3017/" target="_blank">HedgeHunter (CoNLL 2010)</a></td>
+<td>Peer-reviewed</td>
+<td>High</td>
+<td>Foundational hedge classifier</td>
+</tr>
+<tr>
+<td>15</td>
+<td><a href="https://huggingface.co/jeniakim/hedgehog" target="_blank">HEDGEhog BERT model</a></td>
+<td>Model card</td>
+<td>Medium</td>
+<td>Ready-to-use multi-class hedge classifier</td>
+</tr>
+<tr>
+<td>16</td>
+<td><a href="https://github.com/jolovicdev/sourcery" target="_blank">Sourcery</a></td>
+<td>OSS repo</td>
+<td>Low-Medium</td>
+<td>Schema-first extraction framework</td>
+</tr>
+<tr>
+<td>17</td>
+<td><a href="https://docs.llamaindex.ai/en/stable/examples/metadata_extraction/PydanticExtractor/" target="_blank">LlamaIndex PydanticExtractor</a></td>
+<td>Framework docs</td>
+<td>High</td>
+<td>Pydantic-based extraction</td>
+</tr>
+<tr>
+<td>18</td>
+<td><a href="https://myengineeringpath.dev/genai-engineer/structured-outputs/" target="_blank">Structured Outputs guide</a></td>
+<td>Blog</td>
+<td>Medium</td>
+<td>JSON schema enforcement patterns</td>
+</tr>
+<tr>
+<td>19</td>
+<td><a href="https://github.com/cefriel/procedural-kg-llm" target="_blank">cefriel/procedural-kg-llm</a></td>
+<td>OSS + paper</td>
+<td>Medium-High</td>
+<td>Procedural KG extraction prompt pipeline</td>
+</tr>
+<tr>
+<td>20</td>
+<td><a href="https://www.arxiv.org/pdf/2412.03589" target="_blank">Human Evaluation of Procedural KG (Carriero et al.)</a></td>
+<td>arXiv</td>
+<td>High</td>
+<td>Evaluation methodology</td>
+</tr>
+<tr>
+<td>21</td>
+<td><a href="https://arxiv.org/abs/2203.07264" target="_blank">Show Me More Details (Zhou et al., ACL 2022)</a></td>
+<td>Peer-reviewed</td>
+<td>High</td>
+<td>Hierarchies of procedures from web data</td>
+</tr>
+<tr>
+<td>22</td>
+<td><a href="https://allenai.org/papers/how2everything" target="_blank">How2Everything (AI2)</a></td>
+<td>arXiv + code</td>
+<td>High</td>
+<td>Procedural validity eval, How2Judge</td>
+</tr>
+<tr>
+<td>23</td>
+<td><a href="https://paperswithcode.com/paper/goal-oriented-script-construction" target="_blank">Goal-Oriented Script Construction</a></td>
+<td>Peer-reviewed</td>
+<td>Medium-High</td>
+<td>Script induction from narrative</td>
+</tr>
+<tr>
+<td>24</td>
+<td><a href="https://clawhub.ai/sdrabent/youtube-knowledge-extractor" target="_blank">youtube-knowledge-extractor</a></td>
+<td>Community skill</td>
+<td>Medium</td>
+<td>Closest prior art, multimodal YouTube to guide</td>
+</tr>
+<tr>
+<td>25</td>
+<td><a href="https://github.com/openclaw/skills/blob/main/skills/abe238/youtube-summarizer/SKILL.md" target="_blank">youtube-summarizer SKILL.md</a></td>
+<td>Community skill</td>
+<td>Medium</td>
+<td>Reference frontmatter for transcript skills</td>
+</tr>
+<tr>
+<td>26</td>
+<td><a href="https://github.com/moonrunnerkc/skillcheck" target="_blank">skillcheck</a></td>
+<td>OSS linter</td>
+<td>Medium</td>
+<td>Cross-agent validation</td>
+</tr>
+<tr>
+<td>27</td>
+<td><a href="https://github.com/skill-tools/skill-tools-plugin" target="_blank">skill-tools-plugin</a></td>
+<td>OSS plugin</td>
+<td>Medium</td>
+<td>Auto-lint hook feeding Claude</td>
+</tr>
+<tr>
+<td>28</td>
+<td><a href="https://docs.rs/skrills-validate/latest/skrills_validate/" target="_blank">skrills-validate (Rust)</a></td>
+<td>OSS crate</td>
+<td>Medium</td>
+<td>Programmatic validator</td>
+</tr>
+<tr>
+<td>29</td>
+<td><a href="https://claudelint.com/integrations/claude-code-plugin" target="_blank">claudelint</a></td>
+<td>OSS</td>
+<td>Medium</td>
+<td>Published linter integration</td>
+</tr>
+</tbody></table></div>
+
+<h2>Feynman Bridge</h2>
+<p>Note: feynman CLI was unavailable (not installed in this environment); the following is a plain-language synthesis from the cited sources rather than a CLI-grounded explanation.</p>
+
+<p>Think of a talk transcript as a travel diary written in first person: "I took the 8am train, got lost in Rome, finally found the museum at 3pm." A SKILL.md is the opposite: it is a guidebook for anyone who wants to visit the museum. The pipeline is the translator between the two. First you get the diary text (yt-dlp pulls audio, Whisper or Deepgram turns audio into words). Then you read the diary carefully in small chunks because it is too long to read in one breath (map-reduce), picking out every action the author actually performed. Some of what the author says is firm ("I bought a ticket") and some is guesswork ("I think maybe the 2pm one is cheaper"); a hedge classifier sorts those into two piles so the guidebook only tells readers to do what was actually confirmed to work.</p>
+
+<p>The hardest translation step is turning "I got lost, then found the museum" into "Exit the station on the south side and follow Via del Corso." That requires stripping the I, dropping the specific time, and turning a remembered mistake into a general warning. This is the same trick computational linguists use to mine WikiHow: take a narrative and induce the underlying script. The final guidebook gets a structured cover page (YAML frontmatter) so the agent librarian knows when to hand this particular book to a reader, and a linter checks the cover matches the spine (folder name equals the <code>name</code> field) before the book ships.</p>
+
+<h2>Actionable Insights</h2>
+
+<ol>
+<li><strong>Build the pipeline in five separable stages</strong> -- acquire (yt-dlp), transcribe (Whisper/Deepgram), extract (schema-first map-reduce with Pydantic), shift modality (dedicated LLM pass), render + validate (Jinja + skillcheck). Keep each stage behind a JSON boundary so you can swap tools.</li>
+</ol>
+
+<ol>
+<li><strong>Use captions before ASR when they exist</strong> -- YouTube auto-captions, conference VTT files, and podcast show-notes-with-transcripts skip a costly step. Fall back to Whisper large-v3 locally or Deepgram Nova-3 for streaming/diarization.</li>
+</ol>
+
+<ol>
+<li><strong>Adopt a Pydantic schema for ProcedureStep early</strong> -- fields: action_verb, object, tool, precondition, expected_outcome, failure_mode, hedge_level (enum), source_timestamp, source_quote. Every downstream stage reads and writes this type.</li>
+</ol>
+
+<ol>
+<li><strong>Gate promotion to the main body with a hedge classifier</strong> -- route epistemic/doxatic hedged spans to a <code>## Caveats</code> section with preserved source quotes. Use HEDGEhog or a zero-shot GPT classifier calibrated against CoNLL-2010 labels.</li>
+</ol>
+
+<ol>
+<li><strong>Write an explicit modality-shift prompt</strong> -- few-shot with 5-8 narration/procedure pairs, then post-validate that the output contains zero first-person pronouns and every step starts with an imperative verb. This is the move most prior tools skip.</li>
+</ol>
+
+<ol>
+<li><strong>Wire skillcheck or skrills-validate into CI</strong> -- enforce name-matches-directory, description discoverability, token budget, and file-reference integrity. Add a project rule that every step in <code>## Procedure</code> must have a timestamp in <code>## Provenance</code>.</li>
+</ol>
+
+<ol>
+<li><strong>Evaluate end-to-end with an LLM-judge loop</strong> -- following How2Judge, give the generated skill to a fresh agent and ask it to perform the task; score success. Low scores feed back into better extraction prompts.</li>
+</ol>
+
+<h2>Confidence Assessment</h2>
+
+<ul>
+<li><strong>Overall</strong>: medium</li>
+<li><strong>Coverage gaps</strong>:</li>
+</ul>
+<p>  - feynman CLI and alpha CLI were not installed in this environment, so the Feyn</p>
+<p>  - feynman CLI and alpha CLI unavailable in this environment; academic search fell back to Exa with arXiv/ACL filters.</p>
+<ul>
+<li><strong>Conflicting signals</strong>: None — both agents converge on the same pipeline architecture.</li>
+<li><strong>Recommended follow-up</strong>: Build a minimum-viable prototype on one known conference talk; diff generated SKILL.md against hand-written version.</li>
+</ul>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Mark Source Ledger tables (look for table after a heading containing "source")
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('source')) {
+          var next = h.nextElementSibling;
+          if (next && next.classList.contains('table-wrapper')) {
+            var tbl = next.querySelector('table');
+            if (tbl) tbl.classList.add('table-source');
+          }
+        }
+      });
+
+      // Wrap sections for visual treatment
+      wrapSection('executive summary', 'section-executive');
+      wrapSection('feynman bridge', 'section-feynman');
+
+      // Style Actionable Insights ordered list
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('actionable insights')) {
+          var next = h.nextElementSibling;
+          if (next && next.tagName === 'OL') next.classList.add('insights-list');
+        }
+      });
+    });
+
+    function wrapSection(headingText, wrapClass) {
+      var article = document.querySelector('article');
+      if (!article) return;
+      var target = null;
+      article.querySelectorAll('h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes(headingText)) target = h;
+      });
+      if (!target) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = wrapClass;
+      target.parentNode.insertBefore(wrapper, target);
+      var node = target;
+      while (node) {
+        var next = node.nextSibling;
+        var isNewSection =
+          node !== target &&
+          node.nodeType === 1 &&
+          /^H[1-3]$/.test(node.tagName);
+        if (isNewSection) break;
+        wrapper.appendChild(node);
+        node = next;
+      }
+    }
+  </script>
+</body>
+</html>

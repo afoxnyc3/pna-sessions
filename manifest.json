@@ -181,5 +181,18 @@
       "retry-2"
     ],
     "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-165005.html",
+    "date": "2026-04-20",
+    "title": "Video/audio \u2192 SKILL.md workflow \u2014 research_b (retry-2, live tools)",
+    "agent": "research_b",
+    "tags": [
+      "research",
+      "research_b",
+      "2026-04-20",
+      "retry-2"
+    ],
+    "type": "research"
   }
 ]
