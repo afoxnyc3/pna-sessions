@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NetSuite MCP OAuth — Comparative Analysis + Fix — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    /* ── Research-specific styles ── */
+    .research-meta {
+      max-width: 860px; margin: 0 auto;
+      padding: 20px 32px 0;
+      display: flex; flex-wrap: wrap; gap: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+    .meta-field { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+    .meta-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); font-family: 'SF Mono', monospace;
+    }
+    .meta-value { font-size: 12px; color: var(--text); }
+    .confidence-badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 3px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .confidence-high   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    .confidence-medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .confidence-low    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .confidence-unknown { background: rgba(102,102,102,0.2); color: var(--muted); }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; margin: 12px 0 16px; }
+    article table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    article table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    article table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    article table tr:nth-child(even) td { background: var(--surface); }
+    article table.table-source td, article table.table-source th { font-size: 11px; }
+    /* Section cards */
+    .section-executive {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 16px 20px; margin: 4px 0 20px;
+    }
+    .section-executive p { font-size: 15px; line-height: 1.8; margin-bottom: 0; }
+    .section-executive h2 { margin-top: 0; }
+    .section-feynman {
+      border-left: 3px solid #06b6d4;
+      padding-left: 16px; margin: 4px 0 20px;
+    }
+    .section-feynman h2 { color: #06b6d4; }
+    article ol.insights-list { margin: 8px 0 12px 20px; }
+    article ol.insights-list li { margin-bottom: 10px; line-height: 1.65; }
+    /* Mobile */
+    @media (max-width: 640px) {
+      article { font-size: 15px; padding: 20px 16px; }
+      .research-meta { padding: 16px 16px 16px; gap: 12px; }
+      .meta-field { min-width: 120px; }
+      article table.table-source td,
+      article table.table-source th { font-size: 11px; padding: 5px 6px; }
+      article table td, article table th { padding: 6px 8px; }
+    }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>research</div>
+    <div class="agent-label">clarke</div>
+    <h1>NetSuite MCP OAuth — Comparative Analysis + Fix</h1>
+    <div class="tags"><span class="tag">research</span><span class="tag">comparative</span><span class="tag">netsuite</span><span class="tag">mcp</span><span class="tag">oauth</span><span class="tag">2026-04-20</span></div>
+  </div>
+  <div class="research-meta">
+    <div class="meta-field">
+      <span class="meta-label">Query</span>
+      <span class="meta-value"></span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Agent</span>
+      <span class="meta-value">clarke</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Completed</span>
+      <span class="meta-value">2026-04-20</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Confidence</span>
+      <span class="meta-value">&mdash;</span>
+    </div>
+  </div>
+  <article>
+    <h1>NetSuite MCP OAuth — Comparative Analysis + Fix Guide</h1>
+
+<h2>Overview</h2>
+
+<p>Two research agents independently investigated the NetSuite MCP "Your role does not support OAuth2 login" error. Both reached the same root-cause diagnosis via different analytical paths, with meaningful differences in depth, navigation specificity, and source breadth. This document compares their outputs, names a winner, and synthesizes the best combined fix guide.</p>
+
+<hr>
+
+<h2>SWOT Analysis</h2>
+
+<h3>research_a</h3>
+
+<p><strong>Strengths</strong></p>
+<ul>
+<li>Named the single most actionable root cause first and immediately: "Log in using OAuth 2.0 Access Tokens" is missing from all roles. This is the #1 gate and research_a stated it unambiguously in the Executive Summary rather than burying it.</li>
+<li>Provided the most precise navigation paths of any output: exact menu trails like <code>Setup → Users/Roles → Manage Roles → [role] → Permissions → Setup subtab → Permission dropdown → "Log in using OAuth 2.0 Access Tokens"</code> are copy-paste ready for implementation tomorrow.</li>
+<li>Identified a critical user-confusion trap: the similarly named but functionally different "OAuth 2.0 Authorized Applications Management" permission. This is a concrete mistake NetSuite admins commonly make, and calling it out saves a likely misfire.</li>
+<li>Included a 7-step actionable fix list ordered by probability of resolving the issue, with verification steps after each.</li>
+<li>Cited 15 sources including the NetSuite Professionals community thread (Source 12) which provides empirical confirmation that REST Web Services (Full) + Perform Search are required for <code>tools/list</code> completeness — a post-auth failure mode not documented by Oracle.</li>
+<li>Included the Tim Dietrich Claude Code-specific bug citation as a valid exclusion criterion (rules out a confound if the user is on claude.ai web).</li>
+<li>SAML SSO edge case noted — a rare but legitimate escalation path.</li>
+</ul>
+
+<p><strong>Weaknesses</strong></p>
+<ul>
+<li>The Feynman Bridge metaphor (three locks) is solid but requires more setup to grasp than research_b's nightclub bouncer metaphor.</li>
+<li>Fewer sources cited from Oracle's error-specific sub-pages (e.g., <code>subsect_161252543690</code> for the Login Audit Trail error catalog) compared to research_b.</li>
+<li>Confidence gap on the literal error string mapping is acknowledged but the path from string to permission is slightly less explicitly grounded.</li>
+</ul>
+
+<p><strong>Opportunities</strong></p>
+<ul>
+<li>The dedicated role template is the most complete of the two outputs, including the <code>_claude_mcp_integration</code> internal ID suggestion and the explicit "Do NOT grant Create/Edit/Full" instruction per record type.</li>
+</ul>
+
+<p><strong>Threats</strong></p>
+<ul>
+<li>Marginal risk that the "Log in using OAuth 2.0 Access Tokens" fix alone is sufficient and the REST Web Services scope change is redundant — but both changes are safe to make together, so this is low stakes.</li>
+</ul>
+
+<hr>
+
+<h3>research_b</h3>
+
+<p><strong>Strengths</strong></p>
+<ul>
+<li>Strongest root-cause framing: clearly articulated the two-pronged failure mode (scope mismatch on integration record + missing role permissions) as jointly sufficient to produce the error. The explanation of why Administrator fails despite its power is the most cogent of the two outputs.</li>
+<li>The nightclub bouncer Feynman Bridge is the clearest plain-language explanation of the OAuth scope-to-role-permission matching mechanics.</li>
+<li>Explicitly documented that the -System- auto-creation is intentional (not a wizard failure) and that no post-install wizard was missed — this directly addresses a specific anxiety from the problem statement.</li>
+<li>Login Audit Trail diagnostic is more prominently positioned (Step 3 in the actionable list) and specifies the exact error codes to look for (<code>ScopeMismatched</code>, <code>AuthorizationCodeGrantRequired</code>, <code>RoleNotAllowed</code>, <code>UserCredentialsRequired</code>).</li>
+<li>Explicitly noted that Administrator's permissions "are locked" when testing edits — a practical UI gotcha for anyone who tries to edit the Administrator role directly.</li>
+<li>The raw authorize URL test at the end of the Confidence section is a useful diagnostic tool not present in research_a.</li>
+</ul>
+
+<p><strong>Weaknesses</strong></p>
+<ul>
+<li>Less granular navigation paths for the role permission fix. Step 2 says to navigate to Manage Roles and check "REST Web Services (Full) and Log in using OAuth 2.0 Access Tokens (Full)" but does not give the exact sub-tab path or warn about the similarly named permissions.</li>
+<li>The dedicated role template is less detailed: omits the internal ID field, misses the Device ID restriction checkbox, and recommends unchecking 2FA initially without a re-enable instruction.</li>
+<li>13 sources vs. research_a's 15; missing the NetSuite Professionals community thread that empirically confirms the <code>tools/list</code> completeness issue.</li>
+<li>Steps 4 and 5 are partially redundant (both address the integration record) and could be consolidated.</li>
+</ul>
+
+<p><strong>Opportunities</strong></p>
+<ul>
+<li>The explicit 2FA-disable-then-re-enable sequence (Step 6) is clearer than research_a's handling of the same issue.</li>
+</ul>
+
+<p><strong>Threats</strong></p>
+<ul>
+<li>The "two-pronged fix" framing could lead an implementer to batch both changes before testing, making it harder to isolate which change resolved the issue.</li>
+</ul>
+
+<hr>
+
+<h2>Head-to-Head Comparison</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Dimension</th>
+<th>research_a</th>
+<th>research_b</th>
+<th>Winner</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Root cause precision</td>
+<td>Named "Log in using OAuth 2.0 Access Tokens" as the primary gate in the opening sentence</td>
+<td>Identified scope mismatch as the primary cause, login permission as secondary</td>
+<td>research_a (more actionable first move)</td>
+</tr>
+<tr>
+<td>NetSuite-specific nav paths</td>
+<td>Full exact paths for all steps, including sub-tab names</td>
+<td>High-level nav, missing some sub-tab specificity</td>
+<td>research_a</td>
+</tr>
+<tr>
+<td>Scope mismatch explanation</td>
+<td>Clear, included</td>
+<td>Clearest of both — the bouncer framing is excellent</td>
+<td>research_b</td>
+</tr>
+<tr>
+<td>Post-auth tool failure coverage</td>
+<td>Yes — Perform Search required for tools/list</td>
+<td>Mentioned implicitly via REST Web Services</td>
+<td>research_a</td>
+</tr>
+<tr>
+<td>Login Audit Trail guidance</td>
+<td>Step 6 (later in sequence)</td>
+<td>Step 3 (earlier, more prominent)</td>
+<td>research_b</td>
+</tr>
+<tr>
+<td>Source count</td>
+<td>15</td>
+<td>13</td>
+<td>research_a</td>
+</tr>
+<tr>
+<td>Common-mistake trap identified</td>
+<td>Yes — "OAuth 2.0 Authorized Applications Management" confusion</td>
+<td>No</td>
+<td>research_a</td>
+</tr>
+<tr>
+<td>Dedicated role template completeness</td>
+<td>Full (7-field config, per-subtab permissions, explicit don'ts)</td>
+<td>Partial (missing Device ID, missing 2FA re-enable)</td>
+<td>research_a</td>
+</tr>
+<tr>
+<td>Feynman clarity</td>
+<td>Good (three locks)</td>
+<td>Better (nightclub bouncer)</td>
+<td>research_b</td>
+</tr>
+<tr>
+<td>-System- install behavior explained</td>
+<td>Yes</td>
+<td>Yes, more directly</td>
+<td>research_b</td>
+</tr>
+<tr>
+<td>Raw authorize URL diagnostic</td>
+<td>No</td>
+<td>Yes</td>
+<td>research_b</td>
+</tr>
+<tr>
+<td>Administrator edit gotcha</td>
+<td>No</td>
+<td>Yes</td>
+<td>research_b</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Winner: research_a</h2>
+
+<p>research_a wins on implementation readiness. For a fix that needs to be executed tomorrow morning by an administrator, exact navigation paths and the identification of the common permission-name confusion are the highest-value outputs. research_a's seven-step list is ordered by probability, has verification steps, covers the post-auth <code>tools/list</code> failure mode (an underappreciated second error layer), and provides a more complete dedicated role template.</p>
+
+<p>research_b edges ahead on conceptual clarity and a few diagnostic nuances (Login Audit Trail earlier in the sequence, raw authorize URL test, Administrator edit caveat). These are real advantages but they are secondary to implementation specificity for the stated use case.</p>
+
+<p>The ideal guide draws the conceptual framing from research_b and the implementation detail from research_a.</p>
+
+<hr>
+
+<h2>Combined Recommendation: Best Step-by-Step Fix</h2>
+
+<p>This guide synthesizes the strongest elements from both research outputs. Execute in order. Test after each step before proceeding.</p>
+
+<h3>Before you start: capture a baseline</h3>
+
+<p>Navigate to <code>Setup → Users/Roles → View Login Audit Trail</code>. Filter: Date = Today, Detail contains "OAuth". Make a note of the error code in the Detail column from the last failed attempt. The codes map as follows:</p>
+<ul>
+<li><code>ScopeMismatched</code> — integration record scope does not cover the role's permissions</li>
+<li><code>AuthorizationCodeGrantRequired</code> — Auth Code Grant checkbox off on the integration record</li>
+<li><code>RoleNotAllowed</code> / role rejection — the role lacks the OAuth 2.0 login permission</li>
+<li><code>InvalidRedirectUri</code> — redirect URI mismatch</li>
+</ul>
+
+<p>Both research agents agree the current failure is most likely <code>ScopeMismatched</code> combined with a role lacking the login permission.</p>
+
+<hr>
+
+<h3>Step 1: Add "Log in using OAuth 2.0 Access Tokens" to the test role (highest likelihood fix)</h3>
+
+<p>This is the role-level gate that makes a role OAuth 2.0 eligible. It is separate from "OAuth 2.0 Authorized Applications Management" — that permission only lets users view/revoke apps, not log in via OAuth. Adding the wrong one is a common mistake; make sure you add the right one.</p>
+
+<p>Navigation: <code>Setup → Users/Roles → Manage Roles</code></p>
+
+<p>For each role you want to test with (start with Administrator to prove the flow works, even though Administrator's permissions panel is read-only — use a custom role in production):</p>
+<ol>
+<li>Click <strong>Edit</strong> next to the role</li>
+<li>Click the <strong>Permissions</strong> tab</li>
+<li>Click the <strong>Setup</strong> subtab</li>
+<li>In the Permission dropdown, select <strong>"Log in using OAuth 2.0 Access Tokens"</strong></li>
+<li>Leave Level blank (this permission has no level)</li>
+<li>Click <strong>Add</strong></li>
+<li>Click <strong>Save</strong></li>
+</ol>
+
+<p>Repeat for CP Executive and any other role to be authorized.</p>
+
+<p>Test: log out, log back in, go to claude.ai → Settings → Connectors → re-add NetSuite. If the role picker accepts the role, this was the fix. Stop here and move to Step 4 (dedicated role) for production hardening.</p>
+
+<hr>
+
+<h3>Step 2: Add REST Web Services scope to the integration record</h3>
+
+<p>Even after Step 1 succeeds, REST Web Services scope is required on the integration record for MCP tools (record retrieval, SuiteQL, saved search) to actually function. The auto-created -System- integration record only has "NetSuite AI Connector" scope by default; this is intentional but incomplete for tool execution.</p>
+
+<p>Navigation: <code>Setup → Integration → Manage Integrations</code></p>
+
+<ol>
+<li>Find the auto-created integration record (likely named "NetSuite AI Connector" or "MCP Standard Tools")</li>
+<li>Click <strong>Edit</strong></li>
+<li>On the <strong>Authentication</strong> tab, confirm:</li>
+</ol>
+<p>   - State = <strong>Enabled</strong></p>
+<p>   - Authorization Code Grant = <strong>checked</strong></p>
+<p>   - Public Client = <strong>checked</strong> (PKCE flow — no client secret needed)</p>
+<p>   - Redirect URI = <code>https://claude.ai/api/mcp/auth_callback</code> (exact match, no trailing slash)</p>
+<ol>
+<li>Under <strong>Scope</strong>, check <strong>REST Web Services</strong> (in addition to NetSuite AI Connector that is already checked)</li>
+<li>Leave RESTlets unchecked unless you specifically need it</li>
+<li>Click <strong>Save</strong></li>
+</ol>
+
+<p>Test: re-authorize Claude and attempt a tool call (e.g., ask Claude to look up a customer record).</p>
+
+<hr>
+
+<h3>Step 3: Confirm "REST Web Services" feature is enabled at the account level</h3>
+
+<p>Navigation: <code>Setup → Company → Enable Features → SuiteCloud subtab</code></p>
+
+<p>Confirm both <strong>"REST Web Services"</strong> and <strong>"OAUTH 2.0"</strong> checkboxes are checked. If REST Web Services was not previously enabled, enabling it may prompt a page reload and require re-saving.</p>
+
+<hr>
+
+<h3>Step 4: Create a dedicated "Claude MCP Integration" role (do before production use)</h3>
+
+<p>Using Administrator or CP Executive long-term is overpermissioned. Create a minimum-privilege role:</p>
+
+<p>Navigation: <code>Setup → Users/Roles → Manage Roles → New</code></p>
+
+<p>Configure the role header:</p>
+<ul>
+<li><strong>Name</strong>: <code>Claude MCP Integration</code></li>
+<li><strong>ID</strong>: <code>_claude_mcp_integration</code></li>
+<li><strong>Two-Factor Authentication Required</strong>: checked (keep 2FA; temporarily uncheck only if you need to isolate a 2FA-specific failure)</li>
+<li><strong>Web Services Only</strong>: <strong>UNCHECKED</strong> (critical: Web Services Only blocks the browser-based OAuth consent flow and also blocks RESTlets used by MCP tools)</li>
+<li><strong>Restrict this role by Device ID</strong>: <strong>UNCHECKED</strong></li>
+</ul>
+
+<p>Permissions tab — Setup subtab:</p>
+<ul>
+<li><code>Log in using OAuth 2.0 Access Tokens</code> — (no level)</li>
+<li><code>REST Web Services</code> — <strong>Full</strong></li>
+<li><code>User Access Tokens</code> — Full (only if mixing TBA flows; safe to omit for pure OAuth 2.0)</li>
+</ul>
+
+<p>Permissions tab — Lists subtab:</p>
+<ul>
+<li><code>Perform Search</code> — Full (required for Saved Search and SuiteQL MCP tools; View is minimum)</li>
+<li><code>Documents and Files</code> — View</li>
+<li>Per record type (Customers, Vendors, Employees, Items, etc.) — <strong>View only</strong>. Do not grant Create/Edit/Full unless you specifically intend Claude to write records.</li>
+</ul>
+
+<p>Permissions tab — Reports subtab:</p>
+<ul>
+<li>Report Customization — View</li>
+<li>Specific report types as needed — View</li>
+</ul>
+
+<p>Permissions tab — Transactions subtab:</p>
+<ul>
+<li>Transaction types Claude should read (Sales Order, Invoice, Purchase Order) — <strong>View only</strong></li>
+</ul>
+
+<p>Click <strong>Save</strong>.</p>
+
+<p>Assign the role: <code>Lists → Employees → Employees → [employee] → Edit → Access tab → Roles subtab → New Role → Claude MCP Integration → Save</code></p>
+
+<hr>
+
+<h3>Step 5: Verify 2FA enrollment</h3>
+
+<p>The OAuth 2.0 Authorized Applications Management permission requires 2FA (enforced since NetSuite 2018.2). If the user has not enrolled 2FA on the Claude MCP Integration role, the consent flow will interrupt with a 2FA setup prompt.</p>
+
+<p>Log in as the target user with the Claude MCP Integration role. Navigate to the top-right user menu → <strong>Settings → Two-Factor Authentication</strong>. Confirm 2FA is enrolled (authenticator app or hardware token).</p>
+
+<hr>
+
+<h3>Step 6: Rule out "Web Services Only" on any tested roles</h3>
+
+<p>Navigation: <code>Setup → Users/Roles → Manage Roles</code></p>
+
+<p>Edit each role that was tested. Near the top of the form, confirm the <strong>Web Services Only</strong> checkbox is <strong>unchecked</strong>. This restriction routes the role to SOAP web services only, which is incompatible with both the browser OAuth consent flow and RESTlets used by MCP tools.</p>
+
+<hr>
+
+<h3>Step 7: Check for IP restrictions</h3>
+
+<p>Navigation: <code>Setup → Company → Company Information</code> — check "Allowed IPs" at company level.</p>
+
+<p>Navigation: <code>Setup → Users/Roles → Manage Roles → [role] → Edit → Restrictions tab</code> — check for role-level IP restrictions.</p>
+
+<p>If any IP allowlist is active, it must cover both the user's browser IP (for the consent page) and Claude's backend IPs for the token exchange callback. Anthropic does not publish a static IP range for claude.ai's MCP backend. The cleanest remediation is to remove IP restrictions from the Claude MCP Integration role only, not from production roles.</p>
+
+<hr>
+
+<h3>Diagnostic shortcut (if above steps don't resolve it)</h3>
+
+<p>Test the raw authorize URL directly in your browser:</p>
+
+<pre><code class="lang-text">
+https://&lt;accountID&gt;.app.netsuite.com/app/login/oauth2/authorize.nl?response_type=code&amp;client_id=&lt;consumer_key&gt;&amp;redirect_uri=https%3A%2F%2Fclaude.ai%2Fapi%2Fmcp%2Fauth_callback&amp;scope=rest_webservices&amp;state=test&amp;code_challenge=&lt;challenge&gt;&amp;code_challenge_method=S256
+</code></pre>
+
+<p>If this URL produces a consent screen that accepts your role, the problem is definitively scope-on-integration-record and Step 2 is the fix. If it still rejects, the problem is the role permission (Step 1).</p>
+
+<hr>
+
+<h3>If all steps pass but tools still fail</h3>
+
+<p>Check <code>tools/list</code> completeness. The following permissions on the Claude MCP Integration role are empirically required for the full tool catalog to appear (confirmed by NetSuite Professionals community, October 2025):</p>
+<ul>
+<li><code>REST Web Services</code> — Full</li>
+<li><code>Perform Search</code> — Full or View</li>
+<li>View access to each record type you want Claude to query</li>
+</ul>
+
+<hr>
+
+<h2>Confidence</h2>
+
+<p>Both research agents rated this analysis <strong>high confidence</strong> based on Oracle primary documentation. The single acknowledged gap is that the literal UI string "Your role does not support OAuth2 login" is not reproduced verbatim in Oracle's public Help Center, making the mapping from string to error code to fix inferential rather than directly cited. The Login Audit Trail step will confirm the exact error code and validate the diagnosis.</p>
+
+<p>If Steps 1 through 7 are completed and the issue persists, the escalation path is: open a NetSuite Support case referencing the Login Audit Trail error code, or verify whether your account uses SAML SSO (which routes OAuth consent through an IdP and adds a separate configuration layer).</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Mark Source Ledger tables (look for table after a heading containing "source")
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('source')) {
+          var next = h.nextElementSibling;
+          if (next && next.classList.contains('table-wrapper')) {
+            var tbl = next.querySelector('table');
+            if (tbl) tbl.classList.add('table-source');
+          }
+        }
+      });
+
+      // Wrap sections for visual treatment
+      wrapSection('executive summary', 'section-executive');
+      wrapSection('feynman bridge', 'section-feynman');
+
+      // Style Actionable Insights ordered list
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('actionable insights')) {
+          var next = h.nextElementSibling;
+          if (next && next.tagName === 'OL') next.classList.add('insights-list');
+        }
+      });
+    });
+
+    function wrapSection(headingText, wrapClass) {
+      var article = document.querySelector('article');
+      if (!article) return;
+      var target = null;
+      article.querySelectorAll('h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes(headingText)) target = h;
+      });
+      if (!target) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = wrapClass;
+      target.parentNode.insertBefore(wrapper, target);
+      var node = target;
+      while (node) {
+        var next = node.nextSibling;
+        var isNewSection =
+          node !== target &&
+          node.nodeType === 1 &&
+          /^H[1-3]$/.test(node.tagName);
+        if (isNewSection) break;
+        wrapper.appendChild(node);
+        node = next;
+      }
+    }
+  </script>
+</body>
+</html>
