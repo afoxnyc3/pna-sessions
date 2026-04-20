@@ -19,7 +19,8 @@
       --dot-diagram:    #3b82f6;
       --dot-brainstorm: #f59e0b;
       --dot-design:     #a855f7;
-      --dot-research:   #06b6d4;
+      --dot-research:     #06b6d4;
+      --dot-postmortem:   #ef4444;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -113,7 +114,8 @@
     .dot-diagram    { background: var(--dot-diagram); }
     .dot-brainstorm { background: var(--dot-brainstorm); }
     .dot-design     { background: var(--dot-design); }
-    .dot-research   { background: var(--dot-research); }
+    .dot-research    { background: var(--dot-research); }
+    .dot-postmortem  { background: var(--dot-postmortem); }
     .artifact-date {
       font-size: 11px;
       color: var(--muted);
@@ -169,6 +171,7 @@
         <button class="filter-btn" data-filter="brainstorm">Brainstorms</button>
         <button class="filter-btn" data-filter="design">Designs</button>
         <button class="filter-btn" data-filter="research">Research</button>
+        <button class="filter-btn" data-filter="postmortem">Postmortems</button>
       </div>
       <div class="legend">
         <div class="legend-item"><span class="type-dot dot-session"></span>session</div>
@@ -176,6 +179,7 @@
         <div class="legend-item"><span class="type-dot dot-brainstorm"></span>brainstorm</div>
         <div class="legend-item"><span class="type-dot dot-design"></span>design</div>
         <div class="legend-item"><span class="type-dot dot-research"></span>research</div>
+        <div class="legend-item"><span class="type-dot dot-postmortem"></span>postmortem</div>
       </div>
     </div>
 
@@ -211,7 +215,7 @@
         ? allEntries
         : allEntries.filter(e => e.type === activeFilter);
 
-      const plurals = { session: 'sessions', diagram: 'diagrams', brainstorm: 'brainstorms', design: 'designs', research: 'research' };
+      const plurals = { session: 'sessions', diagram: 'diagrams', brainstorm: 'brainstorms', design: 'designs', research: 'research', postmortem: 'postmortems' };
       const label = activeFilter === 'all' ? 'items' : (plurals[activeFilter] || activeFilter + 's');
       count.textContent = `${filtered.length} ${label}`;
 

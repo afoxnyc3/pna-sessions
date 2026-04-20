@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post-mortem: Research Agent Tool Failures — First A/B Run — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    /* ── Postmortem-specific styles ── */
+    .pm-meta {
+      max-width: 860px; margin: 0 auto;
+      padding: 20px 32px 20px;
+      display: flex; flex-wrap: wrap; gap: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pm-field { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
+    .pm-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); font-family: 'SF Mono', monospace;
+    }
+    .pm-value { font-size: 12px; color: var(--text); }
+    .severity-badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 3px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .severity-critical { background: rgba(239,68,68,0.2);  color: #ef4444; }
+    .severity-high     { background: rgba(249,115,22,0.2); color: #f97316; }
+    .severity-medium   { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .severity-low      { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .severity-unknown  { background: rgba(102,102,102,0.2); color: var(--muted); }
+    .pm-status-resolved { color: #22c55e; }
+    /* Section accent borders */
+    article h2 { border-left: 3px solid #ef4444; padding-left: 10px; border-bottom: none; margin-top: 28px; }
+    article h3 { color: #aaa; }
+    .rca-box {
+      background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 6px; padding: 16px 20px; margin: 8px 0 20px;
+    }
+    .fix-box {
+      background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.15);
+      border-radius: 6px; padding: 16px 20px; margin: 8px 0 20px;
+    }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; margin: 12px 0 16px; }
+    article table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    article table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    article table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    article table tr:nth-child(even) td { background: var(--surface); }
+    @media (max-width: 640px) {
+      article { font-size: 15px; padding: 20px 16px; }
+      .pm-meta { padding: 16px; gap: 12px; }
+      article table td, article table th { font-size: 11px; padding: 6px 8px; }
+    }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>postmortem</div>
+    <div class="agent-label">clarke</div>
+    <h1>Post-mortem: Research Agent Tool Failures — First A/B Run</h1>
+    <div class="tags"><span class="tag">postmortem</span><span class="tag">research-cluster</span><span class="tag">exa</span><span class="tag">feynman</span><span class="tag">launchd</span><span class="tag">incident</span></div>
+  </div>
+  <div class="pm-meta">
+    <div class="pm-field">
+      <span class="pm-label">Incident</span>
+      <span class="pm-value">Research agent tool failures — first A/B run</span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Severity</span>
+      <span class="pm-value"><span class="severity-badge severity-medium">medium</span></span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Status</span>
+      <span class="pm-value pm-status-resolved">resolved</span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Detected</span>
+      <span class="pm-value">2026-04-20</span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Resolved</span>
+      <span class="pm-value">2026-04-20</span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Duration</span>
+      <span class="pm-value">~8 hours (overnight)</span>
+    </div>
+  </div>
+  <article>
+    
+<h2>Summary</h2>
+
+<p>The first production A/B run of the research cluster (research_a + research_b) completed overnight on 2026-04-20 but returned results with no live sources. All three external tools failed silently: Exa web search threw a parameter error, and the feynman and alpha CLIs were invisible to the daemons because launchd was running with a stripped PATH. Both agents fell back to training-knowledge inference and self-reported low/medium confidence. The results were still structurally valid and contained useful reasoning, but they could not be considered cited research.</p>
+
+<p>Detection was immediate on morning review of mission results. Resolution took approximately 30 minutes.</p>
+
+<hr>
+
+<h2>Timeline</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Time</th>
+<th>Event</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>~00:30</td>
+<td>Missions dispatched: research_a (004700a4), research_b (eb7a021c)</td>
+</tr>
+<tr>
+<td>~00:32</td>
+<td>research_b calls <code>web_research()</code> — Exa raises <code>ValueError: Invalid option: 'use_autoprompt'</code></td>
+</tr>
+<tr>
+<td>~00:32</td>
+<td>research_b calls <code>feynman_research()</code> — raises <code>FileNotFoundError</code> (not in PATH)</td>
+</tr>
+<tr>
+<td>~00:32</td>
+<td>research_b falls back to training knowledge, completes with confidence: low</td>
+</tr>
+<tr>
+<td>~08:19</td>
+<td>research_a calls feynman-bridge and alpha-research skills — both CLIs not found</td>
+</tr>
+<tr>
+<td>~08:19</td>
+<td>research_a falls back to training knowledge, completes with confidence: medium</td>
+</tr>
+<tr>
+<td>09:00</td>
+<td>Morning review: mission results flagged as tool-failure</td>
+</tr>
+<tr>
+<td>09:08</td>
+<td>Root causes identified, three fixes applied</td>
+</tr>
+<tr>
+<td>09:09</td>
+<td>Both services reloaded with fixed PATH</td>
+</tr>
+<tr>
+<td>09:10</td>
+<td>Exa call verified working. feynman and alpha confirmed accessible via new PATH</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Root Causes</h2>
+
+<h3>RCA-1: exa-py v2.12.0 removed <code>use_autoprompt</code></h3>
+
+<p>The <code>exa-py</code> SDK breaking change dropped the <code>use_autoprompt</code> parameter from <code>search_and_contents()</code> in v2.12.0. The parameter was carried over from the original scaffold without a version pin. The call silently failed with a <code>ValueError</code> at runtime — not a build error — so it was undetected until the first live mission.</p>
+
+<p><strong>Affected:</strong> research_b (<code>tools.py:web_research</code>)</p>
+
+<h3>RCA-2: launchd PATH missing fnm bin directory</h3>
+
+<p>Both launchd plists had PATH set to <code>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</code>. The feynman CLI binary lives at <code>~/.local/share/fnm/node-versions/v24.13.0/installation/bin/feynman</code> — a path outside any standard bin and never included in the plist template. Processes spawned by launchd do not inherit the user's shell PATH, so <code>feynman</code> was a <code>FileNotFoundError</code> inside both daemons.</p>
+
+<p><strong>Affected:</strong> research_a (deepagents worker), research_b (Claude SDK daemon)</p>
+
+<h3>RCA-3: alpha CLI never symlinked</h3>
+
+<p><code>alpha</code> ships bundled inside feynman's <code>node_modules</code> at a deeply nested path. It was never symlinked to a standard bin during feynman's install. Even with the correct fnm PATH, <code>alpha</code> would still have been invisible. This was a missing step in the install checklist — no code ever failed, it just was never done.</p>
+
+<p><strong>Affected:</strong> research_a (alpha-research skill), research_b (would have been affected if feynman PATH was fixed)</p>
+
+<hr>
+
+<h2>Impact</h2>
+
+<ul>
+<li><strong>research_b result:</strong> confidence low — pure inference, zero live sources, no URLs in Source Ledger</li>
+<li><strong>research_a result:</strong> confidence medium — training-knowledge citations (canonical GitHub repos, arXiv IDs), no live verification</li>
+<li><strong>Downstream:</strong> Engineer mission (0fb10bbd) collected both results and published to pna-sessions + ran SWOT comparison. The comparison named research_a the winner on structural quality, which is valid, but neither result should be treated as live-cited research</li>
+<li><strong>No data loss, no service outage, no user-facing breakage.</strong> Impact was confined to result quality on a single research query</li>
+</ul>
+
+<hr>
+
+<h2>Fixes Applied</h2>
+
+<h3>Fix 1 — Remove <code>use_autoprompt</code> from tools.py</h3>
+
+<pre><code class="lang-python">
+# Before
+response = _exa_client.search_and_contents(
+    query,
+    num_results=min(num_results, 20),
+    type="auto",
+    use_autoprompt=True,        # invalid in exa-py &gt;= 2.12.0
+    text={"max_characters": 800},
+)
+
+# After
+response = _exa_client.search_and_contents(
+    query,
+    num_results=min(num_results, 20),
+    type="auto",
+    text={"max_characters": 800},
+)
+</code></pre>
+
+<p>Verified: <code>web_research("Claude Code skill files", num_results=2)</code> returned 2 results successfully.</p>
+
+<h3>Fix 2 — Add fnm bin to PATH in both launchd plists</h3>
+
+<pre><code class="lang-xml">
+&lt;!-- Before --&gt;
+&lt;string&gt;/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin&lt;/string&gt;
+
+&lt;!-- After (com.claudeclaw.research_a.plist + com.claudeclaw.research_b.plist) --&gt;
+&lt;string&gt;/Users/alex/.local/share/fnm/node-versions/v24.13.0/installation/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin&lt;/string&gt;
+</code></pre>
+
+<p>Both services reloaded via <code>launchctl kickstart -k</code>.</p>
+
+<h3>Fix 3 — Symlink alpha to fnm bin</h3>
+
+<pre><code class="lang-bash">
+ln -sf \
+  ~/.local/share/fnm/node-versions/v24.13.0/installation/lib/node_modules/@companion-ai/feynman/node_modules/@companion-ai/alpha-hub/bin/alpha \
+  ~/.local/share/fnm/node-versions/v24.13.0/installation/bin/alpha
+</code></pre>
+
+<p>Verified: <code>alpha --help</code> returns usage text from the new launchd PATH.</p>
+
+<hr>
+
+<h2>Prevention</h2>
+
+<h3>P1 — Pin exa-py with upper bound in pyproject.toml</h3>
+
+<pre><code class="lang-toml">
+# research-agent-sdk/pyproject.toml
+exa-py = "&gt;=2.12.0,&lt;3.0.0"
+</code></pre>
+
+<p>Add a test that calls <code>web_research()</code> with a live API key as part of the CI smoke test suite. Breaking changes will fail at <code>uv sync</code> time, not at runtime.</p>
+
+<h3>P2 — Standardise launchd PATH in plist design template</h3>
+
+<p>The fnm bin path must be first in every plist that runs Node.js CLIs. Update the plist template in <code>agent-design/</code> with a comment block:</p>
+
+<pre><code class="lang-xml">
+&lt;!-- PATH must include fnm bin for feynman, alpha, and any fnm-managed CLIs.
+     Update the fnm version segment when upgrading Node. --&gt;
+&lt;string&gt;/Users/__HOME__/.local/share/fnm/node-versions/v24.13.0/installation/bin:/opt/homebrew/bin:...&lt;/string&gt;
+</code></pre>
+
+<h3>P3 — Add feynman install checklist to CLAUDE.md</h3>
+
+<p>When feynman is installed or upgraded, the <code>alpha</code> symlink must be recreated. Add to setup instructions:</p>
+
+<pre><code class="lang-bash">
+# After: npm install -g feynman (or upgrade)
+FNM_BIN=$(fnm exec --using=default -- node -e "console.log(process.execPath)" | xargs dirname)
+ALPHA=$(node -e "require.resolve('@companion-ai/alpha-hub/bin/alpha')" 2&gt;/dev/null || \
+  find "$FNM_BIN/../lib" -name alpha -type f | head -1)
+ln -sf "$ALPHA" "$FNM_BIN/alpha"
+</code></pre>
+
+<h3>P4 — Pre-flight tool-check before research missions start</h3>
+
+<p>Add a <code>preflight_check()</code> function to both research daemons. Before claiming a mission:</p>
+
+<pre><code class="lang-python">
+def preflight_check() -&gt; list[str]:
+    """Returns list of failed tool names. Empty = all clear."""
+    failures = []
+    if not shutil.which("feynman"):
+        failures.append("feynman")
+    if not shutil.which("alpha"):
+        failures.append("alpha")
+    if _exa_client is None:
+        failures.append("exa")
+    return failures
+</code></pre>
+
+<p>If <code>preflight_check()</code> returns non-empty, log a warning and fail the mission immediately rather than completing with low confidence. This surfaces infra issues as clear errors rather than degraded silent output.</p>
+
+<h3>P5 — Tag re-run results as "retry" in mission title</h3>
+
+<p>When re-running a failed mission, prefix the title with <code>[retry]</code> so the SWOT comparison can distinguish first-run from re-run results.</p>
+
+<hr>
+
+<h2>Lessons</h2>
+
+<p>The core failure mode here is <strong>silent degradation</strong> — both agents completed their missions, returned valid schema output, and self-reported low confidence, but nothing in the orchestration layer flagged this as an infrastructure failure requiring attention. A research agent completing with zero sources and low confidence should trigger an alert, not just a polite disclaimer in the output.</p>
+
+<p>The fix for this is preflight checks (P4) and surfacing tool failure as a mission error rather than a quality flag in the result body.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>

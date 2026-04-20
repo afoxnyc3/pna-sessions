@@ -8,7 +8,7 @@ Usage:
     --title "Title" \
     --agent "principal_architect" \
     --body-md path/to/summary.md \
-    [--type session|diagram|brainstorm|design|research] \
+    [--type session|diagram|brainstorm|design|research|postmortem] \
     [--tags "tag1,tag2"]
 
 Or pipe markdown body via stdin:
@@ -236,12 +236,116 @@ def build_html(
         "brainstorm": "#f59e0b",
         "design":     "#a855f7",
         "research":   "#06b6d4",
+        "postmortem": "#ef4444",
     }
     type_color = type_colors.get(artifact_type, "#666")
 
     research_css = ""
     research_meta_html = ""
     research_js = ""
+    postmortem_css = ""
+    postmortem_meta_html = ""
+
+    if artifact_type == "postmortem":
+        postmortem_css = """
+    /* ── Postmortem-specific styles ── */
+    .pm-meta {
+      max-width: 860px; margin: 0 auto;
+      padding: 20px 32px 20px;
+      display: flex; flex-wrap: wrap; gap: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pm-field { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
+    .pm-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); font-family: 'SF Mono', monospace;
+    }
+    .pm-value { font-size: 12px; color: var(--text); }
+    .severity-badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 3px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .severity-critical { background: rgba(239,68,68,0.2);  color: #ef4444; }
+    .severity-high     { background: rgba(249,115,22,0.2); color: #f97316; }
+    .severity-medium   { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .severity-low      { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .severity-unknown  { background: rgba(102,102,102,0.2); color: var(--muted); }
+    .pm-status-resolved { color: #22c55e; }
+    /* Section accent borders */
+    article h2 { border-left: 3px solid #ef4444; padding-left: 10px; border-bottom: none; margin-top: 28px; }
+    article h3 { color: #aaa; }
+    .rca-box {
+      background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 6px; padding: 16px 20px; margin: 8px 0 20px;
+    }
+    .fix-box {
+      background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.15);
+      border-radius: 6px; padding: 16px 20px; margin: 8px 0 20px;
+    }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; margin: 12px 0 16px; }
+    article table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    article table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    article table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    article table tr:nth-child(even) td { background: var(--surface); }
+    @media (max-width: 640px) {
+      article { font-size: 15px; padding: 20px 16px; }
+      .pm-meta { padding: 16px; gap: 12px; }
+      article table td, article table th { font-size: 11px; padding: 6px 8px; }
+    }"""
+
+        def _severity_badge(severity: str) -> str:
+            sev_lower = severity.lower()
+            cls_map = {
+                "critical": "severity-critical",
+                "high": "severity-high",
+                "medium": "severity-medium",
+                "low": "severity-low",
+            }
+            cls = cls_map.get(sev_lower, "severity-unknown")
+            return f'<span class="severity-badge {cls}">{_esc(severity)}</span>'
+
+        incident    = _esc(frontmatter.get("incident", title))
+        severity    = frontmatter.get("severity", "")
+        sev_badge   = _severity_badge(severity) if severity else "&mdash;"
+        detected    = _esc(frontmatter.get("detected_at", ""))
+        resolved    = _esc(frontmatter.get("resolved_at", ""))
+        duration    = _esc(frontmatter.get("duration", ""))
+        status      = frontmatter.get("status", "resolved")
+        status_cls  = "pm-status-resolved" if status.lower() == "resolved" else ""
+
+        postmortem_meta_html = f"""
+  <div class="pm-meta">
+    <div class="pm-field">
+      <span class="pm-label">Incident</span>
+      <span class="pm-value">{incident}</span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Severity</span>
+      <span class="pm-value">{sev_badge}</span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Status</span>
+      <span class="pm-value {status_cls}">{_esc(status)}</span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Detected</span>
+      <span class="pm-value">{detected}</span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Resolved</span>
+      <span class="pm-value">{resolved}</span>
+    </div>
+    <div class="pm-field">
+      <span class="pm-label">Duration</span>
+      <span class="pm-value">{duration}</span>
+    </div>
+  </div>"""
 
     if artifact_type == "research":
         research_css = """
@@ -421,7 +525,7 @@ def build_html(
     article a:hover {{ text-decoration: underline; }}
     article code {{ background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }}
     article pre {{ background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }}
-    article pre code {{ background: none; padding: 0; font-size: 12px; line-height: 1.55; }}{research_css}
+    article pre code {{ background: none; padding: 0; font-size: 12px; line-height: 1.55; }}{research_css}{postmortem_css}
     footer {{ border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }}
   </style>
 </head>
@@ -435,7 +539,7 @@ def build_html(
     <div class="agent-label">{_esc(agent)}</div>
     <h1>{_esc(title)}</h1>
     <div class="tags">{tag_html}</div>
-  </div>{research_meta_html}
+  </div>{research_meta_html}{postmortem_meta_html}
   <article>
     {body_html}
   </article>
@@ -453,7 +557,7 @@ def main() -> None:
     parser.add_argument(
         "--type",
         default="session",
-        choices=["session", "diagram", "brainstorm", "design", "research"],
+        choices=["session", "diagram", "brainstorm", "design", "research", "postmortem"],
     )
     args = parser.parse_args()
 

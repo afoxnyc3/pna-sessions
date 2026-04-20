@@ -136,5 +136,20 @@
       "2026-04-20"
     ],
     "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-142930.html",
+    "date": "2026-04-20",
+    "title": "Post-mortem: Research Agent Tool Failures \u2014 First A/B Run",
+    "agent": "clarke",
+    "tags": [
+      "postmortem",
+      "research-cluster",
+      "exa",
+      "feynman",
+      "launchd",
+      "incident"
+    ],
+    "type": "postmortem"
   }
 ]
