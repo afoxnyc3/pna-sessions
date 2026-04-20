@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_research session — 2026-04-19 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_research</div>
+    <h1>principal_research session — 2026-04-19</h1>
+    <div class="tags"><span class="tag">principal_research</span><span class="tag">2026-04-19</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_research — 2026-04-19</h1>
+
+<p><strong>Agent:</strong> Principal Research (research orchestrator)</p>
+<p><strong>Date:</strong> 2026-04-19</p>
+<p><strong>Session duration:</strong> short (greeting + wrap only)</p>
+<p><strong>Project(s):</strong> claudeclaw / research cluster</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Session opened, agent acknowledged standing-by for research dispatch</li>
+<li><input type="checkbox" disabled checked> No research prompts received this session — no missions dispatched to research_a or research_b</li>
+<li><input type="checkbox" disabled checked> <code>/wrap</code> executed: local summary saved, publishing to pna-sessions</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<p>| Task | Status | Blocker / Next action |</p>
+<p>|---|---|---|</p>
+<p>| First live A/B research dispatch | pending | Awaiting first real research query from Alex |</p>
+<p>| Verify scoring rubric fires correctly on real dual-worker output | pending | Needs first parallel run to produce two completed outputs |</p>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<p>| Decision | Rationale | Affects |</p>
+<p>|---|---|---|</p>
+<p>| No action without a prompt | Role is dispatch + review, not self-initiated research | Keeps orchestrator idle until used |</p>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+~/dev/projects/rnd/deepagents/sessions/2026-04-19-principal_research-summary.md   created
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>principal_research (self):</strong> On next inbound prompt, dispatch identical brief to research_a and research_b in parallel with <code>--priority 10</code>, poll every 30s for up to 10 min, then score both against the 5-dimension rubric and deliver via Telegram.</li>
+<li><strong>Alex:</strong> Send a real research query to exercise the full A/B pipeline end-to-end. Research cluster is live (per principal_engineer 7m-ago note: research_a activation confirmed with 26s smoke test <code>bd21b225</code>).</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Does the current polling loop recover cleanly if one worker completes in 20s and the other in 9 min, or do we hit any staleness issues reading mission results mid-flight? → needs: first real dual dispatch to observe</li>
+<li>Is the Standard Research Schema enforced by research_a and research_b identically, or will we see drift between deepagents output and Claude Agents SDK output? → needs: side-by-side comparison on first live query</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Research cluster status entering this session (per team activity log):</p>
+<ul>
+<li><strong>research_a</strong> — live, launchd plist loaded, smoke test passed (26s, 3801 chars, valid schema). Invocation fixed to <code>python -m workers.research_a_worker</code>.</li>
+<li><strong>research_b</strong> — scaffold complete, 51 tests green, ruff clean. SQLite poll daemon live.</li>
+<li><strong>principal_research</strong> — this agent, ready to orchestrate.</li>
+</ul>
+
+<p>No work to carry over. Next session should start with an actual research prompt.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
