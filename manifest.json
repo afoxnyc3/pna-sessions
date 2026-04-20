@@ -208,5 +208,20 @@
       "retry-2"
     ],
     "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-225217.html",
+    "date": "2026-04-20",
+    "title": "NetSuite MCP OAuth fix \u2014 research_a",
+    "agent": "research_a",
+    "tags": [
+      "research",
+      "research_a",
+      "netsuite",
+      "mcp",
+      "oauth",
+      "2026-04-20"
+    ],
+    "type": "research"
   }
 ]
