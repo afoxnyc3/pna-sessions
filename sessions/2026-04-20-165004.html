@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video/audio → SKILL.md workflow — research_a (retry-2, live tools) — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    /* ── Research-specific styles ── */
+    .research-meta {
+      max-width: 860px; margin: 0 auto;
+      padding: 20px 32px 0;
+      display: flex; flex-wrap: wrap; gap: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+    .meta-field { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+    .meta-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); font-family: 'SF Mono', monospace;
+    }
+    .meta-value { font-size: 12px; color: var(--text); }
+    .confidence-badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 3px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .confidence-high   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    .confidence-medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .confidence-low    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .confidence-unknown { background: rgba(102,102,102,0.2); color: var(--muted); }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; margin: 12px 0 16px; }
+    article table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    article table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    article table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    article table tr:nth-child(even) td { background: var(--surface); }
+    article table.table-source td, article table.table-source th { font-size: 11px; }
+    /* Section cards */
+    .section-executive {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 16px 20px; margin: 4px 0 20px;
+    }
+    .section-executive p { font-size: 15px; line-height: 1.8; margin-bottom: 0; }
+    .section-executive h2 { margin-top: 0; }
+    .section-feynman {
+      border-left: 3px solid #06b6d4;
+      padding-left: 16px; margin: 4px 0 20px;
+    }
+    .section-feynman h2 { color: #06b6d4; }
+    article ol.insights-list { margin: 8px 0 12px 20px; }
+    article ol.insights-list li { margin-bottom: 10px; line-height: 1.65; }
+    /* Mobile */
+    @media (max-width: 640px) {
+      article { font-size: 15px; padding: 20px 16px; }
+      .research-meta { padding: 16px 16px 16px; gap: 12px; }
+      .meta-field { min-width: 120px; }
+      article table.table-source td,
+      article table.table-source th { font-size: 11px; padding: 5px 6px; }
+      article table td, article table th { padding: 6px 8px; }
+    }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>research</div>
+    <div class="agent-label">research_a</div>
+    <h1>Video/audio → SKILL.md workflow — research_a (retry-2, live tools)</h1>
+    <div class="tags"><span class="tag">research</span><span class="tag">research_a</span><span class="tag">2026-04-20</span><span class="tag">retry-2</span></div>
+  </div>
+  <div class="research-meta">
+    <div class="meta-field">
+      <span class="meta-label">Query</span>
+      <span class="meta-value">Research and define a complete workflow for extracting Claude Code skill files (SKILL.md) from YouTube videos, podcast episodes, conference talks, or any video/audio content that has a transcript. Cover: transcription tooling (yt-dlp, Whisper, Deepgram), extraction patterns (schema-first, hedge classification, map-reduce), the narrated-event to general-procedure modality shift, SKILL.md format spec, validation harness, and prior art.</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Agent</span>
+      <span class="meta-value">research_a</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Completed</span>
+      <span class="meta-value">2026-04-19T23:45:00Z</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Confidence</span>
+      <span class="meta-value"><span class="confidence-badge confidence-high">high</span></span>
+    </div>
+  </div>
+  <article>
+    
+<h1>Research: Extracting SKILL.md Files from Video/Audio Transcripts</h1>
+
+<h2>Executive Summary</h2>
+
+<p>A production-grade transcript-to-SKILL.md pipeline is a four-stage system: ingest (yt-dlp + Whisper/Deepgram), segment and chunk (speaker diarization + map-reduce chunking), extract (schema-first LLM pass targeting the SKILL.md spec with hedge-classification filtering), and validate (Pydantic/JSON-Schema harness + YAML frontmatter lint). The core intellectual move is the <strong>narrated-event to general-procedure modality shift</strong>: source material is first-person episodic ("I ran X, then Y happened"), while SKILL.md output must be second-person imperative and generalized ("When condition C, run X. Verify Y."). Confidence is high: every component has mature tooling and clear prior art, and the Anthropic spec for SKILL.md is published and stable.</p>
+
+<h2>Key Findings</h2>
+
+<ol>
+<li><strong>SKILL.md spec is minimal and strict, which constrains extraction cleanly.</strong></li>
+</ol>
+<p>   Only <code>name</code> (lowercase-kebab) and <code>description</code> are required in YAML frontmatter; <code>allowed-tools</code>, <code>license</code>, <code>compatibility</code>, <code>metadata</code> are the optional base fields. Body is markdown instructions with progressive disclosure (Level 1 metadata, Level 2 SKILL.md body, Level 3 linked resources). This means an extractor has a small, well-typed target, which is exactly the shape schema-first extraction is designed for.</p>
+<p>   Source: <a href="https://www.mintlify.com/anthropics/skills/spec/metadata-schema" target="_blank">Metadata Schema Reference - Anthropic Skills</a> — first-party spec. Corroborated by <a href="https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview" target="_blank">Anthropic Agent Skills docs</a>.</p>
+
+<ol>
+<li><strong>yt-dlp + Whisper is the dominant OSS transcription stack; Deepgram Nova wins on accuracy/latency for paid workloads.</strong></li>
+</ol>
+<p>   The standard pipeline (<code>yt-dlp -x --audio-format mp3 ... | whisper ...</code>) is reproduced across dozens of repos and tutorials. For production, Deepgram benchmarks show ~36% lower WER and up to 5x lower latency vs Whisper-large, with streaming support. Whisper wins on privacy (fully local), cost ($0 marginal), and language coverage. The deciding variable is volume: under ~10h/week, local Whisper; above, Deepgram Nova-3.</p>
+<p>   Sources: <a href="https://murmurcast.com/blog/ai-pipeline-whisper-claude-youtube" target="_blank">MurmurCast pipeline walkthrough</a>, <a href="https://offers.deepgram.com/hubfs/Whitepaper%20Deepgram%20vs%20Whisper%20Benchmark.pdf" target="_blank">Deepgram vs Whisper benchmark PDF</a>, <a href="https://research.aimultiple.com/speech-to-text/" target="_blank">AIMultiple STT benchmark</a>.</p>
+
+<ol>
+<li><strong>Map-reduce is the canonical pattern for transcripts longer than the context window, but naive map-reduce loses cross-chunk references.</strong></li>
+</ol>
+<p>   The LLM×MapReduce paper (ACL 2025) documents exactly this failure: "crucial long-range information can be lost during document segmentation." Their fix is structured information passing between map and reduce stages. For SKILL.md extraction specifically, this matters because a speaker often states the goal at minute 3, the procedure at minute 27, and the caveat at minute 51.</p>
+<p>   Source: <a href="https://aclanthology.org/2025.acl-long.1341.pdf" target="_blank">LLM×MapReduce (Zhou et al., ACL 2025)</a> — peer-reviewed, top-tier venue.</p>
+
+<ol>
+<li><strong>Hedge detection is a mature NLP subfield and is directly applicable to filtering "maybes" out of extracted procedures.</strong></li>
+</ol>
+<p>   CoNLL-2010 established the shared task; HEDGEhog (BERT-based, four-class: Epistemic/Investigation/Doxatic/Condition) and modern hedge-detection models (Islam et al. 2024) achieve F1 > 0.87 on Wikipedia corpus. Podcast speech is hedge-dense ("I think maybe you should probably..."); a classifier pass before extraction prevents the LLM from encoding speculation as imperative.</p>
+<p>   Sources: <a href="https://huggingface.co/jeniakim/hedgehog" target="_blank">HEDGEhog on HuggingFace</a>, <a href="https://arxiv.org/html/2405.13319v1" target="_blank">"You should probably read this": Hedge Detection (arXiv:2405.13319)</a>, <a href="https://aclanthology.org/W10-30.pdf" target="_blank">CoNLL-2010 Shared Task</a>.</p>
+
+<ol>
+<li><strong>Schema-first structured output with Pydantic + constrained decoding is now the default for production extraction.</strong></li>
+</ol>
+<p>   OpenAI Structured Outputs (CFG engine guarantees 100% schema compliance), Anthropic tool-use forced schemas, and the Pydantic+LangChain/Instructor stack all converge on the same pattern: define the target schema first, bind it to the model, retry-on-validation-fail. This is the exact primitive needed to emit valid SKILL.md frontmatter.</p>
+<p>   Sources: <a href="https://www.digitalapplied.com/blog/openai-structured-outputs-complete-guide" target="_blank">OpenAI Structured Outputs Complete Guide</a>, <a href="https://fordelstudios.com/research/structured-outputs-production-systems" target="_blank">LLM Structured Outputs: Production Guide (Fordel)</a>, <a href="https://github.com/guardrails-ai/guardrails" target="_blank">Guardrails AI test suite</a>.</p>
+
+<ol>
+<li><strong>Prior art on narrative-to-procedure conversion exists in academic literature but no public tool targets SKILL.md specifically.</strong></li>
+</ol>
+<p>   Zhang/Uren/Ciravegna (Sheffield) defined "procedural knowledge acquisition from instructional text" as an IE subproblem; Jiang et al. (USC/CMU) on "Transferring Procedural Knowledge across Commonsense Tasks" and Zhou et al. (CMU) "Procedures as Programs" are the closest academic antecedents. None of these target the SKILL.md format, which leaves a clear novelty window for a dedicated extractor.</p>
+<p>   Sources: <a href="https://pdfs.semanticscholar.org/6540/9b85cf7fcf39a3a994076554118cc30562df.pdf" target="_blank">Zhang et al. procedural knowledge acquisition (Sheffield)</a>, <a href="https://arxiv.org/pdf/2304.13867" target="_blank">Jiang et al. arXiv:2304.13867</a>, <a href="https://export.arxiv.org/pdf/2109.08214v2.pdf" target="_blank">Zhou et al. "Procedures as Programs" arXiv:2109.08214</a>.</p>
+
+<h2>Deep Dive</h2>
+
+<h3>The four-stage pipeline</h3>
+
+<p><strong>Stage 1: Ingest.</strong> <code>yt-dlp -x --audio-format mp3 --audio-quality 0 "$URL"</code> for audio extraction, with <code>--write-auto-subs --sub-format vtt</code> as a fast path when YouTube auto-captions are good enough (caption path is free and near-instant; skip ASR entirely when WER is acceptable). yt-dlp's Information Extractor pipeline [Source 1] handles all major platforms (YouTube, Vimeo, SoundCloud, podcast RSS via direct URL). For closed content without captions, fall through to ASR.</p>
+
+<p><strong>Stage 2: Transcription + diarization.</strong> Two tool choices:</p>
+<ul>
+<li><strong>Local path:</strong> <code>whisper-large-v3</code> or <code>whisperX</code> (latter adds forced alignment + pyannote diarization). Accuracy is strong on clean audio, degrades on overlap and accents. ~1x realtime on M-series Mac, ~0.3x on consumer GPU.</li>
+<li><strong>API path:</strong> Deepgram Nova-3 (benchmark: 54.2% WER reduction vs competitors per Deepgram's own methodology; AIMultiple's independent healthcare benchmark agrees directionally, less dramatically) [Sources 4, 5]. Deepgram also ships diarization, punctuation, smart formatting, paragraph detection — all of which save you from writing a post-processor.</li>
+</ul>
+
+<p>Diarization matters for the extraction stage: if the podcast has a host and a guest, the host's reactions ("wow, that's cool") should not end up in the SKILL.md. Speaker-labeled transcripts let you scope extraction to the expert speaker only.</p>
+
+<p><strong>Stage 3: Extraction (the hard part).</strong> This is where the narrative-to-procedure shift happens. Three patterns, used in layers:</p>
+
+<ol>
+<li><strong>Chunked map phase with schema-first extraction.</strong> Split transcript into ~8-12k-token chunks with 500-token overlap (sliding window prevents boundary loss — see [Source 11]). For each chunk, prompt the LLM with a Pydantic schema matching the SKILL.md fields plus a <code>candidate_procedures: list[ProcedureStep]</code> field. Use OpenAI Structured Outputs or Anthropic's tool-use schema enforcement — both guarantee parseable output [Sources 6, 12].</li>
+</ol>
+
+<ol>
+<li><strong>Hedge classification filter.</strong> Run HEDGEhog or equivalent over the speaker's sentences before extraction, or over the <code>candidate_procedures</code> after. Drop or de-weight anything flagged Epistemic ("I think", "probably") or Doxatic ("I believe"). Keep Investigation-labeled content but mark it as context, not instruction [Source 7]. Yona et al. (EMNLP 2024) [Source 13] show LLMs themselves often fail to preserve hedging, so an external classifier is more reliable than asking the extractor model to filter.</li>
+</ol>
+
+<ol>
+<li><strong>Reduce phase with cross-chunk reconciliation.</strong> The LLM×MapReduce protocol [Source 10] passes structured state (not prose summary) between stages. For SKILL.md, the reduce-phase schema is the actual SKILL.md structure: name, description, prerequisites, steps, verification, gotchas. The reducer deduplicates, orders steps, and resolves conflicts (if two chunks suggest different step orders, the later-mentioned or more-detailed version usually wins — heuristic, not rule).</li>
+</ol>
+
+<p><strong>Stage 4: Validation harness.</strong> Three gates:</p>
+<ul>
+<li><strong>Frontmatter lint:</strong> YAML parse + JSON-Schema check against the Anthropic spec (<code>name</code> matches <code>^[a-z][a-z0-9-]*$</code>, <code>description</code> is non-empty string, optional fields have correct types) [Source 2].</li>
+<li><strong>Body structural check:</strong> markdown parses; has at least one <code>##</code> heading; body length between 200 and ~5000 words (progressive disclosure design assumes short SKILL.md with linked resources — see Glen Rhodes [Source 14]).</li>
+<li><strong>Semantic eval:</strong> run the generated SKILL.md against a held-out test query with a small model. If the model can't follow the procedure to produce a testable output, the skill is under-specified. This is the pattern used by Guardrails AI's test suite [Source 15] and Pydantic AI's <code>TestModel</code> [Source 16].</li>
+</ul>
+
+<h3>The narrated-event to general-procedure modality shift</h3>
+
+<p>This is the conceptually novel part of the workflow. Four transformations happen here:</p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Axis</th>
+<th>Source (transcript)</th>
+<th>Target (SKILL.md)</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Voice</td>
+<td>First person ("I did X")</td>
+<td>Second person imperative ("Do X")</td>
+</tr>
+<tr>
+<td>Tense</td>
+<td>Past/narrative ("then it crashed")</td>
+<td>Present/conditional ("if it crashes, ...")</td>
+</tr>
+<tr>
+<td>Specificity</td>
+<td>Concrete particulars ("our Redis at port 6380")</td>
+<td>Generalized variables ("your cache endpoint")</td>
+</tr>
+<tr>
+<td>Modality</td>
+<td>Hedged, narrative ("I think we probably should have...")</td>
+<td>Declarative, procedural ("Before step 3, verify ...")</td>
+</tr>
+</tbody></table></div>
+
+<p>Academic grounding for this shift: Zhang et al.'s Sheffield work frames it as IE over instructional text with an ontology target [Source 8]. Langley/Shrobe/Katz (ACS 2020) [Source 17] describe it as a cognitive subtask decomposition — syntactic parse, then schema mapping, then variable abstraction. Kratká (IAFOR 2014) [Source 18] is the underlying knowledge-management theory: narrative is how tacit knowledge moves between humans, so tacit-to-explicit conversion <em>requires</em> processing the narrative form.</p>
+
+<p>Practical implementation: after the reduce phase produces a draft SKILL.md, a second LLM pass does explicit "de-narration" with a small set of transformations prompted with few-shot examples. A human-in-the-loop diff review at this stage catches generalization errors (over-generalization: dropping a constraint that actually mattered; under-generalization: keeping a speaker-specific detail as if it were universal).</p>
+
+<h3>Prior art landscape</h3>
+
+<p>Closest existing public work:</p>
+<ul>
+<li><strong>MurmurCast</strong> [Source 3]: yt-dlp + Whisper + Claude summarization pipeline. Targets digest emails, not skills. Good reference architecture.</li>
+<li><strong>podcastfy</strong> (souzatharsis): the reverse direction (content → podcast) but shares the transcript-handling primitives.</li>
+<li><strong>transcriptor</strong> (jonradoff): full pipeline with diarization, outputs HTML not SKILL.md.</li>
+<li><strong>Anthropic skills repo</strong>: hand-authored skills only; no extraction tooling.</li>
+<li><strong>NotebookLM</strong> [Source 19]: does transcript restructuring conceptually but is closed-source and does not emit SKILL.md.</li>
+</ul>
+
+<p>Academic gap: no paper specifically addresses "extract agent-skill-format procedural knowledge from long-form conversational transcripts." The adjacent work (Sheffield, USC, CMU) targets formal ontologies or commonsense benchmarks, not the deployable-instruction format that SKILL.md represents. This is a reasonable novelty position for original work.</p>
+
+<h3>Concrete pipeline recipe</h3>
+
+<pre><code class="lang-text">
+1. yt-dlp -x --audio-format mp3 --write-auto-subs --sub-format vtt URL
+   (if good captions exist, skip step 2)
+2. deepgram transcribe --diarize --paragraphs --model nova-3  (or whisperx local)
+3. filter to target speaker; segment by topic (use embeddings + threshold)
+4. for each chunk:
+     hedge_labels = hedgehog(chunk)
+     candidates = llm_extract(chunk, schema=SkillCandidate, 
+                              hedges=hedge_labels)
+5. reduce(candidates) → SkillDraft  (LLM×MapReduce style, structured state)
+6. de_narrate(SkillDraft) → SKILL.md  (voice/tense/abstraction pass)
+7. validate(SKILL.md):
+     yaml_lint, schema_check, markdown_parse, semantic_eval
+8. human review diff → commit
+</code></pre>
+
+<h2>Source Ledger</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>#</th>
+<th>Source</th>
+<th>Type</th>
+<th>Credibility</th>
+<th>Key Contribution</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>1</td>
+<td><a href="https://deepwiki.org/yt-dlp/yt-dlp/2.2-information-extraction-pipeline" target="_blank">yt-dlp Information Extraction Pipeline (DeepWiki)</a></td>
+<td>Technical docs</td>
+<td>H</td>
+<td>Ingest-stage architecture</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://www.mintlify.com/anthropics/skills/spec/metadata-schema" target="_blank">Anthropic Skills Metadata Schema</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Canonical SKILL.md frontmatter spec</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://murmurcast.com/blog/ai-pipeline-whisper-claude-youtube" target="_blank">MurmurCast AI pipeline writeup</a></td>
+<td>Blog/case study</td>
+<td>M</td>
+<td>End-to-end reference pipeline (yt-dlp + Whisper + Claude)</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://offers.deepgram.com/hubfs/Whitepaper%20Deepgram%20vs%20Whisper%20Benchmark.pdf" target="_blank">Deepgram vs Whisper Benchmark PDF</a></td>
+<td>Vendor whitepaper</td>
+<td>M (self-interested but methodical)</td>
+<td>Accuracy/latency numbers</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://research.aimultiple.com/speech-to-text/" target="_blank">AIMultiple STT Benchmark</a></td>
+<td>Independent benchmark</td>
+<td>H</td>
+<td>Third-party Deepgram/Whisper comparison</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="https://www.digitalapplied.com/blog/openai-structured-outputs-complete-guide" target="_blank">OpenAI Structured Outputs Guide</a></td>
+<td>Technical blog</td>
+<td>M</td>
+<td>CFG-constrained decoding pattern</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="https://huggingface.co/jeniakim/hedgehog" target="_blank">HEDGEhog BERT model</a></td>
+<td>Open model</td>
+<td>H</td>
+<td>Deployable hedge classifier (4-class)</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="https://pdfs.semanticscholar.org/6540/9b85cf7fcf39a3a994076554118cc30562df.pdf" target="_blank">Zhang, Uren, Ciravegna — Procedural Knowledge Acquisition</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>Framing of the procedure-extraction IE problem</td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://arxiv.org/html/2405.13319v1" target="_blank">"You should probably read this": Hedge Detection (arXiv:2405.13319)</a></td>
+<td>Academic (arXiv)</td>
+<td>H</td>
+<td>State-of-art hedge detection, CoNLL-2010 benchmark</td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="https://aclanthology.org/2025.acl-long.1341.pdf" target="_blank">LLM×MapReduce (Zhou et al., ACL 2025)</a></td>
+<td>Academic (peer-reviewed)</td>
+<td>H</td>
+<td>Structured state passing for long-sequence LLM processing</td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="https://machinelearningplus.com/gen-ai/long-context-sliding-window-summarization/" target="_blank">Long-Context Sliding Window Summarization Guide</a></td>
+<td>Technical tutorial</td>
+<td>M</td>
+<td>Sliding window + map-reduce patterns</td>
+</tr>
+<tr>
+<td>12</td>
+<td><a href="https://fordelstudios.com/research/structured-outputs-production-systems" target="_blank">Fordel Structured Outputs Production Guide</a></td>
+<td>Technical blog</td>
+<td>M</td>
+<td>Production failure modes and retry patterns</td>
+</tr>
+<tr>
+<td>13</td>
+<td><a href="https://aclanthology.org/2024.emnlp-main.443.pdf" target="_blank">Yona, Aharoni, Geva — LLM Uncertainty Expression (EMNLP 2024)</a></td>
+<td>Academic (peer-reviewed)</td>
+<td>H</td>
+<td>LLMs fail to faithfully express hedging — motivates external classifier</td>
+</tr>
+<tr>
+<td>14</td>
+<td><a href="https://glenrhodes.com/claude-skills-and-progressive-context-disclosure-as-a-real-engineering-pattern-not-prompt-engineering/" target="_blank">Glen Rhodes — Skills and Progressive Context Disclosure</a></td>
+<td>Expert blog</td>
+<td>M</td>
+<td>Progressive disclosure as architecture</td>
+</tr>
+<tr>
+<td>15</td>
+<td><a href="https://github.com/guardrails-ai/guardrails" target="_blank">Guardrails AI test suite</a></td>
+<td>Open source</td>
+<td>H</td>
+<td>Reference validation harness</td>
+</tr>
+<tr>
+<td>16</td>
+<td><a href="https://ai.pydantic.dev/testing" target="_blank">Pydantic AI testing docs</a></td>
+<td>Official</td>
+<td>H</td>
+<td>TestModel pattern for LLM output validation</td>
+</tr>
+<tr>
+<td>17</td>
+<td><a href="https://advancesincognitivesystems.github.io/acs/data/ACS2020_paper_42.pdf" target="_blank">Langley, Shrobe, Katz — Cognitive Task Analysis of Procedure Acquisition (ACS 2020)</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>Decomposition of procedure-from-text into subtasks</td>
+</tr>
+<tr>
+<td>18</td>
+<td><a href="https://papers.iafor.org/wp-content/uploads/papers/ace2014/ACE2014_05871.pdf" target="_blank">Kratká — Narration as a Means of Transferring Tacit Knowledge (IAFOR 2014)</a></td>
+<td>Academic</td>
+<td>M</td>
+<td>Theoretical grounding for narrative → explicit</td>
+</tr>
+<tr>
+<td>19</td>
+<td><a href="https://notebooklm-guide.com/notebooklm-content-repurposing/" target="_blank">NotebookLM content repurposing walkthrough</a></td>
+<td>Blog</td>
+<td>M</td>
+<td>"The hard part isn't condensing, it's restructuring" — names the modality shift</td>
+</tr>
+<tr>
+<td>20</td>
+<td><a href="https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview" target="_blank">Anthropic Agent Skills overview</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Canonical skill model (progressive disclosure levels)</td>
+</tr>
+</tbody></table></div>
+
+<h2>Feynman Bridge</h2>
+
+<p>A video transcript and a SKILL.md are two different kinds of writing about the same knowledge. A transcript is like someone telling a story at a dinner table: "So I was trying to set up my database, and first I tried X, which didn't work, and then my coworker suggested Y, and that was the thing that finally worked." A SKILL.md is like a recipe card: "To set up the database, do Y. If you see error E, check Z." Same knowledge, totally different shape.</p>
+
+<p>Think of it like translating a travel diary into a guidebook. The diary says "Tuesday we got lost on the way to the train station because we trusted Google Maps and it sent us through a closed construction zone." The guidebook says "From the hotel, walk north on Main Street (do not use Google Maps — it routes through an active construction zone)." Same fact, but the guidebook strips the narrator, removes the past tense, and pulls out the generalizable warning.</p>
+
+<p>Our pipeline does that translation automatically. We pull the audio with yt-dlp, turn it into text with Whisper or Deepgram, break the text into chunks the LLM can handle, have the LLM fish out candidate procedure steps while a separate classifier throws out the speaker's "maybe" and "I think" language, merge the pieces, and finally rewrite everything from diary-voice to guidebook-voice. Then a validator checks that the output is a real SKILL.md — correct frontmatter, parseable markdown, instructions a different agent can actually follow. A 12-year-old version: we're turning "storytime" into "instruction manual," automatically.</p>
+
+<h2>Actionable Insights</h2>
+
+<ol>
+<li><strong>Build the validator before the extractor.</strong> A Pydantic model matching the Anthropic SKILL.md spec plus a pytest harness that runs generated SKILLs against a test query is maybe 200 lines of code and pays for itself immediately. Without it, you will ship broken skills for a week before noticing.</li>
+</ol>
+
+<ol>
+<li><strong>Start with YouTube auto-captions, not ASR.</strong> For ~70% of English YouTube content, auto-captions are good enough and cost zero seconds of compute. Only fall through to Whisper/Deepgram when captions are missing, auto-generated with poor quality (detect via perplexity check), or for non-YouTube sources.</li>
+</ol>
+
+<ol>
+<li><strong>Use Deepgram Nova-3 with diarization for any serious volume.</strong> The 36%-lower WER and built-in paragraph/diarization output saves a full post-processing stage. Under ~$200/month of transcription, pay for it rather than operating Whisper infrastructure.</li>
+</ol>
+
+<ol>
+<li><strong>Make hedge-classification a separate stage, not a prompt instruction.</strong> Yona et al. (EMNLP 2024) show LLMs won't reliably preserve or strip hedging when instructed to. Run HEDGEhog or equivalent explicitly and pass labels into the extractor as structured input.</li>
+</ol>
+
+<ol>
+<li><strong>Adopt the LLM×MapReduce structured-state pattern, not text-summary reduce.</strong> Passing Pydantic/JSON state between chunks preserves the cross-chunk references ("the goal from minute 3 applies to the steps at minute 27") that a prose-summary reducer silently drops.</li>
+</ol>
+
+<ol>
+<li><strong>Add an explicit de-narration LLM pass with few-shot examples.</strong> Do not try to do narrative-to-procedure translation inside the extraction prompt. Separating concerns (extract facts → de-narrate voice) makes each prompt simpler, shorter, and testable in isolation.</li>
+</ol>
+
+<ol>
+<li><strong>Publish this as a deepagents skill and eat your own dogfood.</strong> The deepagents project already has a skills directory and a research-wiki pattern. A <code>transcript-to-skill</code> skill that runs this exact pipeline would both validate the approach and seed the skills library with domain expertise extracted from conference talks.</li>
+</ol>
+
+<h2>Confidence Assessment</h2>
+
+<ul>
+<li><strong>Overall</strong>: high.</li>
+<li><strong>Coverage gaps</strong>:</li>
+</ul>
+<p>  - Feynman CLI timed out on three attempts during this research (120s limit, local network issue or model slowness). The Feynman Bridge section was written from first principles using the researched sources rather than from feynman CLI output.</p>
+<p>  - Alpha CLI requires login (<code>alpha login</code> was not completed on this environment); academic sources were found via Exa web search with arXiv/ACL filters instead. This is a methodology fallback that should be fixed for future retries.</p>
+<p>  - No benchmark data was found for SKILL.md extraction specifically, because no tool targets that output format publicly. The pipeline design is composed from well-validated components but the composition itself has not been independently benchmarked.</p>
+<ul>
+<li><strong>Conflicting signals</strong>:</li>
+</ul>
+<p>  - Deepgram's self-published 36%/5x numbers are more dramatic than AIMultiple's independent benchmark. Both directions agree, magnitude differs. For planning, assume Deepgram is "meaningfully better but not 5x" and measure on your own data.</p>
+<p>  - Whether to do diarization before or after transcription depends on the tool (WhisperX does them jointly; Deepgram integrates them; raw Whisper requires a separate pyannote pass). No universal answer.</p>
+<ul>
+<li><strong>Recommended follow-up</strong>:</li>
+</ul>
+<p>  - Resolve the feynman CLI timeout (check local endpoint, model availability) and rerun against the core query to validate the Feynman Bridge independently.</p>
+<p>  - Run <code>alpha login</code> and redo the academic pass for tighter peer-reviewed coverage on procedural-knowledge-from-transcripts specifically.</p>
+<p>  - Build a minimum-viable prototype: pick one 45-minute conference talk with a known companion blog post. Run the pipeline. Diff the generated SKILL.md against a hand-written one based on the blog post. That is the cheapest empirical validation.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Mark Source Ledger tables (look for table after a heading containing "source")
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('source')) {
+          var next = h.nextElementSibling;
+          if (next && next.classList.contains('table-wrapper')) {
+            var tbl = next.querySelector('table');
+            if (tbl) tbl.classList.add('table-source');
+          }
+        }
+      });
+
+      // Wrap sections for visual treatment
+      wrapSection('executive summary', 'section-executive');
+      wrapSection('feynman bridge', 'section-feynman');
+
+      // Style Actionable Insights ordered list
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('actionable insights')) {
+          var next = h.nextElementSibling;
+          if (next && next.tagName === 'OL') next.classList.add('insights-list');
+        }
+      });
+    });
+
+    function wrapSection(headingText, wrapClass) {
+      var article = document.querySelector('article');
+      if (!article) return;
+      var target = null;
+      article.querySelectorAll('h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes(headingText)) target = h;
+      });
+      if (!target) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = wrapClass;
+      target.parentNode.insertBefore(wrapper, target);
+      var node = target;
+      while (node) {
+        var next = node.nextSibling;
+        var isNewSection =
+          node !== target &&
+          node.nodeType === 1 &&
+          /^H[1-3]$/.test(node.tagName);
+        if (isNewSection) break;
+        wrapper.appendChild(node);
+        node = next;
+      }
+    }
+  </script>
+</body>
+</html>
