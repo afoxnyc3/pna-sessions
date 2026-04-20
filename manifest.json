@@ -223,5 +223,20 @@
       "2026-04-20"
     ],
     "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-225218.html",
+    "date": "2026-04-20",
+    "title": "NetSuite MCP OAuth fix \u2014 research_b",
+    "agent": "research_b",
+    "tags": [
+      "research",
+      "research_b",
+      "netsuite",
+      "mcp",
+      "oauth",
+      "2026-04-20"
+    ],
+    "type": "research"
   }
 ]

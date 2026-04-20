@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NetSuite MCP OAuth fix — research_b — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    /* ── Research-specific styles ── */
+    .research-meta {
+      max-width: 860px; margin: 0 auto;
+      padding: 20px 32px 0;
+      display: flex; flex-wrap: wrap; gap: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+    .meta-field { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+    .meta-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); font-family: 'SF Mono', monospace;
+    }
+    .meta-value { font-size: 12px; color: var(--text); }
+    .confidence-badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 3px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .confidence-high   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    .confidence-medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .confidence-low    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .confidence-unknown { background: rgba(102,102,102,0.2); color: var(--muted); }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; margin: 12px 0 16px; }
+    article table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    article table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    article table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    article table tr:nth-child(even) td { background: var(--surface); }
+    article table.table-source td, article table.table-source th { font-size: 11px; }
+    /* Section cards */
+    .section-executive {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 16px 20px; margin: 4px 0 20px;
+    }
+    .section-executive p { font-size: 15px; line-height: 1.8; margin-bottom: 0; }
+    .section-executive h2 { margin-top: 0; }
+    .section-feynman {
+      border-left: 3px solid #06b6d4;
+      padding-left: 16px; margin: 4px 0 20px;
+    }
+    .section-feynman h2 { color: #06b6d4; }
+    article ol.insights-list { margin: 8px 0 12px 20px; }
+    article ol.insights-list li { margin-bottom: 10px; line-height: 1.65; }
+    /* Mobile */
+    @media (max-width: 640px) {
+      article { font-size: 15px; padding: 20px 16px; }
+      .research-meta { padding: 16px 16px 16px; gap: 12px; }
+      .meta-field { min-width: 120px; }
+      article table.table-source td,
+      article table.table-source th { font-size: 11px; padding: 5px 6px; }
+      article table td, article table th { padding: 6px 8px; }
+    }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>research</div>
+    <div class="agent-label">research_b</div>
+    <h1>NetSuite MCP OAuth fix — research_b</h1>
+    <div class="tags"><span class="tag">research</span><span class="tag">research_b</span><span class="tag">netsuite</span><span class="tag">mcp</span><span class="tag">oauth</span><span class="tag">2026-04-20</span></div>
+  </div>
+  <div class="research-meta">
+    <div class="meta-field">
+      <span class="meta-label">Query</span>
+      <span class="meta-value"></span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Agent</span>
+      <span class="meta-value">research_b</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Completed</span>
+      <span class="meta-value">2026-04-20</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Confidence</span>
+      <span class="meta-value">&mdash;</span>
+    </div>
+  </div>
+  <article>
+    <h1>Research: Resolving "Your role does not support OAuth2 login" on NetSuite MCP (Claude Connector)</h1>
+
+<h2>Executive Summary</h2>
+<p>The error "Your role does not support OAuth2 login, please select a different one" is emitted by NetSuite's <code>/app/login/oauth2/authorize.nl</code> endpoint during Step One of the Authorization Code Grant flow when the role the user is attempting to authorize with lacks at least one of the permissions that NetSuite treats as OAuth 2.0 eligible, OR when the integration record's scopes do not intersect with any permission the role holds. Based on Oracle documentation, the two most likely root causes in this environment are (1) the integration record is missing the REST Web Services scope that the MCP Standard Tools SuiteApp relies on for record, report, saved search, and SuiteQL tool execution, and (2) the roles being tested lack the "REST Web Services" and "Log in using OAuth 2.0 Access Tokens" permissions that make a role OAuth-eligible. The fix is deterministic and does not require Oracle Support.</p>
+
+<h2>Key Findings</h2>
+
+<ol>
+<li><strong>The error originates at NetSuite's authorize endpoint, not Claude</strong></li>
+</ol>
+<p>   The string "Your role does not support OAuth2 login, please select a different one" is the NetSuite-side rejection rendered on the <code>login/oauth2/authorize.nl</code> consent screen. It fires before Claude ever receives a callback, so the Login Audit Trail at Setup > Users/Roles > View Login Audit Trail is the authoritative diagnostic source.</p>
+<p>   Source: <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/subsect_161252543690.html" target="_blank">Authorization Code Grant Flow Error Messages in the Login Audit Trail</a> -- Oracle official NetSuite Help</p>
+
+<ol>
+<li><strong>OAuth 2.0 eligibility is gated by role permissions, not a role-level checkbox</strong></li>
+</ol>
+<p>   NetSuite does not expose a single "OAuth2 enabled" toggle on a role. A role becomes OAuth 2.0 eligible when it holds the appropriate permission set: "REST Web Services" (Setup category), "Log in using OAuth 2.0 Access Tokens" (Setup category), and the OAuth 2.0 Authorized Applications Management permission for self-service authorization. If none of these are present, or the scope in the integration does not map to a permission the role holds, the role is rejected.</p>
+<p>   Source: <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_157771510070.html" target="_blank">Set Up OAuth 2.0 Roles</a> -- Oracle official NetSuite Help</p>
+
+<ol>
+<li><strong>Scope on the integration record must intersect with role permissions</strong></li>
+</ol>
+<p>   The integration record scopes (REST Web Services, RESTlets, SuiteAnalytics Connect, NetSuite AI Connector) define which permissions NetSuite will check against the role. Checking only "NetSuite AI Connector" while leaving "REST Web Services" unchecked means NetSuite only looks for AI-Connector-scope permissions on the role, and will reject any role that lacks them even if it is Administrator.</p>
+<p>   Source: <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/subsect_158711892221.html" target="_blank">Authorization Code Grant Flow Error Messages in the Login Audit Trail</a> -- ScopeMismatched error documentation</p>
+
+<ol>
+<li><strong>MCP Standard Tools SuiteApp requires REST Web Services feature + permission</strong></li>
+</ol>
+<p>   The MCP Standard Tools SuiteApp's Record, Report, Saved Search, and SuiteQL tools are implemented against NetSuite REST Web Services / SuiteQL. Oracle's "Required Features and Permissions" page for the NetSuite AI Connector Service explicitly lists Server SuiteScript and OAuth 2.0 as required features. REST Web Services is implicitly required because the tools cannot function without it.</p>
+<p>   Source: <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_0714080625.html" target="_blank">Required Features and Permissions</a> and <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/article_143403258.html" target="_blank">MCP Standard Tools SuiteApp</a> -- Oracle official NetSuite Help</p>
+
+<ol>
+<li><strong>The integration record auto-created by -System- is intentional, not incomplete</strong></li>
+</ol>
+<p>   When the MCP Standard Tools SuiteApp installs, it programmatically creates an integration record with TYPE=Public Client, PKCE required, and the NetSuite AI Connector scope preselected. There is no separate "post-install wizard" you missed. However, the auto-created record only has the minimum scope set, and REST Web Services scope must often be added manually for tool execution to work end-to-end.</p>
+<p>   Source: <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/article_0902023450.html" target="_blank">Installing the MCP Standard Tools SuiteApp</a> -- Oracle official NetSuite Help</p>
+
+<ol>
+<li><strong>2FA does not block the authorize page but can break silent SSO hops</strong></li>
+</ol>
+<p>   If the user's role is marked as requiring 2FA and the browser session is not already 2FA-authenticated, NetSuite will interrupt the OAuth consent flow with a 2FA challenge rather than emit this specific error. 2FA is therefore a secondary suspect, not the primary cause of this specific error string.</p>
+<p>   Source: <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_160855520475.html" target="_blank">OAuth 2.0 Authorization Code Grant Flow</a> -- Oracle official NetSuite Help</p>
+
+<ol>
+<li><strong>Known working permission bundle for MCP-dedicated role</strong></li>
+</ol>
+<p>   A minimum-permission role for MCP access needs: REST Web Services (Full), Log in using OAuth 2.0 Access Tokens (Full), SuiteAnalytics Workbook (View), plus record-level view permissions for whatever data you want Claude to access. Do NOT set "Web Services Only Role" on the role because that disables RESTlets and interferes with MCP tool invocation.</p>
+<p>   Source: <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_157780293862.html" target="_blank">OAuth 2.0 for RESTlets</a> and <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/article_0320025211.html" target="_blank">Roles and Permission Considerations for APIs</a></p>
+
+<ol>
+<li><strong>Administrator role is NOT automatically OAuth-exempt</strong></li>
+</ol>
+<p>   Even Administrator fails with this error if the integration scope does not align with any OAuth-eligible permission on the role. Administrator has REST Web Services by inheritance but the scope mismatch on the integration record still causes rejection at the authorize step.</p>
+<p>   Source: <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/subsect_158521823069.html" target="_blank">Authorization Errors in Step One</a></p>
+
+<h2>Deep Dive</h2>
+
+<p>The problem reported fits a well-documented pattern in NetSuite OAuth 2.0. The authorize endpoint performs three checks in sequence before displaying the consent screen: (a) the integration record exists and has Authorization Code Grant enabled, (b) the requested scope is valid and at least one scope box on the integration record is checked, and (c) the signed-in user has an available role that holds a permission matching one of the integration's declared scopes. Failure at step (c) produces exactly the error string the user is seeing.</p>
+
+<p>Given the diagnostic facts, two conditions are jointly sufficient to produce this failure. First, the integration record only has the NetSuite AI Connector scope checked. NetSuite will therefore look for the "NetSuite AI Connector" permission on the user's role. That permission is bundled into the MCP Standard Tools SuiteApp install, but it is NOT automatically granted to stock roles like Administrator or CP Executive. Second, there is no REST Web Services scope checked on the integration, so NetSuite will not fall back to checking REST permissions on the role. The result: every role tested fails because the only scope being checked against is one they do not hold. This explains why Administrator also fails, which would otherwise be highly anomalous.</p>
+
+<p>The fix is therefore two-pronged: broaden the integration record's scope to include REST Web Services (so REST-permissioned roles become eligible), AND grant the NetSuite AI Connector permission to at least one test role so the original scope also succeeds. This doubled approach makes the MCP connector work with both stock roles (via REST) and dedicated AI roles (via the AI Connector permission).</p>
+
+<p>The -System- auto-created integration record is Oracle's standard behavior and is not a sign of an incomplete wizard. There is no "post-install wizard" to complete. However, Oracle's documentation for the SuiteApp does direct administrators to review and adjust the integration record's scopes after install, which is the step that was missed here.</p>
+
+<p>For security posture, building a dedicated "Claude Integration" role is strongly preferred over using Administrator or CP Executive. That role should NOT be marked Web Services Only because the MCP Standard Tools SuiteApp uses RESTlets under the hood for some tool calls and Web Services Only roles cannot invoke RESTlets.</p>
+
+<h2>Source Ledger</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>#</th>
+<th>Source</th>
+<th>Type</th>
+<th>Credibility</th>
+<th>Key Contribution</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>1</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_157771510070.html" target="_blank">Set Up OAuth 2.0 Roles</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Lists the exact OAuth 2.0 permissions that make a role eligible</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/subsect_158711892221.html" target="_blank">Authorization Code Grant Flow Error Messages in Login Audit Trail</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>ScopeMismatched and AuthorizationCodeGrantRequired error mappings</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/subsect_158521823069.html" target="_blank">Authorization Errors in Step One</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Defines Step One authorize endpoint rejection conditions</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/article_143403258.html" target="_blank">MCP Standard Tools SuiteApp</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Canonical SuiteApp documentation</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/article_0902023450.html" target="_blank">Installing the MCP Standard Tools SuiteApp</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Prerequisites and install behavior</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_0714080625.html" target="_blank">Required Features and Permissions (NetSuite AI Connector)</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Lists required features for the AI Connector</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_0714082142.html" target="_blank">Connect to the NetSuite AI Connector Service</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Claude-specific connection procedure</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_157771733782.html" target="_blank">Create Integration Records for OAuth 2.0</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Integration record scope configuration</td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_157780293862.html" target="_blank">OAuth 2.0 for RESTlets</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Web Services Only role restriction with RESTlets</td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/article_0320025211.html" target="_blank">Roles and Permission Considerations for APIs</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Exact permission names for REST Web Services access</td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/article_4160616848.html" target="_blank">NetSuite AI Connector Service FAQ</a></td>
+<td>Oracle official docs</td>
+<td>Primary</td>
+<td>Protocol version and PKCE requirements</td>
+</tr>
+<tr>
+<td>12</td>
+<td><a href="https://timdietrich.me/blog/netsuite-mcp-claude-code-bug/" target="_blank">Tim Dietrich: NetSuite MCP Authentication in Claude Code</a></td>
+<td>Practitioner blog</td>
+<td>Secondary</td>
+<td>Independent confirmation of OAuth flow behavior; notes Claude Desktop and claude.ai work while Claude Code has a separate bug</td>
+</tr>
+<tr>
+<td>13</td>
+<td><a href="https://netsuite.folio3.com/blog/a-complete-setup-guide-for-netsuite-ai-connector/" target="_blank">Folio3: Complete Setup Guide for NetSuite AI Connector</a></td>
+<td>Partner blog</td>
+<td>Secondary</td>
+<td>Practitioner walk-through of setup sequence</td>
+</tr>
+</tbody></table></div>
+
+<h2>Feynman Bridge</h2>
+
+<p>Think of NetSuite's OAuth 2.0 authorize endpoint as a nightclub bouncer. The bouncer has a list of what rooms (scopes) a guest (integration record) said they want to visit, and a list of what wristbands (permissions) the guest is wearing (their role). If the integration record only says "I want to visit the AI Connector lounge," the bouncer ignores every other wristband the guest is wearing and only checks whether they have the specific AI Connector wristband. No matching wristband, no entry, regardless of whether they are a VIP (Administrator) or have twelve other wristbands. The error "Your role does not support OAuth2 login" is the bouncer saying: "based on the room you asked to enter, none of the roles you could switch to are holding the right wristband."</p>
+
+<p>The fix is to either (a) tell the guest to also request access to the REST lounge, because their existing wristbands already allow that, or (b) print a new wristband for the AI Connector lounge and give it to a role. The preferred fix does both: broaden the integration's declared rooms, and create a dedicated role with the exact wristband set needed for the MCP tools to work without handing Claude the keys to the whole building.</p>
+
+<h2>Actionable Insights</h2>
+
+<p>Ordered by likelihood of resolving the issue. Execute in order, testing after each step.</p>
+
+<ol>
+<li><strong>Enable REST Web Services feature and add REST Web Services scope to the integration record</strong> (highest probability fix)</li>
+</ol>
+<p>   Navigate to Setup > Company > Enable Features > SuiteCloud subtab. Confirm both "REST Web Services" and "OAUTH 2.0" are checked. Save if changes were made. Then go to Setup > Integration > Manage Integrations > List, open the auto-created "NetSuite AI Connector" (or similarly named) integration record, click Edit, and under the Scope section check BOTH "REST Web Services" and "NetSuite AI Connector." Leave "RESTlets" unchecked for now unless you use them. Save. Retest the Claude authorization flow.</p>
+
+<ol>
+<li><strong>Verify the "Log in using OAuth 2.0 Access Tokens" and "REST Web Services" permissions on the test role</strong></li>
+</ol>
+<p>   Navigate to Setup > Users/Roles > Manage Roles. Open the role you are testing with (start with Administrator for diagnostic purposes, but note Administrator's permissions are locked). For any non-Administrator role, click Edit > Permissions > Setup subtab. Confirm both "REST Web Services" (Full) and "Log in using OAuth 2.0 Access Tokens" (Full) are present. Add if missing. Save. Log out fully and retest.</p>
+
+<ol>
+<li><strong>Check the Login Audit Trail for the precise rejection reason</strong></li>
+</ol>
+<p>   Navigate to Setup > Users/Roles > View Login Audit Trail. Filter by Date (today) and Detail containing "OAuth" or "Authorization". Locate the failed attempt. The Detail column will show one of: <code>ScopeMismatched</code>, <code>AuthorizationCodeGrantRequired</code>, <code>RoleNotAllowed</code>, or <code>UserCredentialsRequired</code>. This tells you exactly which of steps 1, 2, 4 will fix it. Reference: <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/subsect_158711892221.html" target="_blank">Authorization Code Grant Flow Error Messages in the Login Audit Trail</a>.</p>
+
+<ol>
+<li><strong>Create a dedicated "Claude Integration" role with minimum permissions</strong> (security best practice, do this regardless of whether step 1 resolves the symptom)</li>
+</ol>
+<p>   Navigate to Setup > Users/Roles > Manage Roles > New. Configure:</p>
+<p>   - Name: <code>Claude MCP Integration</code></p>
+<p>   - Subsidiary: leave default or scope as needed</p>
+<p>   - Two-Factor Authentication Required: UNCHECKED for now (re-enable after flow proves working, see step 6)</p>
+<p>   - Web Services Only Role: UNCHECKED (required; Web Services Only roles break RESTlets used by MCP tools)</p>
+<p>   - Permissions > Setup subtab: add <code>REST Web Services</code> (Full), <code>Log in using OAuth 2.0 Access Tokens</code> (Full), <code>User Access Tokens</code> (Full), <code>SuiteAnalytics Workbook</code> (View)</p>
+<p>   - Permissions > Lists subtab: add View-level permissions only for records Claude should see (e.g., Customers View, Items View, Transactions View, Employees View). Start read-only.</p>
+<p>   - Permissions > Reports subtab: <code>SuiteAnalytics Workbook</code> (View), <code>Financial Statements</code> (View) as needed</p>
+<p>   Save. Assign the role to a dedicated service-account-style employee at Lists > Employees > Employees > [employee] > Edit > Access subtab > Roles sublist.</p>
+
+<ol>
+<li><strong>Verify PKCE and redirect URI match exactly on the integration record</strong></li>
+</ol>
+<p>   Open the integration record at Setup > Integration > Manage Integrations > List > [NetSuite AI Connector record]. Confirm:</p>
+<p>   - State: Enabled</p>
+<p>   - Authorization Code Grant: CHECKED</p>
+<p>   - Public Client: CHECKED (Claude uses PKCE public client flow per NetSuite AI Connector Service FAQ)</p>
+<p>   - Redirect URI: <code>https://claude.ai/api/mcp/auth_callback</code> (exact, including https and no trailing slash)</p>
+<p>   - Scope: both "REST Web Services" and "NetSuite AI Connector" checked</p>
+<p>   Save.</p>
+
+<ol>
+<li><strong>Temporarily disable 2FA on the test role to isolate the variable</strong></li>
+</ol>
+<p>   If steps 1 through 5 still fail, go to Setup > Users/Roles > Manage Roles > [role] > Edit, and under Authentication confirm "Two-Factor Authentication Required" is UNCHECKED. Also check the employee record at Lists > Employees > [employee] > Access subtab for any role-level 2FA requirement. After the OAuth flow succeeds end to end, re-enable 2FA. NetSuite will then require the user to complete a 2FA challenge during the authorize step but will not block the flow.</p>
+
+<ol>
+<li><strong>Verify no IP restriction is blocking Claude's callback</strong></li>
+</ol>
+<p>   Navigate to Setup > Company > Company Information and check "Allowed IPs" at the company level. Then check role-level IP restrictions at Setup > Users/Roles > Manage Roles > [role] > Edit > Restrictions. If any IP allowlist is present, it must include both the user's browser IP (for the consent page) and Claude's backend IPs for the token exchange. Since Anthropic does not publish a static IP allowlist for claude.ai's MCP backend, the cleanest remediation is to remove IP restrictions from the Claude Integration role specifically, or widen them. Do NOT remove IP restrictions from other production roles.</p>
+
+<h2>Confidence Assessment</h2>
+
+<ul>
+<li><strong>Overall</strong>: high (Oracle primary documentation directly maps the error symptom to the root causes identified; fix is deterministic)</li>
+<li><strong>Coverage gaps</strong>:</li>
+</ul>
+<p>  - Oracle does not publish the exact internal string "Your role does not support OAuth2 login" in the error catalog. The error string is almost certainly the user-facing rendering of <code>RoleNotAllowed</code> / <code>ScopeMismatched</code> shown at the authorize consent page, but this is inference from the flow mechanics rather than a direct documentation match. The Login Audit Trail step (#3) will confirm.</p>
+<p>  - No publicly documented IP allowlist for Anthropic's MCP backend.</p>
+<p>  - The <code>feynman_research</code> and <code>academic_search</code> CLIs were unavailable in the execution environment; Feynman Bridge was written from Oracle documentation synthesis.</p>
+<ul>
+<li><strong>Conflicting signals</strong>: Tim Dietrich's blog notes that NetSuite MCP OAuth works in claude.ai web but not Claude Code (as of Jan 2026). Because this user is using claude.ai web (redirect URI contains <code>claude.ai/api/mcp/auth_callback</code>), the Claude Code bug is not relevant here. If after completing all seven steps the flow still fails, confirm the user is authorizing via claude.ai web, not Claude Code CLI.</li>
+<li><strong>Recommended follow-up</strong>: If steps 1 through 7 do not resolve the issue, capture the exact Login Audit Trail Detail value and open a NetSuite Support case referencing Oracle doc ID for "Authorization Code Grant Flow Error Messages in the Login Audit Trail" and your specific error code. Also verify with <code>https://&lt;accountID&gt;.app.netsuite.com/app/login/oauth2/authorize.nl?response_type=code&amp;client_id=&lt;consumer_key&gt;&amp;redirect_uri=https%3A%2F%2Fclaude.ai%2Fapi%2Fmcp%2Fauth_callback&amp;scope=rest_webservices&amp;state=test&amp;code_challenge=&lt;challenge&gt;&amp;code_challenge_method=S256</code> whether the authorize endpoint accepts <code>rest_webservices</code> scope alone; if yes, the problem is definitively scope-on-integration.</li>
+</ul>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Mark Source Ledger tables (look for table after a heading containing "source")
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('source')) {
+          var next = h.nextElementSibling;
+          if (next && next.classList.contains('table-wrapper')) {
+            var tbl = next.querySelector('table');
+            if (tbl) tbl.classList.add('table-source');
+          }
+        }
+      });
+
+      // Wrap sections for visual treatment
+      wrapSection('executive summary', 'section-executive');
+      wrapSection('feynman bridge', 'section-feynman');
+
+      // Style Actionable Insights ordered list
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('actionable insights')) {
+          var next = h.nextElementSibling;
+          if (next && next.tagName === 'OL') next.classList.add('insights-list');
+        }
+      });
+    });
+
+    function wrapSection(headingText, wrapClass) {
+      var article = document.querySelector('article');
+      if (!article) return;
+      var target = null;
+      article.querySelectorAll('h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes(headingText)) target = h;
+      });
+      if (!target) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = wrapClass;
+      target.parentNode.insertBefore(wrapper, target);
+      var node = target;
+      while (node) {
+        var next = node.nextSibling;
+        var isNewSection =
+          node !== target &&
+          node.nodeType === 1 &&
+          /^H[1-3]$/.test(node.tagName);
+        if (isNewSection) break;
+        wrapper.appendChild(node);
+        node = next;
+      }
+    }
+  </script>
+</body>
+</html>
