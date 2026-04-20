@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Research: Video/audio to SKILL.md extraction pipeline (research_b retry) — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    /* ── Research-specific styles ── */
+    .research-meta {
+      max-width: 860px; margin: 0 auto;
+      padding: 20px 32px 0;
+      display: flex; flex-wrap: wrap; gap: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+    .meta-field { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+    .meta-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); font-family: 'SF Mono', monospace;
+    }
+    .meta-value { font-size: 12px; color: var(--text); }
+    .confidence-badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 3px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .confidence-high   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    .confidence-medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .confidence-low    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .confidence-unknown { background: rgba(102,102,102,0.2); color: var(--muted); }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; margin: 12px 0 16px; }
+    article table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    article table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    article table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    article table tr:nth-child(even) td { background: var(--surface); }
+    article table.table-source td, article table.table-source th { font-size: 11px; }
+    /* Section cards */
+    .section-executive {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 16px 20px; margin: 4px 0 20px;
+    }
+    .section-executive p { font-size: 15px; line-height: 1.8; margin-bottom: 0; }
+    .section-executive h2 { margin-top: 0; }
+    .section-feynman {
+      border-left: 3px solid #06b6d4;
+      padding-left: 16px; margin: 4px 0 20px;
+    }
+    .section-feynman h2 { color: #06b6d4; }
+    article ol.insights-list { margin: 8px 0 12px 20px; }
+    article ol.insights-list li { margin-bottom: 10px; line-height: 1.65; }
+    /* Mobile */
+    @media (max-width: 640px) {
+      article { font-size: 15px; padding: 20px 16px; }
+      .research-meta { padding: 16px 16px 16px; gap: 12px; }
+      .meta-field { min-width: 120px; }
+      article table.table-source td,
+      article table.table-source th { font-size: 11px; padding: 5px 6px; }
+      article table td, article table th { padding: 6px 8px; }
+    }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>research</div>
+    <div class="agent-label">research_b</div>
+    <h1>Research: Video/audio to SKILL.md extraction pipeline (research_b retry)</h1>
+    <div class="tags"><span class="tag">research</span><span class="tag">skills</span><span class="tag">video</span><span class="tag">transcription</span><span class="tag">whisper</span><span class="tag">exa</span><span class="tag">feynman</span><span class="tag">retry</span></div>
+  </div>
+  <div class="research-meta">
+    <div class="meta-field">
+      <span class="meta-label">Query</span>
+      <span class="meta-value"></span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Agent</span>
+      <span class="meta-value">research_b</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Completed</span>
+      <span class="meta-value">2026-04-20</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Confidence</span>
+      <span class="meta-value">&mdash;</span>
+    </div>
+  </div>
+  <article>
+    <p>I have enough material. Let me compile the comprehensive research output.</p>
+
+<hr>
+<p>query: Research and define a complete workflow for extracting Claude Code skill files (SKILL.md) from YouTube videos, podcast episodes, conference talks, or any video/audio content that has a transcript. Cover: transcription tooling (yt-dlp, Whisper, Deepgram), extraction patterns (schema-first, hedge classification, map-reduce), the narrated-event to general-procedure modality shift, SKILL.md format spec, validation harness, and prior art.</p>
+<p>agent: research_b</p>
+<p>completed_at: 2025-01-26T00:00:00Z</p>
+<p>confidence: medium</p>
+<hr>
+
+<h1>Research: Extracting SKILL.md files from video and audio transcripts</h1>
+
+<h2>Executive Summary</h2>
+<p>A production workflow to mine Claude Code <code>SKILL.md</code> files from talks, podcasts, and YouTube content has four stages: (1) ingest with <code>yt-dlp</code> plus a transcription engine (local Whisper for cost, Deepgram Nova for diarized podcasts, OpenAI Whisper API for zero-ops), (2) schema-first LLM extraction with hedge classification and map-reduce over chunks, (3) a narrated-event to general-procedure rewrite pass, and (4) a validation harness modeled on Anthropic's <code>skill-creator</code> evals. The SKILL.md spec is fixed: YAML frontmatter with <code>name</code> and <code>description</code>, imperative-voice body, progressive-disclosure references, all under ~500 lines for auto-loading.</p>
+
+<h2>Key Findings</h2>
+
+<ol>
+<li><strong>SKILL.md is a two-layer artifact: trigger metadata plus lazy-loaded body.</strong></li>
+</ol>
+<p>   A skill is a directory containing <code>SKILL.md</code> with required YAML frontmatter (<code>name</code>, <code>description</code>) and an imperative-voice body; supporting <code>scripts/</code>, <code>references/</code>, <code>examples/</code>, and <code>assets/</code> load only when the skill is invoked. At startup Claude pre-loads only the name and description of every installed skill, and full body content enters context only when a request matches.</p>
+<p>   Source: <a href="https://docs.anthropic.com/en/docs/claude-code/skills" target="_blank">Extend Claude with skills (Anthropic docs)</a> -- canonical spec from Anthropic.</p>
+<p>   Source: <a href="https://skills.sh/anthropics/claude-code/skill-development" target="_blank">Skill Development by anthropics/claude-code</a> -- quoted directory layout and imperative-voice rule.</p>
+
+<ol>
+<li><strong>yt-dlp + Whisper is the community default ingest stack.</strong></li>
+</ol>
+<p>   Multiple open-source packages (<code>ytpipe</code>, <code>yt-transcribe</code>, <code>youtube-faster-whisper</code>) wrap <code>yt-dlp</code> audio extraction into <code>faster-whisper</code> or <code>whisper.cpp</code>, confirming the pattern: <code>yt-dlp -x --audio-format mp3 &lt;url&gt;</code> then feed to a Whisper variant, optionally parallelized across channel batches.</p>
+<p>   Source: <a href="https://pypi.org/project/ytpipe/" target="_blank">ytpipe on PyPI</a> -- active package, documents yt-dlp plus faster-whisper pipeline.</p>
+<p>   Source: <a href="https://pypi.org/project/yt-transcribe/0.2.0/" target="_blank">yt-transcribe on PyPI</a> -- whisper.cpp variant with parallel workers.</p>
+
+<ol>
+<li><strong>Deepgram Nova wins on diarization and streaming; Whisper wins on cost and local deployment.</strong></li>
+</ol>
+<p>   Independent 2024-2026 benchmarks place Deepgram Nova-3 at roughly 5.9% WER streaming with built-in speaker diarization and sub-300ms latency, while Whisper is batch-only but deployable locally at near-zero marginal cost. For multi-speaker podcasts and conference Q&A, Deepgram's diarization is the deciding factor; for solo talks, local Whisper is sufficient.</p>
+<p>   Source: <a href="https://speko.ai/blog/best-stt-providers-2026" target="_blank">Speko 2026 STT benchmark</a> -- independent ranked benchmark.</p>
+<p>   Source: <a href="https://offers.deepgram.com/hubfs/Whitepaper%20Deepgram%20vs%20Whisper%20Benchmark.pdf" target="_blank">Deepgram vs Whisper benchmark whitepaper</a> -- vendor report but with published WER numbers.</p>
+
+<ol>
+<li><strong>Schema-first extraction plus constrained decoding is the reliability pattern.</strong></li>
+</ol>
+<p>   Production practice converges on JSON Schema or Pydantic-typed output with constrained decoding (Outlines, llguidance, or Anthropic tool-use) rather than regex post-parsing. Field-level trustworthiness scoring (Cleanlab's CONSTRUCT) and canonicalization layers (PromptPort's ROS/CSS metrics) are emerging defenses against "format collapse."</p>
+<p>   Source: <a href="https://tianpan.co/blog/2025-10-11-structured-outputs-in-production" target="_blank">Structured Outputs in Production (Tianpan)</a> -- synthesis of current practice.</p>
+<p>   Source: <a href="https://arxiv.org/pdf/2603.18014" target="_blank">CONSTRUCT: Real-Time Trustworthiness Scoring (arXiv)</a> -- per-field uncertainty for extraction.</p>
+
+<ol>
+<li><strong>Unsupervised step extraction from transcripts is a published research area.</strong></li>
+</ol>
+<p>   LUSE (Berkeley, CVEU 2023) zero-shot-prompts an LLM to segment steps from instructional-video transcripts. Unsupervised Task Graph Generation (arXiv 2302.09173) combines LLM reasoning with clustering to recover step dependencies. Video-Mined Task Graphs (Ashutosh et al., UT Austin/Meta) mines procedural structure across many how-to videos.</p>
+<p>   Source: <a href="https://cveu.github.io/2023/papers/36.pdf" target="_blank">LUSE paper</a> -- direct prior art for transcript-to-steps.</p>
+<p>   Source: <a href="https://arxiv.gg/abs/2302.09173" target="_blank">Unsupervised Task Graph Generation (arXiv 2302.09173)</a> -- LLM + clustering for step dependency.</p>
+
+<ol>
+<li><strong>Hedge classification is a mature NLP task with shippable models.</strong></li>
+</ol>
+<p>   CoNLL-2010 established the shared task; <code>jeniakim/hedgehog</code> on Hugging Face is a BERT-based multi-class hedge detector (Epistemic, Investigation, Doxatic, Condition) usable off-the-shelf to strip speculative language before procedure generalization.</p>
+<p>   Source: <a href="https://huggingface.co/jeniakim/hedgehog" target="_blank">HEDGEhog on Hugging Face</a> -- deployable model.</p>
+<p>   Source: <a href="https://arxiv.org/html/2405.13319v1" target="_blank">"You should probably read this": Hedge Detection in Text (arXiv 2405.13319)</a> -- SOTA on CoNLL-2010.</p>
+
+<ol>
+<li><strong>Map-reduce summarization is the canonical pattern for long transcripts.</strong></li>
+</ol>
+<p>   For content exceeding context limits, the map step extracts structured candidates per chunk, the reduce step deduplicates and merges. LLM×MapReduce (arXiv 2410.09342) formalizes this with structured information protocols and in-chunk confidence to resolve conflicts across chunks.</p>
+<p>   Source: <a href="https://arxiv.org/html/2410.09342v1" target="_blank">LLM×MapReduce (arXiv 2410.09342)</a> -- formal treatment for long-sequence LLM processing.</p>
+<p>   Source: <a href="https://cloud.google.com/blog/products/ai-machine-learning/long-document-summarization-with-workflows-and-gemini-models" target="_blank">Google Cloud: long document summarization</a> -- production patterns.</p>
+
+<ol>
+<li><strong>Anthropic ships a reference validation harness.</strong></li>
+</ol>
+<p>   The <code>skill-creator</code> skill and <code>mcp-builder/scripts/evaluation.py</code> in <code>anthropics/skills</code> demonstrate Anthropic's approach: run parallel test cases with and without the skill, capture timing and token usage, measure triggering accuracy by testing ~20 rephrasings of the description, and produce an interactive reviewer.</p>
+<p>   Source: <a href="https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md" target="_blank">skills/skill-creator/SKILL.md</a> -- reference implementation.</p>
+<p>   Source: <a href="https://github.com/anthropics/skills/blob/main/skills/mcp-builder/scripts/evaluation.py" target="_blank">mcp-builder evaluation.py</a> -- concrete harness code.</p>
+
+<h2>Deep Dive</h2>
+
+<p>The full workflow decomposes into six stages that map cleanly onto the requested topics.</p>
+
+<p><strong>Stage 1: Ingest.</strong> Use <code>yt-dlp -x --audio-format opus --audio-quality 0 &lt;url&gt;</code> for YouTube and most podcast feeds; opus is cheaper than mp3 and Whisper handles it directly. For RSS podcasts, parse the enclosure URL and skip yt-dlp. Cache audio by content hash so re-runs of extraction do not repay transcription cost [Source 1, 2].</p>
+
+<p><strong>Stage 2: Transcription.</strong> Route by content type. Solo talk or single-speaker screencast goes to local <code>faster-whisper large-v3</code> with VAD filtering. Panel, interview, or podcast goes to Deepgram Nova-3 with <code>diarize=true</code> and <code>punctuate=true</code>; the diarization is what makes subsequent speaker-attributed extraction tractable. Conference recordings with jargon go to Whisper with an <code>initial_prompt</code> containing a glossary. Always persist both the raw transcript and a timestamped segment list so the final SKILL.md can cite <code>[HH:MM:SS]</code> anchors [Source 3, 4].</p>
+
+<p><strong>Stage 3: Preprocessing.</strong> Run a hedge classifier over every sentence. Epistemic hedges ("I think", "maybe", "we usually") and Doxatic hedges ("I believe") get flagged, not deleted. The flags feed the next stage: the extractor must either demote a hedged claim to a non-normative "Context" section or drop it. HEDGEhog is the pragmatic choice; it returns token-level labels compatible with segment boundaries [Source 5, 6]. Also run speaker-role inference (host vs guest vs audience) and drop audience Q&A by default.</p>
+
+<p><strong>Stage 4: Schema-first extraction with map-reduce.</strong> Define a Pydantic or JSON Schema model:</p>
+
+<pre><code class="lang-text">
+SkillCandidate {
+  name: str (slug),
+  description: str (trigger conditions, imperative),
+  preconditions: list[str],
+  steps: list[Step { index, instruction, rationale?, hedge_level }],
+  failure_modes: list[str],
+  examples: list[str],
+  source_anchors: list[Timestamp]
+}
+</code></pre>
+
+<p>Map step: chunk the transcript to ~3-4k tokens with 200-token overlap, run the schema-constrained extractor per chunk using Anthropic tool-use or OpenAI Structured Outputs. Reduce step: cluster candidates by <code>name</code> and semantically-similar descriptions, merge steps preserving order from timestamps, union preconditions and failure modes. LLM×MapReduce's structured information protocol with confidence scores is the template for resolving conflicts across chunks [Source 7, 8]. Use a CONSTRUCT-style trustworthiness score per field to flag low-confidence extractions for human review [Source 9].</p>
+
+<p><strong>Stage 5: Narrated-event to general-procedure rewrite.</strong> This is the most underappreciated stage. A transcript says "so what I did was I ran <code>npm install</code>, and then it failed, so I added <code>--legacy-peer-deps</code>." The SKILL.md must say: "Install dependencies. If resolution fails with peer conflicts, retry with <code>--legacy-peer-deps</code>." The modality shift rules:</p>
+
+<ul>
+<li>First-person past ("I ran", "we noticed") becomes imperative infinitive ("Run", "Check for"). Anthropic's own spec requires imperative/infinitive voice, not second person [Source 2].</li>
+<li>Anecdotal single-case outcomes ("it worked for me") become conditional rules ("If X, then Y").</li>
+<li>Speaker-specific context ("in our monorepo") becomes explicit preconditions in the frontmatter description or an "Applies when" block.</li>
+<li>Hedged claims flagged in Stage 3 are either dropped or moved to a "Caveats" reference file.</li>
+</ul>
+
+<p>Prior art on this shift: "From We to Me" (arXiv 2603.03320) treats narrative reframing as abductive reasoning; "Transferring Procedural Knowledge across Commonsense Tasks" (arXiv 2304.13867) studies abstracting stories into transferable procedures. Neither targets SKILL.md but both validate the rewrite-with-explicit-schema approach.</p>
+
+<p><strong>Stage 6: Validation harness.</strong> Mirror <code>anthropics/skills/skill-creator</code>:</p>
+
+<ol>
+<li>Lint frontmatter: <code>name</code> is a valid slug, <code>description</code> contains trigger verbs and use-case phrases, body is under ~500 lines.</li>
+<li>Triggering accuracy: generate 20 paraphrased user prompts that should invoke the skill and 20 that should not, measure precision/recall of auto-invocation [Source 10].</li>
+<li>Task evals: construct 5-10 test prompts that require the skill, run Claude with and without the skill loaded, grade outputs with an LLM-judge rubric, log tokens and latency [Source 11, 12].</li>
+<li>Source fidelity: for each claim in SKILL.md, verify the cited timestamp anchor contains supporting content (an LLM-judge check against the transcript segment).</li>
+<li>Round-trip: execute one example end-to-end if the skill is executable.</li>
+</ol>
+
+<p>Prior art beyond Anthropic: <code>skills.sh</code>, <code>Tessl</code>, and <code>agentskills/agentskills</code> (16K stars, spec repo) are independent directories and package managers converging on the same SKILL.md shape, which suggests the spec is stable enough to target.</p>
+
+<h2>Source Ledger</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>#</th>
+<th>Source</th>
+<th>Type</th>
+<th>Credibility</th>
+<th>Key Contribution</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>1</td>
+<td><a href="https://pypi.org/project/ytpipe/" target="_blank">ytpipe PyPI</a></td>
+<td>Software</td>
+<td>Medium</td>
+<td>yt-dlp + faster-whisper reference pipeline</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://docs.anthropic.com/en/docs/claude-code/skills" target="_blank">Anthropic skills docs</a></td>
+<td>Primary docs</td>
+<td>High</td>
+<td>SKILL.md spec, progressive disclosure</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://speko.ai/blog/best-stt-providers-2026" target="_blank">Speko STT Benchmark 2026</a></td>
+<td>Independent benchmark</td>
+<td>Medium</td>
+<td>Deepgram Nova-3 5.9% WER, ranking</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://offers.deepgram.com/hubfs/Whitepaper%20Deepgram%20vs%20Whisper%20Benchmark.pdf" target="_blank">Deepgram vs Whisper whitepaper</a></td>
+<td>Vendor</td>
+<td>Medium-low</td>
+<td>Features, diarization, latency</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://huggingface.co/jeniakim/hedgehog" target="_blank">HEDGEhog HF model</a></td>
+<td>Model card</td>
+<td>Medium</td>
+<td>Deployable 4-class hedge detector</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="https://arxiv.org/html/2405.13319v1" target="_blank">Hedge Detection in Text (arXiv 2405.13319)</a></td>
+<td>Academic</td>
+<td>High</td>
+<td>SOTA on CoNLL-2010 hedge task</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="https://arxiv.org/html/2410.09342v1" target="_blank">LLM×MapReduce (arXiv 2410.09342)</a></td>
+<td>Academic</td>
+<td>High</td>
+<td>Structured protocol for long-context map-reduce</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="https://cloud.google.com/blog/products/ai-machine-learning/long-document-summarization-with-workflows-and-gemini-models" target="_blank">Google Cloud long-doc summarization</a></td>
+<td>Vendor eng blog</td>
+<td>Medium</td>
+<td>Production map-reduce patterns</td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://arxiv.org/pdf/2603.18014" target="_blank">CONSTRUCT (arXiv 2603.18014)</a></td>
+<td>Academic</td>
+<td>High</td>
+<td>Per-field trustworthiness scoring</td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="https://skills.sh/anthropics/skills/skill-creator" target="_blank">skill-creator on skills.sh</a></td>
+<td>Primary</td>
+<td>High</td>
+<td>Description optimization via 20 rephrasings</td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank">Demystifying evals for AI agents</a></td>
+<td>Primary</td>
+<td>High</td>
+<td>Eval strategy for agent systems</td>
+</tr>
+<tr>
+<td>12</td>
+<td><a href="https://github.com/anthropics/skills/blob/main/skills/mcp-builder/scripts/evaluation.py" target="_blank">mcp-builder evaluation.py</a></td>
+<td>Primary code</td>
+<td>High</td>
+<td>Concrete eval harness code</td>
+</tr>
+<tr>
+<td>13</td>
+<td><a href="https://cveu.github.io/2023/papers/36.pdf" target="_blank">LUSE paper</a></td>
+<td>Academic</td>
+<td>High</td>
+<td>Zero-shot LLM step extraction from transcripts</td>
+</tr>
+<tr>
+<td>14</td>
+<td><a href="https://arxiv.gg/abs/2302.09173" target="_blank">Unsupervised Task Graph Generation (arXiv 2302.09173)</a></td>
+<td>Academic</td>
+<td>High</td>
+<td>LLM + clustering for step dependencies</td>
+</tr>
+<tr>
+<td>15</td>
+<td><a href="https://arxiv.gg/abs/2307.08763" target="_blank">Video-Mined Task Graphs (arXiv 2307.08763)</a></td>
+<td>Academic</td>
+<td>High</td>
+<td>Cross-video procedural mining</td>
+</tr>
+<tr>
+<td>16</td>
+<td><a href="https://arxiv.org/pdf/2603.03320" target="_blank">From We to Me (arXiv 2603.03320)</a></td>
+<td>Academic</td>
+<td>Medium-high</td>
+<td>Narrative shift formalization</td>
+</tr>
+<tr>
+<td>17</td>
+<td><a href="https://arxiv.org/pdf/2304.13867" target="_blank">Transferring Procedural Knowledge (arXiv 2304.13867)</a></td>
+<td>Academic</td>
+<td>High</td>
+<td>Abstracting stories to procedures</td>
+</tr>
+<tr>
+<td>18</td>
+<td><a href="https://tianpan.co/blog/2025-10-11-structured-outputs-in-production" target="_blank">Structured Outputs in Production</a></td>
+<td>Eng blog</td>
+<td>Medium</td>
+<td>Practitioner synthesis of structured output</td>
+</tr>
+<tr>
+<td>19</td>
+<td><a href="https://arxiv.org/pdf/2601.06151" target="_blank">PromptPort (arXiv 2601.06151)</a></td>
+<td>Academic</td>
+<td>Medium-high</td>
+<td>Format collapse, ROS/CSS metrics</td>
+</tr>
+<tr>
+<td>20</td>
+<td><a href="https://skills.sh/anthropics/claude-code/skill-development" target="_blank">Skill Development skills.sh</a></td>
+<td>Primary</td>
+<td>High</td>
+<td>Imperative voice rule, directory layout</td>
+</tr>
+</tbody></table></div>
+
+<h2>Feynman Bridge</h2>
+
+<p>Note: <code>feynman</code> CLI was not installed on this runner; the grounding below synthesizes the cited sources directly rather than a feynman_research transcript.</p>
+
+<p>Think of a conference talk as someone narrating a trip they took once: "I drove to the coast, I almost missed the exit, and the burger at the diner was great." A SKILL.md is a road atlas a stranger can use to make the same trip next week. The workflow is the translator between the two. Transcription turns speech into text. Hedge detection finds the "I think" and "maybe" parts and sets them aside, because atlases do not say "maybe turn left." Schema-first extraction forces the model to fill in a fixed form (name, steps, preconditions, failure modes) instead of writing a free-form essay, so downstream tools can parse it reliably. Map-reduce handles the fact that a two-hour podcast does not fit in one LLM call: you chop it up, extract candidates per chunk, then merge duplicates.</p>
+
+<p>The trickiest move is the modality shift. Stories are in the past tense and personal ("we upgraded and it broke"); procedures are in the imperative and general ("before upgrading, snapshot the database; if the upgrade fails, restore from snapshot"). This is not summarization, it is re-grounding, and the existing research (LUSE, Video-Mined Task Graphs, Transferring Procedural Knowledge) shows LLMs can do it when given a schema and explicit voice instructions. Finally, the validation harness is what separates a plausible SKILL.md from a trustworthy one: it confirms the skill triggers on the right prompts, that its claims trace back to a real timestamp in the source, and that using it actually improves Claude's task performance versus not using it.</p>
+
+<h2>Actionable Insights</h2>
+
+<ol>
+<li><strong>Pin the transcription router by content type.</strong> Route solo talks to local <code>faster-whisper large-v3</code>, multi-speaker to Deepgram Nova-3 with diarization, jargon-heavy to Whisper with a glossary <code>initial_prompt</code>. Cache by audio content hash.</li>
+</ol>
+
+<ol>
+<li><strong>Make the extraction schema non-negotiable.</strong> Use Anthropic tool-use or OpenAI Structured Outputs against a Pydantic <code>SkillCandidate</code> model. Include <code>source_anchors: list[Timestamp]</code> on every step so validation can round-trip to the transcript.</li>
+</ol>
+
+<ol>
+<li><strong>Run HEDGEhog before extraction, not after.</strong> Token-level hedge tags feed the schema as a <code>hedge_level</code> field, which the rewrite stage uses to decide whether a claim becomes a step, a caveat, or gets dropped.</li>
+</ol>
+
+<ol>
+<li><strong>Implement map-reduce with explicit dedup keys.</strong> Map emits candidates per 3-4k-token chunk with 200-token overlap; reduce merges on <code>name</code> slug similarity plus description embedding cosine above a threshold. Preserve step order by earliest timestamp.</li>
+</ol>
+
+<ol>
+<li><strong>Add a dedicated "narrative-to-procedure" rewrite pass.</strong> Do not fold it into extraction. Prompt explicitly: convert first-person past to imperative infinitive, convert anecdotes to conditionals, extract speaker-specific context into preconditions.</li>
+</ol>
+
+<ol>
+<li><strong>Copy Anthropic's skill-creator eval harness wholesale.</strong> Build 20 positive and 20 negative trigger prompts, 5-10 task prompts with and without the skill, LLM-judge rubric for source fidelity against transcript segments. This is the minimum bar to ship.</li>
+</ol>
+
+<ol>
+<li><strong>Treat sub-500-line SKILL.md as a hard constraint; push everything else to <code>references/</code>.</strong> The progressive-disclosure architecture depends on keeping the always-indexed portion small. Move rationale, caveats, and extended examples to <code>references/*.md</code> with their own frontmatter.</li>
+</ol>
+
+<h2>Confidence Assessment</h2>
+
+<ul>
+<li><strong>Overall</strong>: medium</li>
+<li><strong>Coverage gaps</strong>: </li>
+</ul>
+<p>  - <code>feynman</code> CLI and <code>alpha</code> (alphaXiv) CLI were both not installed on this runner; I substituted with web searches for academic sources but could not run the requested tooling. The Feynman Bridge is synthesized from cited sources rather than a feynman_research transcript.</p>
+<p>  - No published benchmark exists specifically for "transcript to SKILL.md" end-to-end quality; the validation approach is assembled from adjacent prior art (LUSE, task graph papers, Anthropic's generic skill-creator).</p>
+<p>  - Hallucinated or future-dated publication dates appeared on several web results (e.g., 2026 dates); I treated these as retrieval artifacts and relied on content credibility rather than date.</p>
+<ul>
+<li><strong>Conflicting signals</strong>: STT rankings disagree slightly across vendor and independent benchmarks. Deepgram's own whitepaper favors Deepgram; Speko and AIMultiple are closer to parity with Whisper for clean English audio. The practical recommendation (diarization as the deciding factor) holds across all of them.</li>
+<li><strong>Recommended follow-up</strong>: </li>
+</ul>
+<p>  1. Install <code>feynman-research</code> and <code>alphaXiv-cli</code> and rerun so the Feynman Bridge and academic section are tool-grounded rather than web-grounded.</p>
+<p>  2. Build a small gold set (5 talks, hand-authored target SKILL.md) and measure the pipeline against it before scaling.</p>
+<p>  3. Check <code>anthropics/skills</code> repo for any newer reference skills specifically for content ingestion that may have shipped since this search.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Mark Source Ledger tables (look for table after a heading containing "source")
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('source')) {
+          var next = h.nextElementSibling;
+          if (next && next.classList.contains('table-wrapper')) {
+            var tbl = next.querySelector('table');
+            if (tbl) tbl.classList.add('table-source');
+          }
+        }
+      });
+
+      // Wrap sections for visual treatment
+      wrapSection('executive summary', 'section-executive');
+      wrapSection('feynman bridge', 'section-feynman');
+
+      // Style Actionable Insights ordered list
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('actionable insights')) {
+          var next = h.nextElementSibling;
+          if (next && next.tagName === 'OL') next.classList.add('insights-list');
+        }
+      });
+    });
+
+    function wrapSection(headingText, wrapClass) {
+      var article = document.querySelector('article');
+      if (!article) return;
+      var target = null;
+      article.querySelectorAll('h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes(headingText)) target = h;
+      });
+      if (!target) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = wrapClass;
+      target.parentNode.insertBefore(wrapper, target);
+      var node = target;
+      while (node) {
+        var next = node.nextSibling;
+        var isNewSection =
+          node !== target &&
+          node.nodeType === 1 &&
+          /^H[1-3]$/.test(node.tagName);
+        if (isNewSection) break;
+        wrapper.appendChild(node);
+        node = next;
+      }
+    }
+  </script>
+</body>
+</html>

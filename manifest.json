@@ -151,5 +151,22 @@
       "incident"
     ],
     "type": "postmortem"
+  },
+  {
+    "path": "sessions/2026-04-20-155132.html",
+    "date": "2026-04-20",
+    "title": "Research: Video/audio to SKILL.md extraction pipeline (research_b retry)",
+    "agent": "research_b",
+    "tags": [
+      "research",
+      "skills",
+      "video",
+      "transcription",
+      "whisper",
+      "exa",
+      "feynman",
+      "retry"
+    ],
+    "type": "research"
   }
 ]
