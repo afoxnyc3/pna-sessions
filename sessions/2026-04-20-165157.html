@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comparative Analysis: Video/audio to SKILL.md workflow — A/B retry-2 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    /* ── Research-specific styles ── */
+    .research-meta {
+      max-width: 860px; margin: 0 auto;
+      padding: 20px 32px 0;
+      display: flex; flex-wrap: wrap; gap: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+    .meta-field { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+    .meta-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); font-family: 'SF Mono', monospace;
+    }
+    .meta-value { font-size: 12px; color: var(--text); }
+    .confidence-badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 3px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .confidence-high   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    .confidence-medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .confidence-low    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .confidence-unknown { background: rgba(102,102,102,0.2); color: var(--muted); }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; margin: 12px 0 16px; }
+    article table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    article table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    article table td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    article table tr:nth-child(even) td { background: var(--surface); }
+    article table.table-source td, article table.table-source th { font-size: 11px; }
+    /* Section cards */
+    .section-executive {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 16px 20px; margin: 4px 0 20px;
+    }
+    .section-executive p { font-size: 15px; line-height: 1.8; margin-bottom: 0; }
+    .section-executive h2 { margin-top: 0; }
+    .section-feynman {
+      border-left: 3px solid #06b6d4;
+      padding-left: 16px; margin: 4px 0 20px;
+    }
+    .section-feynman h2 { color: #06b6d4; }
+    article ol.insights-list { margin: 8px 0 12px 20px; }
+    article ol.insights-list li { margin-bottom: 10px; line-height: 1.65; }
+    /* Mobile */
+    @media (max-width: 640px) {
+      article { font-size: 15px; padding: 20px 16px; }
+      .research-meta { padding: 16px 16px 16px; gap: 12px; }
+      .meta-field { min-width: 120px; }
+      article table.table-source td,
+      article table.table-source th { font-size: 11px; padding: 5px 6px; }
+      article table td, article table th { padding: 6px 8px; }
+    }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-20</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>research</div>
+    <div class="agent-label">clarke</div>
+    <h1>Comparative Analysis: Video/audio to SKILL.md workflow — A/B retry-2</h1>
+    <div class="tags"><span class="tag">research</span><span class="tag">comparative</span><span class="tag">swot</span><span class="tag">2026-04-20</span><span class="tag">retry-2</span></div>
+  </div>
+  <div class="research-meta">
+    <div class="meta-field">
+      <span class="meta-label">Query</span>
+      <span class="meta-value">Research and define a complete workflow for extracting Claude Code skill files (SKILL.md) from YouTube videos, podcast episodes, conference talks, or any video/audio content that has a transcript.</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Agent</span>
+      <span class="meta-value">clarke</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Completed</span>
+      <span class="meta-value">2026-04-20T16:50:00Z</span>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Confidence</span>
+      <span class="meta-value"><span class="confidence-badge confidence-high">high</span></span>
+    </div>
+  </div>
+  <article>
+    
+<h1>Comparative Analysis: Video/Audio to SKILL.md Workflow</h1>
+
+<h2>Executive Summary</h2>
+
+<p>Both agents converged on the same core four-stage pipeline and agreed on every major technology choice. <strong>research_a is the clear winner</strong>: higher confidence (high vs medium), stronger peer-reviewed grounding (ACL 2025, EMNLP 2024, ACS 2020), a sharper conceptual lens on the modality shift problem, and a better Feynman Bridge. research_b had more sources (29 vs 20) but lower signal density, and its result was DB-truncated. Take research_b's prior-art additions (cefriel KG intermediate, How2Judge eval) and fold them into the implementation.</p>
+
+<h2>SWOT Matrix</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Dimension</th>
+<th>research_a</th>
+<th>research_b</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>Strengths</strong></td>
+<td>High confidence; peer-reviewed grounding (ACL 2025, EMNLP 2024, ACS 2020); 4-stage architecture with decision rules; modality-shift framing with academic lineage; honest about tool failures</td>
+<td>More prior-art coverage (29 sources); identified procedural-KG intermediate layer; found cefriel/procedural-kg-llm and How2Everything eval framework; stronger validation harness detail</td>
+</tr>
+<tr>
+<td><strong>Weaknesses</strong></td>
+<td>feynman timed out 3x; alpha required unconfigured login; Feynman Bridge written from first principles</td>
+<td>Medium confidence; feynman/alpha both unavailable; weaker academic citations; DB-truncated result; wrong date in frontmatter (2025-01-27)</td>
+</tr>
+<tr>
+<td><strong>Opportunities</strong></td>
+<td>LLM x MapReduce (ACL 2025) structured-state passing is directly implementable; Procedures as Programs (CMU) provides formal grounding</td>
+<td>cefriel KG intermediate adds inspectability; How2Judge eval framework directly applicable</td>
+</tr>
+<tr>
+<td><strong>Threats / Gaps</strong></td>
+<td>No end-to-end benchmark for SKILL.md extraction exists; feynman CLI reliability still an infra concern</td>
+<td>Result truncated at Confidence Assessment; timestamp bug in research_b daemon</td>
+</tr>
+</tbody></table></div>
+
+<h2>Side-by-Side: Key Findings</h2>
+
+<p><strong>Transcription stack</strong>: Both agree on yt-dlp + Whisper vs Deepgram Nova-3 decision. research_a adds a concrete decision rule: under ~10h/week use local Whisper, above that pay for Deepgram. research_b identifies the same options without a cutoff. research_a is more actionable.</p>
+
+<p><strong>Map-reduce</strong>: research_a cites LLM x MapReduce (ACL 2025, peer-reviewed) which specifically documents "crucial long-range information can be lost during document segmentation" and proposes structured JSON state passing as the fix. research_b cites LangChain docs and a Medium post. research_a wins on academic credibility.</p>
+
+<p><strong>Hedge classification</strong>: Both identify HEDGEhog and CoNLL-2010. research_a uniquely adds EMNLP 2024 (Yona et al.) showing LLMs themselves fail to faithfully express hedging -- the key citation that justifies an external classifier over prompt instruction. research_b doesn't have this.</p>
+
+<p><strong>Schema-first extraction</strong>: Identical finding. research_b's ProcedureStep schema includes <code>failure_mode</code> as an explicit field, which research_a omits. Slight edge to research_b on schema completeness.</p>
+
+<p><strong>Prior art</strong>: research_b found more -- cefriel/procedural-kg-llm (KG intermediate), How2Everything (eval framework), skillcheck/skrills-validate/claudelint (validation harnesses), youtube-knowledge-extractor (closest end-to-end prior art). research_b wins on prior-art coverage.</p>
+
+<h2>Side-by-Side: Feynman Bridge</h2>
+
+<p><strong>research_a</strong>: Diary-to-guidebook analogy with full pipeline walkthrough. "Tuesday we got lost... (guidebook) walk north on Main Street (do not use Google Maps -- active construction zone)." Extends to a 12-year-old explanation. Complete, vivid, written from researched sources despite feynman CLI timing out.</p>
+
+<p><strong>research_b</strong>: Also uses travel diary analogy, explicitly flags feynman unavailable. Solid but shorter and ends abruptly.</p>
+
+<p><strong>Winner: research_a</strong> -- more complete, better executed, no disclaimer needed.</p>
+
+<h2>Side-by-Side: Actionable Insights</h2>
+
+<p>Significant overlap on the 6-7 insights each produced. Key differentiators:</p>
+
+<ul>
+<li>research_a adds: "Build the validator before the extractor" as insight #1 (useful prioritization); "Publish as a deepagents skill and eat your own dogfood" (directly relevant to this project)</li>
+<li>research_b adds: "Evaluate end-to-end with an LLM-judge loop" (How2Judge pattern) -- research_a misses this</li>
+<li>Both agree on: captions before ASR, Pydantic schema early, hedge classifier as separate stage, dedicated modality-shift prompt</li>
+</ul>
+
+<p><strong>research_a is more immediately actionable for this project context.</strong></p>
+
+<h2>Winner</h2>
+
+<p><strong>research_a</strong></p>
+
+<p>High-confidence result with peer-reviewed grounding at every stage, sharper framing of the core design challenge, and more directly actionable output for the deepagents/SKILL.md context. The Feynman Bridge was better executed. Incorporate research_b's prior-art additions (cefriel KG layer, How2Judge eval) into any implementation plan.</p>
+
+<h2>Recommendation</h2>
+
+<p>Build a minimum-viable <code>transcript-to-skill</code> deepagents skill with this stack:</p>
+
+<ol>
+<li><strong>yt-dlp</strong> -- audio extraction with caption fast-path (free, near-instant for YouTube)</li>
+<li><strong>faster-whisper large-v3</strong> local (under ~10h/week) or <strong>Deepgram Nova-3</strong> (above that threshold)</li>
+<li><strong>HEDGEhog classifier</strong> -- external pass before extraction, not in-prompt instruction (EMNLP 2024 result)</li>
+<li><strong>LLM x MapReduce with structured JSON state</strong> (ACL 2025 pattern) -- not prose-summary reduce</li>
+<li><strong>Pydantic ProcedureStep</strong> with research_b's schema fields (includes <code>failure_mode</code>)</li>
+<li><strong>cefriel-style KG intermediate</strong> before final SKILL.md render -- makes reduce a graph merge</li>
+<li><strong>Dedicated modality-shift LLM pass</strong> with 5-8 few-shot narration/procedure pairs</li>
+<li><strong>skillcheck or skrills-validate</strong> wired into CI</li>
+</ol>
+
+<p>Cheapest validation: one 45-minute conference talk with a published blog post companion. Run the pipeline. Diff generated SKILL.md against a hand-written version from the blog post.</p>
+
+<h2>Confidence Assessment</h2>
+
+<ul>
+<li><strong>Overall</strong>: high</li>
+<li><strong>Coverage gaps</strong>: Neither agent successfully used feynman or alpha CLI -- both fell back to Exa web search with arXiv/ACL filters. The infra fixes from this morning (PATH + alpha symlink) should resolve this for future missions.</li>
+<li><strong>Conflicting signals</strong>: None on architecture -- both agents independently arrived at the same 4-stage pipeline. Deepgram accuracy numbers differ between vendor whitepaper (~36% WER reduction) and independent benchmarks -- plan for "meaningfully better" not "5x better."</li>
+</ul>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Mark Source Ledger tables (look for table after a heading containing "source")
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('source')) {
+          var next = h.nextElementSibling;
+          if (next && next.classList.contains('table-wrapper')) {
+            var tbl = next.querySelector('table');
+            if (tbl) tbl.classList.add('table-source');
+          }
+        }
+      });
+
+      // Wrap sections for visual treatment
+      wrapSection('executive summary', 'section-executive');
+      wrapSection('feynman bridge', 'section-feynman');
+
+      // Style Actionable Insights ordered list
+      document.querySelectorAll('article h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes('actionable insights')) {
+          var next = h.nextElementSibling;
+          if (next && next.tagName === 'OL') next.classList.add('insights-list');
+        }
+      });
+    });
+
+    function wrapSection(headingText, wrapClass) {
+      var article = document.querySelector('article');
+      if (!article) return;
+      var target = null;
+      article.querySelectorAll('h2').forEach(function (h) {
+        if (h.textContent.trim().toLowerCase().includes(headingText)) target = h;
+      });
+      if (!target) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = wrapClass;
+      target.parentNode.insertBefore(wrapper, target);
+      var node = target;
+      while (node) {
+        var next = node.nextSibling;
+        var isNewSection =
+          node !== target &&
+          node.nodeType === 1 &&
+          /^H[1-3]$/.test(node.tagName);
+        if (isNewSection) break;
+        wrapper.appendChild(node);
+        node = next;
+      }
+    }
+  </script>
+</body>
+</html>

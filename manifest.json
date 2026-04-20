@@ -194,5 +194,19 @@
       "retry-2"
     ],
     "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-165157.html",
+    "date": "2026-04-20",
+    "title": "Comparative Analysis: Video/audio to SKILL.md workflow \u2014 A/B retry-2",
+    "agent": "clarke",
+    "tags": [
+      "research",
+      "comparative",
+      "swot",
+      "2026-04-20",
+      "retry-2"
+    ],
+    "type": "research"
   }
 ]
