@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tracing — pna-sessions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #060d1f;
+      --surface: #0d1b35;
+      --surface-2: #111e3d;
+      --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15);
+      --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-muted: #475569;
+      --primary: #3b82f6;
+      --primary-dim: rgba(59,130,246,0.12);
+      --cyan: #22d3ee;
+      --cyan-dim: rgba(34,211,238,0.1);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245,158,11,0.1);
+      --amber-border: rgba(245,158,11,0.3);
+      --green: #10b981;
+      --green-dim: rgba(16,185,129,0.1);
+      --green-border: rgba(16,185,129,0.3);
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 15px; }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px);
+      background-size: 32px 32px;
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(6,13,31,0.85);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-back {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-back:hover { color: var(--text); }
+
+    .nav-sep {
+      width: 1px;
+      height: 16px;
+      background: var(--border-strong);
+      margin: 0 4px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-link:hover {
+      color: var(--text);
+      background: var(--primary-dim);
+    }
+    .nav-link.active {
+      color: var(--primary);
+      background: var(--primary-dim);
+    }
+
+    /* ── Page ── */
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 48px 32px 80px;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      margin-bottom: 40px;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .page-subtitle {
+      font-size: 0.9375rem;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    /* ── KPI chips ── */
+    .kpi-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .kpi-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      border-radius: 100px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .kpi-chip-value {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--cyan);
+    }
+
+    .kpi-chip-label {
+      font-size: 0.8125rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    /* ── Cards ── */
+    .ve-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .ve-card-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .ve-card-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .ve-card-meta {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Sparkline / bar chart ── */
+    .spark-section {
+      margin-bottom: 32px;
+    }
+
+    .spark-list {
+      list-style: none;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .spark-item {
+      display: grid;
+      grid-template-columns: 110px 1fr 72px;
+      align-items: center;
+      gap: 12px;
+      height: 28px;
+    }
+
+    .spark-date {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .spark-bar-track {
+      background: var(--surface-3);
+      border-radius: 3px;
+      height: 28px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .spark-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--cyan));
+      border-radius: 3px;
+      min-width: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .spark-cost {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--cyan);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    /* ── Table section ── */
+    .table-section {
+      margin-bottom: 32px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    thead tr {
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      white-space: nowrap;
+      background: var(--surface-3);
+    }
+
+    th:first-child { border-radius: 0; padding-left: 24px; }
+    th:last-child  { padding-right: 24px; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody tr:hover { background: var(--primary-dim); }
+
+    tbody tr.is-expanded { background: var(--surface-2); }
+
+    td {
+      padding: 13px 16px;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    td:first-child { padding-left: 24px; }
+    td:last-child  { padding-right: 24px; }
+
+    .td-mono {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .td-dim { color: var(--text-dim); }
+
+    .cost-green { color: var(--green); }
+    .cost-amber { color: var(--amber); }
+    .cost-red   { color: #f87171; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: var(--surface-3);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .badge-amber {
+      background: var(--amber-dim);
+      color: var(--amber);
+      border-color: var(--amber-border);
+    }
+
+    /* ── Expand row ── */
+    .expand-row td {
+      padding: 0;
+      border-bottom: 1px solid var(--border-strong);
+      background: var(--surface-3);
+    }
+
+    .expand-inner {
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .expand-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .expand-key {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .expand-val {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    /* ── Agent pill ── */
+    .agent-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: var(--primary-dim);
+      color: var(--primary);
+      border: 1px solid var(--border-strong);
+      white-space: nowrap;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      padding: 64px 32px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .empty-state-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-dim);
+    }
+
+    .empty-state-body {
+      font-size: 0.875rem;
+      font-family: var(--font-mono);
+    }
+
+    /* ── Section spacing ── */
+    .section-gap { margin-bottom: 28px; }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="index.html" class="nav-back">&#8592; pna-sessions</a>
+  <div class="nav-sep"></div>
+  <div class="nav-links">
+    <a href="backlog.html" class="nav-link">Backlog</a>
+    <a href="kanban.html" class="nav-link">Kanban</a>
+    <a href="tracing.html" class="nav-link active">Tracing</a>
+  </div>
+</nav>
+
+<!-- Page -->
+<main class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="page-title">Tracing</h1>
+    <p class="page-subtitle">Agent session cost and token usage</p>
+    <div class="kpi-row" id="kpi-row">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- Sparkline chart -->
+  <section class="spark-section section-gap">
+    <div class="ve-card">
+      <div class="ve-card-header">
+        <span class="ve-card-title">Cost per Session</span>
+        <span class="ve-card-meta">last 20 sessions</span>
+      </div>
+      <ul class="spark-list" id="spark-list">
+        <!-- populated by JS -->
+      </ul>
+    </div>
+  </section>
+
+  <!-- Sessions table -->
+  <section class="table-section">
+    <div class="ve-card">
+      <div class="ve-card-header">
+        <span class="ve-card-title">Sessions</span>
+        <span class="ve-card-meta" id="session-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="sessions-table">
+          <thead>
+            <tr>
+              <th>Session ID</th>
+              <th>Agent</th>
+              <th>Date</th>
+              <th>Turns</th>
+              <th>Peak Context</th>
+              <th>Total Output</th>
+              <th>Cost</th>
+              <th>Compactions</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  window.__TRACE_DATA__ = [
+  {
+    "session_id": "e8f4c34f-c3a4-434f-9993-258a5a30329b",
+    "turns": 6,
+    "peak_context": 100478,
+    "total_output": 8396,
+    "total_cost": 9.5827,
+    "compactions": 0,
+    "session_start": 1776652315,
+    "session_end": 1776770680,
+    "agent_id": "principal_research"
+  },
+  {
+    "session_id": "5f7141a2-a7cd-4243-aa47-64394b16b443",
+    "turns": 8,
+    "peak_context": 151639,
+    "total_output": 95825,
+    "total_cost": 49.991,
+    "compactions": 1,
+    "session_start": 1776636206,
+    "session_end": 1776655824,
+    "agent_id": "principal_engineer"
+  },
+  {
+    "session_id": "65bf765f-0f11-4e0e-941d-32760dcaf0cb",
+    "turns": 3,
+    "peak_context": 73025,
+    "total_output": 1480,
+    "total_cost": 1.8062,
+    "compactions": 0,
+    "session_start": 1776581281,
+    "session_end": 1776625308,
+    "agent_id": "principal_strategy"
+  },
+  {
+    "session_id": "5e643334-a26c-471f-a914-343f18342f09",
+    "turns": 80,
+    "peak_context": 164674,
+    "total_output": 302112,
+    "total_cost": 61.2403,
+    "compactions": 4,
+    "session_start": 1776575735,
+    "session_end": 1776739421,
+    "agent_id": "main"
+  },
+  {
+    "session_id": "c56e1a14-d3fc-48cb-b674-8b487b3d6e38",
+    "turns": 48,
+    "peak_context": 159569,
+    "total_output": 192345,
+    "total_cost": 97.5592,
+    "compactions": 5,
+    "session_start": 1776570175,
+    "session_end": 1776739254,
+    "agent_id": "principal_architect"
+  },
+  {
+    "session_id": "edc13cb8-b212-4976-8875-358fd5a54b85",
+    "turns": 14,
+    "peak_context": 151097,
+    "total_output": 77372,
+    "total_cost": 15.54,
+    "compactions": 1,
+    "session_start": 1776277658,
+    "session_end": 1776625298,
+    "agent_id": null
+  },
+  {
+    "session_id": "1075631d-e89a-455f-ac15-05b97c43175b",
+    "turns": 3,
+    "peak_context": 59094,
+    "total_output": 12077,
+    "total_cost": 1.3111,
+    "compactions": 0,
+    "session_start": 1776221747,
+    "session_end": 1776625315,
+    "agent_id": "principal_delivery"
+  },
+  {
+    "session_id": "3edb79a0-d3cd-4dce-9261-e3739c4fcf03",
+    "turns": 2,
+    "peak_context": 17569,
+    "total_output": 470,
+    "total_cost": 0.1621,
+    "compactions": 0,
+    "session_start": 1776221643,
+    "session_end": 1776625377,
+    "agent_id": "principal_pipeline"
+  },
+  {
+    "session_id": "47f03d6d-d704-43b6-b384-3327d28cbb87",
+    "turns": 49,
+    "peak_context": 155808,
+    "total_output": 176561,
+    "total_cost": 40.1848,
+    "compactions": 3,
+    "session_start": 1776209009,
+    "session_end": 1776575231,
+    "agent_id": null
+  }
+]
+
+  ;(function () {
+    const data = window.__TRACE_DATA__ || []
+
+    // ── Utilities ──────────────────────────────────────────────
+
+    function fmtCost(v) {
+      return '$' + Number(v).toFixed(4)
+    }
+
+    function fmtK(n) {
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
+      if (n >= 1000)    return (n / 1000).toFixed(1) + 'k'
+      return String(n)
+    }
+
+    function fmtDate(ts) {
+      if (!ts) return '—'
+      const d = new Date(ts * 1000)
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
+    }
+
+    function fmtDateTime(ts) {
+      if (!ts) return '—'
+      const d = new Date(ts * 1000)
+      return d.toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      })
+    }
+
+    function costClass(v) {
+      if (v < 0.10) return 'cost-green'
+      if (v <= 0.50) return 'cost-amber'
+      return 'cost-red'
+    }
+
+    function shortId(id) {
+      return id ? id.slice(0, 8) : '—'
+    }
+
+    function agentLabel(id) {
+      return id ? id.replace(/^principal_/, '') : null
+    }
+
+    // ── KPI chips ─────────────────────────────────────────────
+
+    function renderKPI() {
+      const el = document.getElementById('kpi-row')
+      if (!data.length) {
+        el.innerHTML = ''
+        return
+      }
+
+      const totalSessions = data.length
+      const totalCost = data.reduce((s, r) => s + (r.total_cost || 0), 0)
+      const totalTurns = data.reduce((s, r) => s + (r.turns || 0), 0)
+      const avgCost = totalSessions > 0 ? totalCost / totalSessions : 0
+
+      const chips = [
+        { value: totalSessions,        label: 'Total Sessions' },
+        { value: fmtCost(totalCost),   label: 'Total Cost' },
+        { value: totalTurns,           label: 'Total Turns' },
+        { value: fmtCost(avgCost),     label: 'Avg Cost / Session' },
+      ]
+
+      el.innerHTML = chips.map(c => `
+        <div class="kpi-chip">
+          <span class="kpi-chip-value">${c.value}</span>
+          <span class="kpi-chip-label">${c.label}</span>
+        </div>
+      `).join('')
+    }
+
+    // ── Sparkline bar chart ────────────────────────────────────
+
+    function renderSpark() {
+      const el = document.getElementById('spark-list')
+      const slice = data.slice(0, 20)
+
+      if (!slice.length) {
+        el.innerHTML = '<li style="color:var(--text-muted);font-size:0.85rem;padding:8px 0;">No data</li>'
+        return
+      }
+
+      const maxCost = Math.max(...slice.map(r => r.total_cost || 0), 0.001)
+
+      el.innerHTML = slice.map(r => {
+        const pct = ((r.total_cost || 0) / maxCost * 100).toFixed(1)
+        const dateStr = fmtDate(r.session_start)
+        const costStr = fmtCost(r.total_cost)
+        return `
+          <li class="spark-item">
+            <span class="spark-date">${dateStr}</span>
+            <div class="spark-bar-track">
+              <div class="spark-bar-fill" style="width:${pct}%"></div>
+            </div>
+            <span class="spark-cost">${costStr}</span>
+          </li>
+        `
+      }).join('')
+    }
+
+    // ── Table ──────────────────────────────────────────────────
+
+    let expandedId = null
+
+    function renderTable() {
+      const tbody = document.getElementById('table-body')
+      const countEl = document.getElementById('session-count')
+
+      if (!data.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="padding:0">
+              <div class="empty-state">
+                <div class="empty-state-title">No session data</div>
+                <div class="empty-state-body">Run python3 scripts/export_trace.py to populate</div>
+              </div>
+            </td>
+          </tr>
+        `
+        countEl.textContent = '0 sessions'
+        return
+      }
+
+      countEl.textContent = data.length + ' sessions'
+
+      function buildRows() {
+        let html = ''
+        data.forEach((r, idx) => {
+          const isExp = expandedId === r.session_id
+          const agent = agentLabel(r.agent_id)
+          const agentCell = agent
+            ? `<span class="agent-pill">${agent}</span>`
+            : '<span class="td-dim">—</span>'
+
+          const compBadge = r.compactions > 0
+            ? `<span class="badge badge-amber">${r.compactions}</span>`
+            : `<span class="badge">${r.compactions}</span>`
+
+          html += `
+            <tr data-session-id="${r.session_id}" class="${isExp ? 'is-expanded' : ''}">
+              <td><span class="td-mono">${shortId(r.session_id)}</span></td>
+              <td>${agentCell}</td>
+              <td class="td-dim">${fmtDate(r.session_start)}</td>
+              <td class="td-mono">${r.turns}</td>
+              <td class="td-mono td-dim">${fmtK(r.peak_context)}</td>
+              <td class="td-mono td-dim">${fmtK(r.total_output)}</td>
+              <td class="td-mono ${costClass(r.total_cost)}">${fmtCost(r.total_cost)}</td>
+              <td>${compBadge}</td>
+            </tr>
+          `
+
+          if (isExp) {
+            const dur = r.session_end && r.session_start
+              ? Math.round((r.session_end - r.session_start) / 60) + ' min'
+              : '—'
+
+            html += `
+              <tr class="expand-row">
+                <td colspan="8">
+                  <div class="expand-inner">
+                    <div class="expand-field">
+                      <span class="expand-key">Full Session ID</span>
+                      <span class="expand-val">${r.session_id}</span>
+                    </div>
+                    <div class="expand-field">
+                      <span class="expand-key">Agent</span>
+                      <span class="expand-val">${r.agent_id || '—'}</span>
+                    </div>
+                    <div class="expand-field">
+                      <span class="expand-key">Started</span>
+                      <span class="expand-val">${fmtDateTime(r.session_start)}</span>
+                    </div>
+                    <div class="expand-field">
+                      <span class="expand-key">Ended</span>
+                      <span class="expand-val">${fmtDateTime(r.session_end)}</span>
+                    </div>
+                    <div class="expand-field">
+                      <span class="expand-key">Duration</span>
+                      <span class="expand-val">${dur}</span>
+                    </div>
+                    <div class="expand-field">
+                      <span class="expand-key">Turns</span>
+                      <span class="expand-val">${r.turns}</span>
+                    </div>
+                    <div class="expand-field">
+                      <span class="expand-key">Peak Context</span>
+                      <span class="expand-val">${r.peak_context.toLocaleString()} tokens</span>
+                    </div>
+                    <div class="expand-field">
+                      <span class="expand-key">Total Output</span>
+                      <span class="expand-val">${r.total_output.toLocaleString()} tokens</span>
+                    </div>
+                    <div class="expand-field">
+                      <span class="expand-key">Total Cost</span>
+                      <span class="expand-val">${fmtCost(r.total_cost)}</span>
+                    </div>
+                    <div class="expand-field">
+                      <span class="expand-key">Compactions</span>
+                      <span class="expand-val">${r.compactions}</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            `
+          }
+        })
+        return html
+      }
+
+      function render() {
+        tbody.innerHTML = buildRows()
+
+        tbody.querySelectorAll('tr[data-session-id]').forEach(row => {
+          row.addEventListener('click', function () {
+            const sid = this.getAttribute('data-session-id')
+            expandedId = expandedId === sid ? null : sid
+            render()
+          })
+        })
+      }
+
+      render()
+    }
+
+    // ── Init ──────────────────────────────────────────────────
+
+    renderKPI()
+    renderSpark()
+    renderTable()
+
+  })()
+</script>
+</body>
+</html>
