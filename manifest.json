@@ -266,5 +266,16 @@
       "a-b-test",
       "agents"
     ]
+  },
+  {
+    "path": "sessions/2026-04-21-013749.html",
+    "date": "2026-04-21",
+    "title": "principal_architect session \u2014 2026-04-20",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-20"
+    ],
+    "type": "session"
   }
 ]

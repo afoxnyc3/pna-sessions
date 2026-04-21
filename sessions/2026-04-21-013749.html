@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_architect session — 2026-04-20 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-21</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>principal_architect session — 2026-04-20</h1>
+    <div class="tags"><span class="tag">principal_architect</span><span class="tag">2026-04-20</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_architect — 2026-04-20</h1>
+
+<p><strong>Agent:</strong> Principal Architect (P&A)</p>
+<p><strong>Date:</strong> 2026-04-20</p>
+<p><strong>Session duration:</strong> ~90 min</p>
+<p><strong>Project(s):</strong> pna-library, pna-library-explainer, media-extract (3rd-party)</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Reported current library state (85 entries: 77 skills, 7 agents, 1 prompt) by category</li>
+<li><input type="checkbox" disabled checked> Updated <code>pna-library-explainer.html</code> with current catalog: 85 entries, 77 skills, 7 agents, new Creator & Content + Web & Content cards, "What changed this session" rewrite with commit SHAs (<code>/Users/alex/.agent/diagrams/pna-library-explainer.html</code>)</li>
+<li><input type="checkbox" disabled checked> Redeployed to Vercel production, canonical alias live (<code>https://pna-library-explainer-deploy.vercel.app</code>, HTTP 200 verified, content confirms 85 entries / 2026-04-20 footer)</li>
+<li><input type="checkbox" disabled checked> Verified <code>media-extract</code> skill installation state at <code>~/.claude/skills/media-extract/</code> (already cloned earlier today from <code>alexadark/media-extract-skill</code>)</li>
+<li><input type="checkbox" disabled checked> Wired <code>.env</code> for media-extract: <code>GEMINI_API_KEY</code> copied from claudeclaw <code>GOOGLE_API_KEY</code>, chmod 600 (<code>/Users/alex/.claude/skills/media-extract/.env</code>)</li>
+<li><input type="checkbox" disabled checked> Confirmed deps: yt-dlp 2026.03.17, ffmpeg 8.1, jq present</li>
+<li><input type="checkbox" disabled checked> Created default media-extract config (<code>~/.media-extract/config.json</code>)</li>
+<li><input type="checkbox" disabled checked> Ran media-extract end-to-end on IndyDevDan Pi coding agent video (f8cfH5XX-XU, 51:36, 15 chapters)</li>
+<li><input type="checkbox" disabled checked> Cached transcript (<code>~/.media-extract/cache/transcripts/f8cfH5XX-XU-pi-coding-agent-claude-code-competitor.md</code>, 200KB, 3056 deduped lines)</li>
+<li><input type="checkbox" disabled checked> Delivered structured Pi video summary: metadata header, TL;DR, 12-dim design philosophy contrast, 14-slice taxonomy (v0-v13) with timestamps, golden nuggets, workflow-to-lift (Tilldone hook), P&A relevance, next move</li>
+<li><input type="checkbox" disabled checked> Framed takeaway: Pi video surfaces replicable patterns (Tilldone hook, agent chains, meta-agent) mapping to existing Claude Code primitives, not a new CLI to adopt</li>
+<li><input type="checkbox" disabled checked> Scoped <code>till-done</code> as the single highest-value library extraction from Pi</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>till-done</code> skill implementation</td>
+<td>scoped, not built</td>
+<td>Queue as engineer mission with SPEC from this summary</td>
+</tr>
+<tr>
+<td>Development Lifecycle category prune (24 overlapping skills)</td>
+<td>pending</td>
+<td>Run <code>meta-optimize</code> pass</td>
+</tr>
+<tr>
+<td><code>creator-stack</code> first real-world validation run</td>
+<td>pending</td>
+<td>Alex to pick a validation target</td>
+</tr>
+<tr>
+<td>Bootstrap wiring for research_a/b/principal_sandbox plists</td>
+<td>pending</td>
+<td>Engineer owns</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Pi is a CLI, not a skill</td>
+<td>Adopting Pi ≠ extracting its patterns; our stack (Claude Code + hooks + skills + subagents) already supports the same primitives</td>
+<td>Library curation strategy</td>
+</tr>
+<tr>
+<td>Highest-value Pi extraction is <code>till-done</code> hook</td>
+<td>Closes the loop on "agent claims done without verifying". Atomic, single-PR, slots into Development Lifecycle</td>
+<td>Next engineer mission</td>
+</tr>
+<tr>
+<td>Pair <code>till-done</code> with existing <code>verification-before-completion</code></td>
+<td>Existing skill covers the verify step; <code>till-done</code> adds the upfront-enumeration gate</td>
+<td>Hook stack composition</td>
+</tr>
+<tr>
+<td>Redeploy via isolated <code>/tmp/</code> dir</td>
+<td>Avoids Vercel deploy timeouts from unrelated repo churn</td>
+<td>Future explainer updates</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+/Users/alex/.agent/diagrams/pna-library-explainer.html   modified
+/tmp/pna-library-explainer-deploy/index.html              created (staging)
+/Users/alex/.claude/skills/media-extract/.env             created
+/Users/alex/.media-extract/config.json                    created
+/Users/alex/.media-extract/cache/transcripts/f8cfH5XX-XU-pi-coding-agent-claude-code-competitor.md   created
+</code></pre>
+
+<p><strong>Deploy</strong>: <code>dpl_2TkirQ69UtEVqgi1ujsyeqbzaq7t</code> → <code>https://pna-library-explainer-deploy.vercel.app</code></p>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>principal_architect (next session):</strong> draft full SPEC for <code>till-done</code> skill — pre-work checklist gate, work-phase pinned context, pre-completion verification loop with pass/fail evidence, failure re-routing. Output: single SKILL.md + hook script + one example. Est XS.</li>
+<li><strong>principal_engineer:</strong> once SPEC lands, implement <code>till-done</code> in <code>~/.claude/skills/till-done/</code> with pre-commit test that blocks completion without checklist file.</li>
+<li><strong>principal_architect:</strong> run <code>meta-optimize</code> pass on Development Lifecycle category (24 skills, overlap suspected with <code>verification-before-completion</code>, <code>test-driven-development</code>, <code>incremental-implementation</code>, <code>code-review-and-quality</code>).</li>
+<li><strong>main (clarke):</strong> first real creator-stack validation — pick one <code>research-creator</code> style task and run it end-to-end.</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Should <code>till-done</code> be a hook (auto-enforced) or a skill (opt-in)? → needs: Alex preference. Recommend hook for team agents, skill for main chat.</li>
+<li>Does the <code>till-done</code> checklist live in session memory or a scratch file? → needs: design decision during SPEC phase.</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Pi coding agent (Mario Zechner, 51:36 video) is the clearest recent articulation of the "knowing what your agent is doing is engineering. Not knowing is vibe coding" thesis. The v0-v13 extension taxonomy is worth re-reading when designing new sub-agents. Cached transcript at <code>~/.media-extract/cache/transcripts/f8cfH5XX-XU-pi-coding-agent-claude-code-competitor.md</code>.</p>
+
+<p>Library explainer page is now source-of-truth for 85-entry catalog state. Next deploy should reflect any <code>creator-stack</code> validation outcomes + Development Lifecycle prune results.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
