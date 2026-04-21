@@ -253,5 +253,18 @@
       "2026-04-20"
     ],
     "type": "research"
+  },
+  {
+    "type": "diagram",
+    "title": "Research Cluster Architecture",
+    "date": "2026-04-20",
+    "agent": "main",
+    "path": "diagrams/2026-04-20-research-cluster-architecture.html",
+    "tags": [
+      "research",
+      "architecture",
+      "a-b-test",
+      "agents"
+    ]
   }
 ]
