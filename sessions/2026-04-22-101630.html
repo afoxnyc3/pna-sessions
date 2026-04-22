@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_engineer session — 2026-04-22 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-22</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_engineer</div>
+    <h1>principal_engineer session — 2026-04-22</h1>
+    <div class="tags"><span class="tag">principal_engineer</span><span class="tag">2026-04-22</span><span class="tag">agent-expert-kit</span><span class="tag">phase-2-readiness</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_engineer — 2026-04-22</h1>
+
+<p><strong>Agent:</strong> Principal Engineer</p>
+<p><strong>Date:</strong> 2026-04-22</p>
+<p><strong>Session duration:</strong> ~15 min</p>
+<p><strong>Project(s):</strong> agent-expert-kit</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Phase 2 readiness review for agent-expert-kit — confirmed ready (<code>~/dev/projects/agent-expert-kit/ROADMAP.md</code>)</li>
+<li><input type="checkbox" disabled checked> Full Phase 1 test suite verified green — 51/51 passing (<code>~/dev/projects/agent-expert-kit/tests/</code>)</li>
+<li><input type="checkbox" disabled checked> Merged all 7 Phase 1 feature branches into <code>master</code> via fast-forward (15 commits, linear history) (<code>master @ 4e0c13b</code>)</li>
+<li><input type="checkbox" disabled checked> Deleted merged local branches: <code>feat/T1.1</code> through <code>feat/T1.7</code> — only <code>master</code> remains</li>
+<li><input type="checkbox" disabled checked> Re-ran full test suite on <code>master</code> post-merge — 51/51 passing</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>T2.1a — registrar writes to <code>library.yaml</code> under <code>experts:</code></td>
+<td>queued, not started</td>
+<td>awaiting Alex go-ahead to cut <code>feat/T2.1a-registrar-library-yaml</code> from master</td>
+</tr>
+<tr>
+<td>T2.1b — <code>library list experts</code> subcommand</td>
+<td>queued</td>
+<td>depends on T2.1a</td>
+</tr>
+<tr>
+<td>T2.2 — <code>.bak</code> timestamped overwrite protection</td>
+<td>queued</td>
+<td>after T2.1a/b</td>
+</tr>
+<tr>
+<td>T2.3 — slug collision halt + suggested rename</td>
+<td>queued</td>
+<td>after T2.1a/b</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Merge Phase 1 branches into <code>master</code> via fast-forward before branching Phase 2</td>
+<td>Keeps linear history clean; Phase 2 cuts from shipped Phase 1 code, not scaffold commit <code>abe4aaa</code></td>
+<td>All Phase 2 work on agent-expert-kit</td>
+</tr>
+<tr>
+<td>Delete all 7 Phase 1 feature branches locally post-merge</td>
+<td>Fully merged into <code>master</code>, safe deletion; reduces branch noise</td>
+<td>Repo hygiene</td>
+</tr>
+<tr>
+<td>Do NOT push master to <code>origin</code></td>
+<td>DevOps agent owns push; Engineer scope is local commits only</td>
+<td>Remote state unchanged (only <code>origin/feat/T1.7-end-to-end</code> remote exists)</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+~/dev/projects/agent-expert-kit/.git/refs/heads/master   modified (fast-forwarded abe4aaa → 4e0c13b)
+~/dev/projects/agent-expert-kit/.git/refs/heads/feat/T1.1-skill-entrypoint   deleted
+~/dev/projects/agent-expert-kit/.git/refs/heads/feat/T1.2-expertise-template   deleted
+~/dev/projects/agent-expert-kit/.git/refs/heads/feat/T1.3-question-template   deleted
+~/dev/projects/agent-expert-kit/.git/refs/heads/feat/T1.4-self-improve-template   deleted
+~/dev/projects/agent-expert-kit/.git/refs/heads/feat/T1.5-seeder-prompt   deleted
+~/dev/projects/agent-expert-kit/.git/refs/heads/feat/T1.6-validator   deleted
+~/dev/projects/agent-expert-kit/.git/refs/heads/feat/T1.7-end-to-end   deleted
+</code></pre>
+
+<p>No file content changes this session — pure git ref management.</p>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>principal_engineer (next mission):</strong> Cut <code>feat/T2.1a-registrar-library-yaml</code> from <code>master</code>. Implement registrar hook in <code>pna-library/skills/agent-expert-kit/scripts/scaffold.py</code> (or equivalent per SPEC) that appends a new entry to <code>~/dev/pna-library/library.yaml</code> under top-level <code>experts:</code> key. Fields: <code>name</code>, <code>domain</code>, <code>path</code>. Enforce slug uniqueness. Write tests under <code>tests/test_registrar.py</code>. Acceptance per TASKS.md T2.1a.</li>
+<li><strong>principal_engineer:</strong> After T2.1a ships, move to T2.1b (<code>library list experts</code> subcommand in <code>~/dev/pna-library/skills/library/</code> — confirm skill location before starting).</li>
+<li><strong>clarke:</strong> Queue T2.1a mission when ready. Full suite: 51/51 on master, clean slate for Phase 2.</li>
+<li><strong>DevOps (when exists):</strong> <code>master</code> is ahead of any remote tracking. Push is not my job. Flagged for when DevOps agent is built.</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>None blocking Phase 2. All preconditions verified:</li>
+</ul>
+<p>  - <code>library.yaml</code> exists at <code>~/dev/pna-library/library.yaml</code> (440 lines, no <code>experts:</code> key yet — T2.1a will add)</p>
+<p>  - <code>library</code> skill present at <code>~/.claude/skills/library</code> (symlink target is pna-library root — T2.1b extension target confirmed)</p>
+<p>  - PyYAML available in agent runtime (proven in Phase 1)</p>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Phase 1 branches were stacked linearly (each branch built on the prior), so <code>feat/T1.7-end-to-end</code> already contained the full Phase 1 commit chain plus the <code>4e0c13b</code> spec amendment splitting T2.1. Fast-forward from <code>master</code> covered everything in one <code>git merge --ff-only</code>. No merge commits, no conflicts, no cherry-picks needed.</p>
+
+<p>Remote <code>origin/feat/T1.7-end-to-end</code> still exists and is ahead of where <code>origin/master</code> would be (origin/master may not exist at all). This is DevOps territory when that agent ships.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
