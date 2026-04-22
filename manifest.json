@@ -290,5 +290,19 @@
       "librarian-spinup"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101534.html",
+    "date": "2026-04-22",
+    "title": "principal_librarian session \u2014 2026-04-22",
+    "agent": "principal_librarian",
+    "tags": [
+      "principal_librarian",
+      "2026-04-22",
+      "library",
+      "grooming",
+      "gemini-cluster"
+    ],
+    "type": "session"
   }
 ]
