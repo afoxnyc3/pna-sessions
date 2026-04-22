@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_strategy session — 2026-04-19 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-22</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_strategy</div>
+    <h1>principal_strategy session — 2026-04-19</h1>
+    <div class="tags"><span class="tag">principal_strategy</span><span class="tag">2026-04-19</span><span class="tag">strategy</span><span class="tag">synthesis</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_strategy — 2026-04-19</h1>
+
+<p><strong>Agent:</strong> Principal Strategy (Offer & Product Strategist)</p>
+<p><strong>Date:</strong> 2026-04-19</p>
+<p><strong>Session duration:</strong> ~2 hours (across multiple interactions)</p>
+<p><strong>Project(s):</strong> strategy-memo, backlog, cross-agent synthesis</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul>
+<li>Created vault backlog — first-ever backlog at <code>Obsidian/claudeclaw/Backlog.md</code> capturing all open items across infra, research, strategy, roadrunner, and workflow domains (<code>/Users/alex/Documents/Obsidian/claudeclaw/Backlog.md</code>)</li>
+<li>Cross-agent session synthesis v1 — pulled hive_mind DB, mission results, and vault session notes; wrote full system-state strategy memo (<code>Strategy/memos/2026-04-19-system-state-and-strategy.md</code>)</li>
+<li>Cross-agent session synthesis v2 — dispatched live session-summary missions to Architect (ff520508) and Engineer (59b00f53), read first-party vault session notes for all three agents (Clarke, Architect, Engineer), rewrote memo with full source attribution and cost breakdown</li>
+<li>Confirmed <code>pre_tool_use.py</code> false positive — <code>--env-file=.env</code> blocked as <code>.env</code> access violation during mission polling; logged to backlog as confirmed bug</li>
+<li>Backlog v2 update — added Strategy/Offers section, Roadrunner section, confirmed false positive item, <code>AGENT_MAX_TURNS=100</code> item</li>
+<li>Logged session to hive_mind DB</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Live mission results from Architect (ff520508) + Engineer (59b00f53)</td>
+<td>Timed out — bots not running</td>
+<td>Services down pending morning build. Missions still queued — will auto-pick up when services restart</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Use vault session notes as primary source for synthesis (not live missions)</td>
+<td>Bots offline; vault notes are first-party, written by agents immediately post-session — same fidelity</td>
+<td>Strategy memo accuracy</td>
+</tr>
+<tr>
+<td>Flag <code>pre_tool_use.py</code> false positive as High severity</td>
+<td>Blocked real work in this session — not theoretical</td>
+<td>Backlog priority order</td>
+</tr>
+<tr>
+<td>Scope strategy memo to system state + recommendations, not market research</td>
+<td>No new external data gathered this session; internal state was the question</td>
+<td>Memo framing</td>
+</tr>
+<tr>
+<td>Cancel stale missions recommendation</td>
+<td>Time-sensitive context degrades; stale missions risk processing outdated tasks when services restart</td>
+<td>Ops practice</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+/Users/alex/Documents/Obsidian/claudeclaw/Backlog.md                                   created
+/Users/alex/Documents/Obsidian/claudeclaw/Strategy/memos/2026-04-19-system-state-and-strategy.md   created + updated (v2)
+/Users/alex/Documents/Obsidian/claudeclaw/Strategy/memos/                               created (dir)
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>Architect:</strong> Fix <code>pre_tool_use.py</code> — change <code>.env</code> pattern from substring match to file-read-operation match only. Backlog item confirmed. Do before next principal run.</li>
+<li><strong>Alex:</strong> Run morning build (<code>git pull &amp;&amp; npm install &amp;&amp; npm run build</code>, set <code>AGENT_MAX_TURNS=100</code>, <code>launchctl kickstart</code>). Everything downstream is gated on this.</li>
+<li><strong>Alex:</strong> Create private GitHub remote for <code>~/.claude/skills/</code> and provide URL — Clarke pushes immediately.</li>
+<li><strong>Alex:</strong> Provide pricing anchor for "Agent to Production" — day-rate, project-based, or retainer. Unblocks Strategy offer memo.</li>
+<li><strong>Strategy (next session):</strong> Retrieve and write up the Apr 14 agentic harnesses market scan output. Mission completed, no vault memo exists.</li>
+<li><strong>Strategy (next session):</strong> Draft "Agent to Production" offer memo once: (a) observability verified, (b) roadrunner packaged, (c) pricing anchor received.</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>deepagents vs claudeclaw: permanent parallel environments or promotion candidate? — needs: Alex decision → ADR</li>
+<li>Roadrunner T20/T21 (FastAPI): in scope or defer for repolens? — needs: Alex call</li>
+<li>Which skill to target for first skill-optimizer loop run? — needs: Alex guidance on highest-priority skill</li>
+<li><code>AGENT_MAX_TURNS=100</code>: confirm this is the right value before morning build — needs: Alex verify</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Both live session-summary missions (Architect ff520508, Engineer 59b00f53) were queued but timed out — bots are offline pending the morning build. The synthesis was done from first-party vault session notes (<code>Delivery/session-summaries/2026-04-19-*.md</code>) which have equivalent fidelity.</p>
+
+<p>Team activity context from memory showed significant new work since the last strategy session: Librarian ingested Principal Plugin MVP-5 (5 new skills, library now at 93), Architect scaffolded pna-case-base and principal-plugin repos (both live on GitHub), Engineer verified agent-expert-kit Phase 1 (51 tests green). This was NOT reflected in the strategy memo — it arrived in memory context mid-session after the memo was drafted. The next strategy session should incorporate this activity.</p>
+
+<p>The backlog is new. Treat it as the canonical open-items register going forward.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>

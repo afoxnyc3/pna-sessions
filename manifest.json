@@ -381,5 +381,18 @@
       "session-summary"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101919.html",
+    "date": "2026-04-22",
+    "title": "principal_strategy session \u2014 2026-04-19",
+    "agent": "principal_strategy",
+    "tags": [
+      "principal_strategy",
+      "2026-04-19",
+      "strategy",
+      "synthesis"
+    ],
+    "type": "session"
   }
 ]
