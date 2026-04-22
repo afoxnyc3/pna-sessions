@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_architect session — 2026-04-22 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-22</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>principal_architect session — 2026-04-22</h1>
+    <div class="tags"><span class="tag">principal_architect</span><span class="tag">2026-04-22</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_architect — 2026-04-22</h1>
+
+<p><strong>Agent:</strong> Principal Architect (Technical Architecture & Planning)</p>
+<p><strong>Date:</strong> 2026-04-22</p>
+<p><strong>Session duration:</strong> ~1.5 hours</p>
+<p><strong>Project(s):</strong> principal-plugin, pna-case-base</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Analysed uploaded <code>principal-and-agent.zip</code> (5 SKILL.md files, plugin CLAUDE.md, 9-sheet research workbook). Verified non-malware; produced capability gap summary.</li>
+<li><input type="checkbox" disabled checked> Scaffolded <strong>principal-plugin</strong> at <code>/Users/alex/dev/projects/principal-plugin/</code> with README, SPEC, ROADMAP, TASKS, ARCHITECTURE, 3 ADRs, SWOT analysis, and the inherited MVP-5 skill pack. Committed and pushed to <code>github.com/afoxnyc3/principal-plugin</code> (private).</li>
+<li><input type="checkbox" disabled checked> Scaffolded <strong>pna-case-base</strong> at <code>/Users/alex/dev/projects/pna-case-base/</code> with full planning docs, TAXONOMY (7 controlled enumerations), docs/ANONYMIZATION.md policy, 5 templates (case + 4 pattern types), 2 ADRs, and directory schema. Committed and pushed to <code>github.com/afoxnyc3/pna-case-base</code> (private).</li>
+<li><input type="checkbox" disabled checked> Fired librarian mission <code>47d40f89</code> to ingest MVP-5 into <code>pna-library</code>. Librarian completed: 5 skills added (library count 88→93), symlinked to <code>~/.claude/skills/</code>, zero collisions, eval fixtures on branch <code>librarian/evals-baseline</code> in principal-plugin.</li>
+<li><input type="checkbox" disabled checked> Hive-mind logs filed for both scaffolds and the delegation (<code>/Users/alex/dev/claudeclaw/store/claudeclaw.db</code>, <code>hive_mind</code> table).</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Seed case records in pna-case-base</td>
+<td>not started</td>
+<td>Phase 1 of roadmap. Needs engagement-retrospective dry-run on Spector Capisce + 2 synthetic-but-grounded cases (voice-agent, email-triage archetypes).</td>
+</tr>
+<tr>
+<td>12-skill backlog authoring</td>
+<td>not started</td>
+<td>Awaiting Alex sign-off on split: librarian authors 9 markdown-mostly skills, architect authors <code>pattern-recognition</code> and <code>live-agent-prototype</code>.</td>
+</tr>
+<tr>
+<td>Eval fixtures merge</td>
+<td>pending review</td>
+<td>Librarian pushed <code>librarian/evals-baseline</code> branch to principal-plugin; not yet merged. Architect should review before merge.</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Skill pack over hosted app (ADR-0001)</td>
+<td>Zero infra; native Claude runtime; clean handoff. Consumer is technical.</td>
+<td>principal-plugin distribution model</td>
+</tr>
+<tr>
+<td>Case base in a separate private repo (ADR-0002)</td>
+<td>Decouples methodology from client data; enables future public plugin release; private-by-default for case content.</td>
+<td>pna-case-base, cross-repo contract</td>
+</tr>
+<tr>
+<td>Sequential lifecycle enforced through prose, not runtime (ADR-0003, principal-plugin)</td>
+<td>Keeps skills self-contained and independently testable. Operator discipline + pushy descriptions + hand-off prompts are the enforcement.</td>
+<td>All 17 skills</td>
+</tr>
+<tr>
+<td>Flat markdown over database for case base (ADR-0001, pna-case-base)</td>
+<td>Engagement-cadence data volume; human-readable diffs; zero runtime dependency. Indexer trigger set at 250+ cases.</td>
+<td>pna-case-base retrieval model</td>
+</tr>
+<tr>
+<td>Anonymisation at authoring time, not commit time (ADR-0002, pna-case-base)</td>
+<td>Automated regex has false negatives on contextual identifiers. Human checklist enforced by engagement-retrospective is more reliable.</td>
+<td>pna-case-base commit discipline</td>
+</tr>
+<tr>
+<td>GitHub push executed by architect despite DevOps being "not yet built"</td>
+<td>Alex explicitly directed. Policy is "Alex decides if and when to push"; he decided. Flagged the deviation in the response.</td>
+<td>Capability honesty going forward</td>
+</tr>
+<tr>
+<td>12-skill backlog split recommendation</td>
+<td>Librarian for 9 markdown-heavy (discovery, design-non-retrieval, governance, policy); architect for <code>pattern-recognition</code> (cross-repo contract) and <code>live-agent-prototype</code> (runnable scaffolds, engineering taste).</td>
+<td>Phase 2-5 of principal-plugin roadmap</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+/Users/alex/dev/projects/principal-plugin/                           created
+/Users/alex/dev/projects/principal-plugin/README.md                  created
+/Users/alex/dev/projects/principal-plugin/SPEC.md                    created
+/Users/alex/dev/projects/principal-plugin/ROADMAP.md                 created
+/Users/alex/dev/projects/principal-plugin/TASKS.md                   created
+/Users/alex/dev/projects/principal-plugin/ARCHITECTURE.md            created
+/Users/alex/dev/projects/principal-plugin/CLAUDE.md                  created (from upload)
+/Users/alex/dev/projects/principal-plugin/.gitignore                 created
+/Users/alex/dev/projects/principal-plugin/docs/adr/0001-skill-pack-over-hosted-app.md         created
+/Users/alex/dev/projects/principal-plugin/docs/adr/0002-case-base-as-separate-repo.md         created
+/Users/alex/dev/projects/principal-plugin/docs/adr/0003-sequential-lifecycle-enforcement.md   created
+/Users/alex/dev/projects/principal-plugin/docs/SWOT.md               created
+/Users/alex/dev/projects/principal-plugin/skills/*                   inherited (5 SKILL.md)
+/Users/alex/dev/projects/principal-plugin/research/*                 inherited (xlsx + source README)
+
+/Users/alex/dev/projects/pna-case-base/                              created
+/Users/alex/dev/projects/pna-case-base/README.md                     created
+/Users/alex/dev/projects/pna-case-base/SPEC.md                       created
+/Users/alex/dev/projects/pna-case-base/ROADMAP.md                    created
+/Users/alex/dev/projects/pna-case-base/TASKS.md                      created
+/Users/alex/dev/projects/pna-case-base/ARCHITECTURE.md               created
+/Users/alex/dev/projects/pna-case-base/TAXONOMY.md                   created
+/Users/alex/dev/projects/pna-case-base/.gitignore                    created
+/Users/alex/dev/projects/pna-case-base/docs/ANONYMIZATION.md         created
+/Users/alex/dev/projects/pna-case-base/docs/adr/0001-flat-markdown-over-database.md              created
+/Users/alex/dev/projects/pna-case-base/docs/adr/0002-anonymisation-at-authoring-not-commit.md    created
+/Users/alex/dev/projects/pna-case-base/templates/case.md             created
+/Users/alex/dev/projects/pna-case-base/templates/pattern-trigger.md           created
+/Users/alex/dev/projects/pna-case-base/templates/pattern-architecture.md      created
+/Users/alex/dev/projects/pna-case-base/templates/pattern-anti.md              created
+/Users/alex/dev/projects/pna-case-base/templates/pattern-playbook.md          created
+/Users/alex/dev/projects/pna-case-base/{cases,patterns/*}/.gitkeep            created
+</code></pre>
+
+<p>Remote repos created:</p>
+<ul>
+<li>https://github.com/afoxnyc3/principal-plugin (private)</li>
+<li>https://github.com/afoxnyc3/pna-case-base (private)</li>
+</ul>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>architect (self):</strong> Review librarian's <code>librarian/evals-baseline</code> branch on principal-plugin and merge if fixtures look sound. <code>~/dev/projects/principal-plugin</code></li>
+<li><strong>architect (self):</strong> Draft SPECs for <code>pattern-recognition</code> and <code>live-agent-prototype</code> as separate project files if Alex confirms the split. <code>~/dev/projects/principal-plugin/skills/&lt;name&gt;/SPEC-draft.md</code> or equivalent.</li>
+<li><strong>librarian:</strong> Once Alex confirms split, begin authoring the 9 markdown-mostly skills one per week; each skill gets its own PR against principal-plugin with frontmatter + body + evals fixture.</li>
+<li><strong>main (Clarke):</strong> Decide whether to run <code>engagement-retrospective</code> dry-run against Spector Capisce now to produce seed case #1 for pna-case-base. Without this, Phase 1 of the case-base roadmap does not complete and <code>pattern-recognition</code> has nothing to retrieve against.</li>
+<li><strong>Alex:</strong> Sign off on the 12-skill split (librarian vs architect ownership). Also decide whether principal-plugin stays private permanently or if v1 release flips to public for marketing (SWOT flagged: methodology files can be public; case base must stay private regardless).</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>12-skill backlog ownership split: librarian authors direct, or architect drafts SPECs first? → needs: Alex</li>
+<li>Seed case #1 source: Spector mid-engagement or wait until engagement close? → needs: Alex</li>
+<li>Principal-plugin repo visibility post-v1: stays private, or flips public for marketing leverage? → needs: Alex (strategic call; SWOT recommends keeping case base private regardless)</li>
+<li>Whether to add a regex pre-commit gate to pna-case-base as belt-and-braces on the human anonymisation checklist → deferred to case-count trigger (50 records or second operator)</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<ul>
+<li>GitHub push deviation: my agent CLAUDE.md lists repo create + push under "Cannot do yet" (DevOps agent's lane, not yet built). Alex explicitly directed, so I proceeded and flagged the deviation. The standing rule "Alex decides if and when to push" covers this; the capability list should be updated once DevOps exists to distinguish "cannot autonomously" from "cannot when directed".</li>
+<li>Standing rule observed: specs are one-pass, not iterated. Fixed one SPEC gap during critic pass <strong>before</strong> git init (taxonomy enum minimum for data_sensitivity_levels). Post-commit amendments will require explicit intent per the rule.</li>
+<li>Librarian grooming note should be cross-referenced by architect when scoping the 9 authoring tasks — the 85→93 catalog growth and the prior creator-stack / Gemini cluster flags are relevant context.</li>
+<li>No publish-to-pna-sessions of a diagram artefact this session; output is planning docs and two git repos, handled by the wrap skill's session publish.</li>
+</ul>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>

@@ -331,5 +331,16 @@
       "phase-2-readiness"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101639.html",
+    "date": "2026-04-22",
+    "title": "principal_architect session \u2014 2026-04-22",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-22"
+    ],
+    "type": "session"
   }
 ]
