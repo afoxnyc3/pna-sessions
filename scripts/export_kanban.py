@@ -65,18 +65,29 @@ def load_tasks():
     grouped = {"queued": [], "running": [], "completed": [], "failed": []}
 
     for row in rows:
+        def clean(s, limit):
+            """Truncate and collapse whitespace so the value stays on one JSON line."""
+            if s is None:
+                return ""
+            s = str(s)[:limit]
+            # Collapse newlines/tabs to spaces so json.dumps produces a single-line string
+            return s.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").replace("\t", " ")
+
+        result_full = row["result"] or ""
         task = {
             "id": row["id"],
-            "title": row["title"],
-            "prompt": row["prompt"],
+            "title": clean(row["title"], 120),
+            "prompt": clean(row["prompt"], 800),
             "assigned_agent": row["assigned_agent"],
             "status": row["status"],
             "priority": row["priority"],
             "created_at": row["created_at"],
             "started_at": row["started_at"],
             "completed_at": row["completed_at"],
-            "result": row["result"],
-            "error": row["error"],
+            # Preview only — full result lives in pna-sessions
+            "result": clean(result_full, 600) + ("…" if len(result_full) > 600 else ""),
+            "result_length": len(result_full),
+            "error": clean(row["error"], 400),
         }
         status = row["status"] if row["status"] in grouped else "queued"
         grouped[status].append(task)
@@ -95,12 +106,13 @@ def inject_into_html(data: dict) -> Path:
     json_str = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     replacement = f"window.__KANBAN_DATA__ = {json_str}"
 
-    pattern = r"window\.__KANBAN_DATA__\s*=\s*\{[^}]*\}"
-    new_source, n = re.subn(pattern, replacement, source, count=1)
+    # Match the ENTIRE line starting with window.__KANBAN_DATA__ (handles any JSON value, not just {})
+    pattern = re.compile(r"^window\.__KANBAN_DATA__\s*=\s*.*$", re.MULTILINE)
+    new_source, n = pattern.subn(replacement, source, count=1)
 
     if n == 0:
         print(
-            "[export_kanban] Error: could not find 'window.__KANBAN_DATA__ = {}' placeholder in kanban.html.",
+            "[export_kanban] Error: could not find 'window.__KANBAN_DATA__' line in kanban.html.",
             file=sys.stderr,
         )
         sys.exit(1)

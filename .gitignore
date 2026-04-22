@@ -2,3 +2,7 @@
 .vercel
 *.pyc
 __pycache__/
+logs/refresh.log
+logs/refresh.err
+logs/*.log
+logs/*.err
