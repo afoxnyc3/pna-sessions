@@ -342,5 +342,20 @@
       "2026-04-22"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101754.html",
+    "date": "2026-04-22",
+    "title": "principal_librarian session \u2014 2026-04-22 (full)",
+    "agent": "principal_librarian",
+    "tags": [
+      "principal_librarian",
+      "2026-04-22",
+      "library",
+      "grooming",
+      "gemini-cluster",
+      "principal-plugin"
+    ],
+    "type": "session"
   }
 ]
