@@ -277,5 +277,18 @@
       "2026-04-20"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-021249.html",
+    "date": "2026-04-22",
+    "title": "principal_architect session \u2014 2026-04-21",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-21",
+      "agent-expert-kit",
+      "librarian-spinup"
+    ],
+    "type": "session"
   }
 ]

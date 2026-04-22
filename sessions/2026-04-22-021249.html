@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_architect session — 2026-04-21 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-22</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>principal_architect session — 2026-04-21</h1>
+    <div class="tags"><span class="tag">principal_architect</span><span class="tag">2026-04-21</span><span class="tag">agent-expert-kit</span><span class="tag">librarian-spinup</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_architect — 2026-04-21</h1>
+
+<p><strong>Agent:</strong> Principal Architect</p>
+<p><strong>Date:</strong> 2026-04-21</p>
+<p><strong>Session duration:</strong> ~6 hours (spanning two work blocks)</p>
+<p><strong>Project(s):</strong> agent-expert-kit, pna-library, claudeclaw (Clarke routing)</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Deep-read of IndyDevDan "Mac Mini Agents" workflow — produced workflow-extraction artifact (10 numbered steps + validation checklist + P&A takeaways) from YouTube <code>LOazLNQnB80</code></li>
+<li><input type="checkbox" disabled checked> Deep-read of IndyDevDan "Agent Experts" (TAC-13) companion video <code>zTcDwqopvKE</code> — summarized meta-agentics atoms (meta-prompt / meta-agent / meta-skill), three-step Act→Learn→Reuse, agent-expert triad shape</li>
+<li><input type="checkbox" disabled checked> Cloned <code>disler/agent-experts</code> repo to <code>~/dev/scratch/agent-experts</code> (token stripped post-clone), read 7 key files (question.md, self-improve.md, expertise.yaml schema, plan_build_improve.md, meta_prompt.md, meta-agent.md, build-agent.md)</li>
+<li><input type="checkbox" disabled checked> Produced lessons-learned doc: <code>/Users/alex/Documents/Obsidian/claudeclaw/Architecture/patterns/agent-experts-patterns.md</code></li>
+<li><input type="checkbox" disabled checked> Scaffolded <code>~/dev/projects/agent-expert-kit/</code> with SPEC / ROADMAP / TASKS / ARCHITECTURE + ADR-0001 (domain-triad-pattern); git init'd with initial commit <code>abe4aaa</code></li>
+<li><input type="checkbox" disabled checked> Fired engineer mission <code>3efb34d9</code> (agent-expert-kit Phase 1)</li>
+<li><input type="checkbox" disabled checked> Engineer completed Phase 1 (T1.1 through T1.7, 51 tests green) and resolved Phase 2 spec blocker (library.yaml vs skill_roster.yaml split) — see <code>~/dev/projects/agent-expert-kit/TASKS.md</code></li>
+<li><input type="checkbox" disabled checked> Created <code>principal_librarian</code> agent end-to-end: BotFather token → <code>agent-create-cli</code> → live service on <code>@pna_librarian_bot</code> PID 3216 → wrote 273-line role-specific CLAUDE.md at <code>/Users/alex/.claudeclaw/agents/principal_librarian/CLAUDE.md</code> → service restarted → first-session setup completed by the agent (vault Library/ created, scratch dir, pna-library cloned, 3 schedules registered, catalog baselined at 85 skills)</li>
+<li><input type="checkbox" disabled checked> Patched Clarke main CLAUDE.md: added librarian to Principals list, added 4 librarian routing rules, expanded Notes section with architect→engineer→librarian handoff rule, corrected Environment block vault folder list (added Architecture/, Ideas/, Library/)</li>
+<li><input type="checkbox" disabled checked> hive_mind log: <code>spec_shipped</code> entry for agent-expert-kit planning artifacts</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>agent-expert-kit Phase 2 (registrar + overwrite safety)</td>
+<td>ready to dispatch</td>
+<td>Engineer resolved the library.yaml vs skill_roster.yaml split. T2.1 now T2.1a + T2.1b. Queue engineer mission when Alex greenlights.</td>
+</tr>
+<tr>
+<td>agent-expert-kit Phase 3 (<code>self-improve-expertise</code> sister skill)</td>
+<td>spec-pending</td>
+<td>Architect to draft the SPEC next session so librarian has a queue post-engineer hand-off</td>
+</tr>
+<tr>
+<td>Sister-skill SPECs (<code>plan-build-improve</code>, <code>parallel-build</code>)</td>
+<td>spec-pending</td>
+<td>Default action next session unless overridden</td>
+</tr>
+<tr>
+<td>till-done skill</td>
+<td>spec-pending</td>
+<td>Concept previously approved; SPEC has not been scaffolded. Pair with agent-expert-kit in Phase 5 chain orchestrator.</td>
+</tr>
+<tr>
+<td>Librarian follow-ups from baseline report</td>
+<td>librarian-owned</td>
+<td>creator-stack isolation + Gemini cluster overlap flagged; librarian to propose prune/merge in next grooming cycle</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Adopt Disler domain triad (<code>expertise.yaml</code> + <code>question.md</code> + <code>self-improve.md</code>) as canonical agent memory unit</td>
+<td>Code is source of truth; YAML is a 1000-line-capped mental-model cache; compile-check gate eliminates malformed state. Proven in Disler's stack.</td>
+<td>All agents; agent-expert-kit; research_a/b A/B; creator-stack</td>
+</tr>
+<tr>
+<td>Expertise files live at <code>~/.pna/experts/&lt;domain&gt;/</code> (shared), not per-agent paths</td>
+<td>research_a/b A/B test requires identical substrate across frameworks to be meaningful</td>
+<td>agent-expert-kit default, all consumers</td>
+</tr>
+<tr>
+<td>MAX_LINES=1000 configurable per domain</td>
+<td>Carried from Disler; global cap forces hygiene; per-domain override allowed when needed</td>
+<td>expertise.yaml ceiling</td>
+</tr>
+<tr>
+<td>Engineer ships v1 of agent-expert-kit; librarian owns v2+ maintenance</td>
+<td>Clean seam — engineer owns code-producing work, librarian owns SKILL.md-as-artifact</td>
+<td>Future library work</td>
+</tr>
+<tr>
+<td>Spin up <code>principal_librarian</code> as dedicated agent (not <code>principal_skillwright</code>)</td>
+<td>Library ownership was sitting in the seams between architect/engineer; role now owned</td>
+<td>Fleet composition; routing; CLAUDE.md</td>
+</tr>
+<tr>
+<td>library.yaml is the canonical registry; skill_roster.yaml is deepagents routing only (out of scope)</td>
+<td>Engineer's Phase 2 amendment (2026-04-21). T2.1 split into T2.1a (registrar writes library.yaml) + T2.1b (library list experts subcommand)</td>
+<td>agent-expert-kit Phase 2, library skill extension</td>
+</tr>
+<tr>
+<td>No spec iteration, applied consistently this session</td>
+<td>Alex's standing rule. Defaults applied inline in SPEC Open Questions, not bounced back</td>
+<td>Workflow</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+/Users/alex/Documents/Obsidian/claudeclaw/Architecture/patterns/agent-experts-patterns.md   created
+/Users/alex/dev/projects/agent-expert-kit/README.md                                         created
+/Users/alex/dev/projects/agent-expert-kit/SPEC.md                                           created
+/Users/alex/dev/projects/agent-expert-kit/ROADMAP.md                                        created
+/Users/alex/dev/projects/agent-expert-kit/TASKS.md                                          created (Phase 1 statuses added by engineer, T2.1 split into T2.1a/b)
+/Users/alex/dev/projects/agent-expert-kit/ARCHITECTURE.md                                   created (registrar diagrams updated to reflect library.yaml)
+/Users/alex/dev/projects/agent-expert-kit/docs/adr/0001-domain-triad-pattern.md             created
+/Users/alex/dev/projects/agent-expert-kit/.gitignore                                        created
+/Users/alex/dev/projects/agent-expert-kit/                                                  git init + commit abe4aaa
+/Users/alex/.claudeclaw/agents/principal_librarian/CLAUDE.md                                created (273 lines, overwrote stock template)
+/Users/alex/.claudeclaw/agents/principal_librarian/agent.yaml                               created (by agent-create-cli)
+/Users/alex/.claudeclaw/CLAUDE.md                                                           modified (4 surgical edits: principals list, routing rules, notes, environment)
+~/.claude/skills/wrap (invoked), hive_mind row inserted                                     logged
+</code></pre>
+
+<p>Cached transcripts from media-extract (reference only):</p>
+<pre><code class="lang-text">
+~/.media-extract/cache/transcripts/LOazLNQnB80-mac-mini-agents-openclaw-nightmare.md
+~/.media-extract/cache/transcripts/zTcDwqopvKE-agent-experts-agents-that-learn.md
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>Architect (self, next session):</strong> draft SPECs for <code>self-improve-expertise</code>, <code>plan-build-improve</code>, <code>parallel-build</code> so librarian has an on-ramp queue. Target location: <code>~/dev/projects/&lt;slug&gt;/</code> per agent, one project per skill family member. Default action unless Alex overrides.</li>
+<li><strong>Architect:</strong> when Alex greenlights, dispatch engineer mission for agent-expert-kit Phase 2 (T2.1a + T2.1b + T2.2 + T2.3). Use the Phase 1 mission as the template; reference the amended TASKS.md.</li>
+<li><strong>Engineer:</strong> Phase 1 complete. Stand by for Phase 2 dispatch. Continue to feed spec amendments back to architect when genuine contradictions surface (library.yaml split was the right call).</li>
+<li><strong>Librarian:</strong> process creator-stack isolation and Gemini cluster overlap findings from baseline grooming report. Propose merge/prune candidates with evidence next Friday's meta-optimize run.</li>
+<li><strong>Clarke/Alex:</strong> update muscle memory — skill work now routes to <code>@pna_librarian_bot</code>, not the architect or engineer.</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Re-sync cadence for <code>self-improve-expertise</code> — on-demand only in v1 (default applied); cron-scheduled is Phase 2 of that skill. Revisit after Phase 4 dogfood → needs: usage data from 2 real domains</li>
+<li>Should Phase 4 dogfood start with creator-stack or claudeclaw-missions? Architect default: creator-stack (tractable, we own the code, aligns with librarian's current catalog flag) → needs: Alex confirm</li>
+<li><code>till-done</code> skill scope — keep as standalone gate or fold into <code>plan-build-improve</code> chain? → needs: Alex preference; architect leans standalone (cleaner seam, reusable outside chain)</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Session ran in two phases split by a context compact. Earlier work (Pi coding agent, Mac Mini Agent workflow-extraction, till-done scoping, session wrap to pna-sessions) is captured in the 2026-04-20 summary already published. This summary covers the post-compact work: agent-experts deep-read → planning scaffold → librarian spin-up → Clarke routing update.</p>
+
+<p>Notable pattern from this session: the full <code>concept → plan → engineer dispatch → engineer completes → librarian hands off → Clarke routes</code> loop closed for the first time inside a single day. Previously spec drafts bottlenecked at the architect. Now engineer ships and librarian picks up. Keep watching this loop as it scales.</p>
+
+<p>Two minor chores carried over:</p>
+<ul>
+<li><code>.env</code> line 31 had an unquoted <code>finish him</code> phrase — Alex fixed (EMERGENCY_KILL_PHRASE). No further action.</li>
+<li>Open daily notes from 2026-04-19 still unresolved (agent_events population verification, rm-rf regex tightening, <code>~/.claude/skills/</code> backup remote, skill registry + smart routing post-claudeclaw-os-upgrade). Not architect-owned; flag for main / engineer when relevant.</li>
+</ul>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
