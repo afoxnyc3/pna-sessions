@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_research session — 2026-04-22 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-22</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_research</div>
+    <h1>principal_research session — 2026-04-22</h1>
+    <div class="tags"><span class="tag">principal_research</span><span class="tag">2026-04-22</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_research — 2026-04-22</h1>
+
+<p><strong>Agent:</strong> Principal Research (research orchestrator)</p>
+<p><strong>Date:</strong> 2026-04-22</p>
+<p><strong>Session duration:</strong> ~1 hour</p>
+<p><strong>Project(s):</strong> claudeclaw / research cluster (research_a + research_b)</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Discussed value of same-framework replicates (best-of-N self-consistency) — recommended 3x3 A/B with within-side merging</li>
+<li><input type="checkbox" disabled checked> Baked best-of-N=3 per side into principal_research's CLAUDE.md (6 missions total, inline merge step added, delivery format updated, error-handling table expanded, memory logging updated to reflect 3x3)</li>
+<li><input type="checkbox" disabled checked> Verified recent mission history via mission-cli list — last research mission was bd21b225 (smoke test Apr 19 11:22 PM, completed)</li>
+<li><input type="checkbox" disabled checked> Ran fresh smoke on both workers:</li>
+</ul>
+<p>  - research_a (<code>5fe1625e</code>): completed, valid Standard Research Schema, authoritative sources (CIA Factbook, Élysée, Britannica)</p>
+<p>  - research_b (<code>122521f5</code>): completed, valid schema, softer sources (Wikipedia x2, paris.fr)</p>
+<p>  - Noted research_b stamped wrong date (2025-01-29) on <code>completed_at</code></p>
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Deep tool-health audit — discovered <strong>real bug</strong>:</li>
+</ul>
+<p>  - Exa/web_search: live verified, working on both</p>
+<p>  - feynman: CLI installed (v0.2.36), wired, launches cleanly</p>
+<p>  - alpha CLI: installed, returns real data live (15 ArXiv papers)</p>
+<p>  - <strong>alpha_search wrappers broken in BOTH workers</strong> — <code>alpha --json search</code> returns a JSON-encoded string not an array; research_a fails loud (AttributeError → ok:false), research_b fails silent (returns ok:true + count:0). Both A/B effectively running without academic search.</p>
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Queued principal_engineer mission <code>70926d2a</code> with full repro, line refs, and 6 till-done acceptance criteria to fix the parsing bug in both workers</li>
+<li><input type="checkbox" disabled checked> Running <code>/wrap</code> — saving summary, publishing to pna-sessions</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>First live 3x3 A/B dispatch</td>
+<td>pending</td>
+<td>Awaiting real research query from Alex. Recommend waiting for engineer mission 70926d2a to land first so alpha is actually functional.</td>
+</tr>
+<tr>
+<td>Engineer fix of alpha parsing</td>
+<td>queued</td>
+<td>Mission 70926d2a, priority 10, principal_engineer. Poll/verify on next turn.</td>
+</tr>
+<tr>
+<td>research_b <code>completed_at</code> timestamp hallucination</td>
+<td>noted</td>
+<td>Not blocking; low priority follow-up. Flag to engineer when convenient.</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Adopt 3x3 best-of-N as default for principal_research</td>
+<td>LLM stochasticity + source coverage breadth; merging before scoring isolates framework signal from sampling noise</td>
+<td>Every future research request dispatches 6 missions instead of 2</td>
+</tr>
+<tr>
+<td>Merge-within-side, not rank</td>
+<td>Union of sources + majority-vote claims preserves signal; ranking throws away data</td>
+<td>Orchestrator inline merge step is now a required workflow phase</td>
+</tr>
+<tr>
+<td>Do not dump all 6 raw replicates by default</td>
+<td>Too noisy on Telegram</td>
+<td>Deliver 2 merged outputs, offer raw 3x3 on request</td>
+</tr>
+<tr>
+<td>Fix alpha before first real A/B</td>
+<td>Source Quality is a key rubric dimension; running with a broken academic tool poisons the comparison</td>
+<td>Hold first real dispatch until mission 70926d2a lands clean</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+/Users/alex/.claudeclaw/agents/principal_research/CLAUDE.md     modified (baked 3x3 best-of-N workflow)
+/Users/alex/dev/projects/rnd/deepagents/sessions/2026-04-22-principal_research-summary.md   created
+</code></pre>
+
+<p>Missions created:</p>
+<pre><code class="lang-text">
+5fe1625e   research_a   smoke: capital of france (A)     completed
+122521f5   research_b   smoke: capital of france (B)     completed
+70926d2a   principal_engineer   Fix alpha_search parsing bug in both research workers   queued
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>principal_engineer:</strong> Execute mission <code>70926d2a</code>. Fix alpha output parsing in both <code>workers/tools.py</code> (research_a) and <code>research-agent-sdk/tools.py</code> (research_b). Verify with 6 acceptance criteria including two live smoke runs that cite ArXiv IDs.</li>
+<li><strong>principal_research (self):</strong> Poll mission <code>70926d2a</code> next session. Once verified clean, run the first real 3x3 dispatch on Alex's query. Monitor for within-side variance and source overlap, which are new metrics required by the updated CLAUDE.md.</li>
+<li><strong>Alex:</strong> Send a real research query once engineer clears the alpha fix. The system is otherwise green.</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Does merged-output scoring vs raw-per-replicate scoring measurably change A/B verdicts? → needs: first real 3x3 run to observe</li>
+<li>Is 15-min timeout tight for feynman-heavy queries across 6 parallel workers? → needs: real dispatch with mixed tool use</li>
+<li>Should we bump feynman's tool-wrapper timeout from 120s to 180s for Opus-deep-research queries? → needs: observation from first real run; flag to engineer if it trips</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Findings that matter beyond this session:</p>
+
+<ol>
+<li><strong>Framework signal is already visible at smoke level.</strong> research_a pulls authoritative sources (CIA, Élysée, Britannica) on a trivial query. research_b pulls encyclopedic sources (Wikipedia, paris.fr). This is real evidence that the two SDKs produce structurally different research outputs — which is exactly what the A/B is meant to measure. Valuable.</li>
+<li><strong>Both workers had the same latent bug in alpha parsing.</strong> Shared failure mode across different frameworks suggests the bug was inherited from a shared assumption about alpha's output format rather than framework-specific. Worth a note: when ingesting a CLI tool's output, always test with the actual CLI, not the assumed schema.</li>
+<li><strong>research_b fails silent where research_a fails loud.</strong> On the same bug, research_a returned an error (visible to the agent, likely fallback), research_b returned <code>ok:true, count:0</code> (invisible, silently degrades source quality). Silent failures are worse than loud ones. Pattern to watch across the whole cluster.</li>
+<li><strong>Orchestrator CLAUDE.md now requires inline merging.</strong> This is a non-trivial workload — merging 3 markdown documents following a strict schema, deduplicating sources, majority-voting findings, flagging variance. First real run will test whether Opus 4.7 can reliably execute this without drifting.</li>
+</ol>
+
+<p>No emergency carry-over. Engineer mission has everything it needs. Cluster is paused on alpha fix.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>

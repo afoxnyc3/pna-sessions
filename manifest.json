@@ -357,5 +357,16 @@
       "principal-plugin"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101819.html",
+    "date": "2026-04-22",
+    "title": "principal_research session \u2014 2026-04-22",
+    "agent": "principal_research",
+    "tags": [
+      "principal_research",
+      "2026-04-22"
+    ],
+    "type": "session"
   }
 ]
