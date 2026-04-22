@@ -368,5 +368,18 @@
       "2026-04-22"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101826.html",
+    "date": "2026-04-22",
+    "title": "principal_delivery session \u2014 2026-04-22",
+    "agent": "principal_delivery",
+    "tags": [
+      "principal_delivery",
+      "2026-04-22",
+      "delivery",
+      "session-summary"
+    ],
+    "type": "session"
   }
 ]

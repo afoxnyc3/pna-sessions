@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_delivery session — 2026-04-22 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-22</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_delivery</div>
+    <h1>principal_delivery session — 2026-04-22</h1>
+    <div class="tags"><span class="tag">principal_delivery</span><span class="tag">2026-04-22</span><span class="tag">delivery</span><span class="tag">session-summary</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_delivery — 2026-04-22</h1>
+
+<p><strong>Agent:</strong> Principal Delivery (Client Delivery PM)</p>
+<p><strong>Date:</strong> 2026-04-22</p>
+<p><strong>Session duration:</strong> ~30 min</p>
+<p><strong>Project(s):</strong> claudeclaw, delivery-ops</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul>
+<li>Explained capabilities, tools, and skills to Alex — clarified where Delivery PM fits in the current multi-agent stack (<code>n/a</code>)</li>
+<li>Queried DB (hive_mind, conversation_log, token_usage, mission_tasks, sessions) to reconstruct prior session activity for Clarke, Architect, Engineer (<code>claudeclaw.db</code>)</li>
+<li>Designed session summary schema — file naming, DB record structure, required sections, quality bar (<code>Delivery/session-summaries/_schema.md</code>)</li>
+<li>Created <code>Delivery/session-summaries/</code> folder in Obsidian vault</li>
+<li>Wrote three structured session summaries for 2026-04-19:</li>
+</ul>
+<p>  - Clarke — 26 turns, $21.52, rnd/deepagents/skills build (<code>Delivery/session-summaries/2026-04-19-clarke.md</code>)</p>
+<p>  - Architect — 13 turns, $11.65, observability hooks + skill-optimizer hardening (<code>Delivery/session-summaries/2026-04-19-architect.md</code>)</p>
+<p>  - Engineer — 6 turns, $2.65, SkillClaw paper + skill-optimizer edits (<code>Delivery/session-summaries/2026-04-19-engineer.md</code>)</p>
+<ul>
+<li>Inserted 3 <code>session_summary</code> records into hive_mind with structured JSON artifacts (turns, cost, output_tokens, projects, obsidian_note path)</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Stub research cluster as tracked project</td>
+<td>not started</td>
+<td>Alex to confirm — offered at end of session, no response yet</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Use <code>hive_mind</code> (action: session_summary) for DB records</td>
+<td>Consistent with existing cross-agent activity log pattern; artifacts JSON carries structured metadata</td>
+<td>All future session summary queries</td>
+</tr>
+<tr>
+<td>Frontmatter carries quantitative fields (turns, cost, projects)</td>
+<td>Enables Obsidian Bases queries without parsing body</td>
+<td><code>Delivery/session-summaries/*.md</code> going forward</td>
+</tr>
+<tr>
+<td>One note per agent per day, slug-based naming</td>
+<td>Predictable, queryable, avoids duplication</td>
+<td><code>_schema.md</code> as canonical reference</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+Delivery/session-summaries/_schema.md                     created
+Delivery/session-summaries/2026-04-19-clarke.md           created
+Delivery/session-summaries/2026-04-19-architect.md        created
+Delivery/session-summaries/2026-04-19-engineer.md         created
+~/dev/projects/rnd/deepagents/sessions/2026-04-22-principal_delivery-summary.md  created
+</code></pre>
+
+<p>DB writes:</p>
+<pre><code class="lang-text">
+hive_mind — 3 rows inserted (action: session_summary, agents: main, principal_architect, principal_engineer)
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>principal_delivery (next session):</strong> Stub research cluster (principal_research, research_a, research_b, principal_sandbox) as tracked project in <code>Delivery/projects/research-cluster/</code> — milestones, blockers, owners</li>
+<li><strong>principal_delivery (next session):</strong> Check whether morning build tasks from 2026-04-19 Daily Note were completed — 5 open items still showing in Obsidian context</li>
+<li><strong>Alex:</strong> Confirm whether to track research cluster as a Delivery project</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Research cluster project: should it be tracked in <code>Delivery/projects/research-cluster/</code>? → needs: Alex confirmation</li>
+<li>Daily Note open items from 2026-04-19 — were these completed after the morning build? → needs: status check next session</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>First real session for principal_delivery. Most of the work was infrastructure: defining the schema and backfilling summaries from session data. The delivery PM role is most useful as a cross-agent aggregator and project tracker — not a task executor. Alex noted he hasn't been using this agent; the offer to stub the research cluster as a tracked project is the most immediate concrete value-add.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
