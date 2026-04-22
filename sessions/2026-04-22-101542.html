@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>clarke session — 2026-04-22 — P&amp;A</title>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #222;
+      --text: #e8e8e8; --muted: #666; --accent: #fff;
+      --code-bg: #111; --tag-bg: #1e1e1e; --tag-border: #333;
+      --link: #a0c4ff; --type-color: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: 'SF Mono', monospace; }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: 'SF Mono', monospace; margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: 'SF Mono', monospace; }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 12px; color: #d4d4d4; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-22</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">main</div>
+    <h1>clarke session — 2026-04-22</h1>
+    <div class="tags"><span class="tag">clarke</span><span class="tag">2026-04-22</span><span class="tag">chelsea-piers-itops</span><span class="tag">pna-library</span><span class="tag">architecture</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — clarke — 2026-04-22</h1>
+
+<p><strong>Agent:</strong> Clarke (main)</p>
+<p><strong>Date:</strong> 2026-04-22</p>
+<p><strong>Session duration:</strong> ~4 hours</p>
+<p><strong>Project(s):</strong> pna-library, chelsea-piers-itops, claudeclaw (architecture Q&A)</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Installed Osmani agent personas into library — <code>~/dev/pna-library/library.yaml</code> (commit <code>a31a745</code>, pushed to <code>feat/T1.1-T1.7-agent-expert-kit-phase1</code>)</li>
+</ul>
+<p>  - Added <code>agents:</code> section: <code>code-reviewer</code>, <code>test-engineer</code>, <code>security-auditor</code></p>
+<p>  - Each entry maps persona → skills + tools, sourced from <code>~/dev/external/agent-skills/agents/</code></p>
+<p>  - Answered architectural question: no separate launchd agent — mission-based dispatch is the right model</p>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Answered series of architecture Q&A for Alex:</li>
+</ul>
+<p>  - Hook vs skill vs pattern vs rule: post-engineer review fan-out is a <strong>hook</strong> (auto-fires at lifecycle boundary); <code>/ship</code> is the manual <strong>skill</strong> equivalent</p>
+<p>  - Parallel review missions: two ephemeral Claude Code sub-agents (Task fan-out), not the Engineer taking on personas, not persistent services</p>
+<p>  - launchd bot architecture: each is a separate Node.js process (claudeclaw runtime), NOT Claude Code; Claude Code is spawned as a subprocess per task via the SDK <code>query()</code> call</p>
+<p>  - Context/memory system: full breakdown of 5-layer retrieval (semantic + FTS5, high-importance, consolidation insights, team activity, history recall), Gemini extraction + embedding pipeline, salience decay model, consolidation with contradiction resolution</p>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Built <code>chelsea-piers-itops</code> project end-to-end:</li>
+</ul>
+<p>  - Explored upstream <code>anthropics/knowledge-work-plugins</code> — plugin schema, SKILL.md format, MCP connector pattern, <code>~~category</code> placeholder convention</p>
+<p>  - Generated full documentation set (<code>docs/</code>):</p>
+<p>    - <code>SPEC.md</code> — 13 system integrations, skill schema, 5 persona definitions, data handling rules</p>
+<p>    - <code>PRD.md</code> — 5 user personas with JTBD, 11 FRs, NFRs, v1 out-of-scope</p>
+<p>    - <code>ROADMAP.md</code> — 3-phase plan (read-only MVP → write-gated → automation), risk register</p>
+<p>    - <code>TASKS.md</code> — 8 epics, 18 tasks with acceptance criteria and owners</p>
+<p>    - <code>MVP.md</code> — L1 triage loop, definition of done, validation playbook</p>
+<p>    - <code>CONSTRAINTS.md</code> — auth limits per system, data sensitivity table, licensing, change guardrails</p>
+<p>  - Scaffolded plugin (<code>chelsea-piers-itops/</code>): plugin.json, .mcp.json, CONNECTORS.md</p>
+<p>  - Wrote 4 MVP skills: <code>ticket-triage</code>, <code>device-lookup</code>, <code>runbook-lookup</code>, <code>escalation-routing</code></p>
+<p>  - Created private GitHub repo <code>afoxnyc3/chelsea-piers-itops</code>, committed and pushed (commit <code>f57610f</code>)</p>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>agent-expert-kit Phase 2</td>
+<td>queued (<code>e8bdc4d3</code>)</td>
+<td>Engineer agent needs to pick up the mission; check with <code>mission-cli list</code></td>
+</tr>
+<tr>
+<td>agent-expert-kit Phase 3 spec</td>
+<td>queued (<code>78432eb3</code>)</td>
+<td>Architect agent needs to pick up the mission</td>
+</tr>
+<tr>
+<td>chelsea-piers-itops — remaining Phase 1 skills</td>
+<td>not started</td>
+<td>Needs CP IT team to confirm: Meraki org ID, Confluence space key, Jira project key, escalation contacts</td>
+</tr>
+<tr>
+<td>chelsea-piers-itops — MCP auth</td>
+<td>blocked</td>
+<td>Requires CP M365 app registration approval and Atlassian OAuth app creation</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Osmani personas: mission-based dispatch, not launchd</td>
+<td>Personas are roles not services; idle persistent process is wasteful; fits local-first philosophy</td>
+<td>All future persona usage; post-engineer review hook design</td>
+</tr>
+<tr>
+<td>Post-engineer review = hook, not skill</td>
+<td>Fires automatically at mission completion boundary; <code>/ship</code> is the manual variant</td>
+<td>agent-expert-kit Phase 2+ quality gates</td>
+</tr>
+<tr>
+<td>chelsea-piers-itops MVP = L1 triage loop only</td>
+<td>Highest daily volume, read-only = lowest risk, immediate measurable ROI</td>
+<td>Phase 1 delivery scope and validation plan</td>
+</tr>
+<tr>
+<td>Mimecast + Meraki + NinjaOne use Bash tool (no MCP server)</td>
+<td>No official MCP servers exist for these systems</td>
+<td>Connector architecture; skills use REST API via env vars</td>
+</tr>
+<tr>
+<td>Email message bodies never passed to LLM</td>
+<td>Privacy and compliance constraint for CP IT Ops</td>
+<td>All email-related skills scoped to metadata only</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+~/dev/pna-library/library.yaml                                          modified
+~/dev/projects/chelsea-piers-itops/docs/SPEC.md                         created
+~/dev/projects/chelsea-piers-itops/docs/PRD.md                          created
+~/dev/projects/chelsea-piers-itops/docs/ROADMAP.md                      created
+~/dev/projects/chelsea-piers-itops/docs/TASKS.md                        created
+~/dev/projects/chelsea-piers-itops/docs/MVP.md                          created
+~/dev/projects/chelsea-piers-itops/docs/CONSTRAINTS.md                  created
+~/dev/projects/chelsea-piers-itops/chelsea-piers-itops/.claude-plugin/plugin.json   created
+~/dev/projects/chelsea-piers-itops/chelsea-piers-itops/.mcp.json        created
+~/dev/projects/chelsea-piers-itops/chelsea-piers-itops/CONNECTORS.md    created
+~/dev/projects/chelsea-piers-itops/chelsea-piers-itops/skills/ticket-triage/SKILL.md       created
+~/dev/projects/chelsea-piers-itops/chelsea-piers-itops/skills/device-lookup/SKILL.md       created
+~/dev/projects/chelsea-piers-itops/chelsea-piers-itops/skills/runbook-lookup/SKILL.md      created
+~/dev/projects/chelsea-piers-itops/chelsea-piers-itops/skills/escalation-routing/SKILL.md  created
+</code></pre>
+
+<p><strong>Commits:</strong></p>
+<ul>
+<li><code>pna-library</code> <code>a31a745</code> — feat: add Osmani code-quality personas to library</li>
+<li><code>chelsea-piers-itops</code> <code>f57610f</code> — feat: initial scaffold</li>
+</ul>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>Clarke (next session):</strong> Check whether Engineer picked up <code>e8bdc4d3</code> (agent-expert-kit Phase 2) — <code>node dist/mission-cli.js result e8bdc4d3</code></li>
+<li><strong>Clarke (next session):</strong> Check whether Architect picked up <code>78432eb3</code> (agent-expert-kit Phase 3 spec) — <code>node dist/mission-cli.js result 78432eb3</code></li>
+<li><strong>Alex → CP IT team:</strong> Provide Meraki org ID + network IDs, Confluence space key, Jira project key, escalation contact matrix, and M365 tenant ID for chelsea-piers-itops connector config</li>
+<li><strong>Engineer (when Phase 2 completes):</strong> Wire post-mission hook to dispatch <code>code-reviewer</code> + <code>security-auditor</code> parallel missions before merge</li>
+<li><strong>Clarke (future):</strong> Build remaining Phase 1 chelsea-piers-itops skills once CP constants are confirmed (see <code>docs/TASKS.md</code> Epics 3–7)</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Has Engineer picked up the agent-expert-kit Phase 2 mission? Last seen queued. → check <code>mission-cli list</code></li>
+<li>Does CP have an M365 app registration process or does IT Manager have Global Admin to create one? → needs: Alex / CP IT Manager</li>
+<li>Zoho scope at CP — CRM, or broader suite? → needs: CP IT Manager</li>
+<li>Should <code>pna-library</code> persona entries be on <code>main</code> or keep accumulating on the feature branch? → needs: Alex</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>Long architecture-heavy session. Alex asked detailed questions about the claudeclaw internals (process model, context window, memory pipeline) — all answered from source code. The chelsea-piers-itops project is the first external client plugin built on the knowledge-work-plugins framework. Key structural difference from upstream: Microsoft-centric stack replaces Google/Slack/Notion defaults; IT Ops adds three entirely new skill categories (network ops, email security, RMM) not present in the upstream plugin library.</p>
+
+<p>Principal Librarian also had a productive session today: 5 new skills ingested (saas-decommission, problem-decomposition, agentic-workflow-solutioning, threat-model, engagement-retrospective), library now at 93 skills. Principal Architect scaffolded both principal-plugin and pna-case-base repos.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>

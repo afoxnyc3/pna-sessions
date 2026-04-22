@@ -304,5 +304,19 @@
       "gemini-cluster"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101542.html",
+    "date": "2026-04-22",
+    "title": "clarke session \u2014 2026-04-22",
+    "agent": "main",
+    "tags": [
+      "clarke",
+      "2026-04-22",
+      "chelsea-piers-itops",
+      "pna-library",
+      "architecture"
+    ],
+    "type": "session"
   }
 ]
