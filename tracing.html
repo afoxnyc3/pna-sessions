@@ -332,6 +332,42 @@
       border-color: var(--amber-border);
     }
 
+    .badge-green {
+      background: var(--green-dim);
+      color: var(--green);
+      border-color: var(--green-border);
+    }
+
+    .badge-red {
+      background: rgba(248,113,113,0.1);
+      color: #f87171;
+      border-color: rgba(248,113,113,0.3);
+    }
+
+    .badge-blue {
+      background: var(--primary-dim);
+      color: var(--primary);
+      border-color: var(--border-strong);
+    }
+
+    .result-preview {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: block;
+      max-width: 340px;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    .mission-title {
+      max-width: 260px;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.35;
+    }
+
     /* ── Expand row ── */
     .expand-row td {
       padding: 0;
@@ -443,7 +479,7 @@
   </section>
 
   <!-- Sessions table -->
-  <section class="table-section">
+  <section class="table-section section-gap">
     <div class="ve-card">
       <div class="ve-card-header">
         <span class="ve-card-title">Sessions</span>
@@ -456,6 +492,7 @@
               <th>Session ID</th>
               <th>Agent</th>
               <th>Date</th>
+              <th>Duration</th>
               <th>Turns</th>
               <th>Peak Context</th>
               <th>Total Output</th>
@@ -471,64 +508,144 @@
     </div>
   </section>
 
+  <!-- Mission Work Log -->
+  <section class="table-section">
+    <div class="ve-card">
+      <div class="ve-card-header">
+        <span class="ve-card-title">Mission Work Log</span>
+        <span class="ve-card-meta" id="mission-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="missions-table">
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Duration</th>
+              <th>Result / Error</th>
+              <th>Est. Cost</th>
+            </tr>
+          </thead>
+          <tbody id="missions-body">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <script>
   window.__TRACE_DATA__ = [
   {
+    "session_id": "84a26222-b31b-4ea1-a92d-ef82916711e1",
+    "turns": 4,
+    "peak_context": 140987,
+    "total_output": 35416,
+    "total_cost": 19.3083,
+    "compactions": 0,
+    "session_start": 1776827648,
+    "session_end": 1776897727,
+    "duration_secs": 70079,
+    "agent_id": "principal_engineer"
+  },
+  {
+    "session_id": "05531c89-4875-477c-bfa0-2a72270746ee",
+    "turns": 5,
+    "peak_context": 162073,
+    "total_output": 62818,
+    "total_cost": 28.7242,
+    "compactions": 0,
+    "session_start": 1776825664,
+    "session_end": 1776898228,
+    "duration_secs": 72564,
+    "agent_id": "principal_architect"
+  },
+  {
+    "session_id": "d7d9cdd0-593e-46da-a358-34554e220cbc",
+    "turns": 7,
+    "peak_context": 84725,
+    "total_output": 15865,
+    "total_cost": 3.5552,
+    "compactions": 0,
+    "session_start": 1776815058,
+    "session_end": 1776853083,
+    "duration_secs": 38025,
+    "agent_id": "principal_librarian"
+  },
+  {
+    "session_id": "22ae6390-e945-48fc-8a04-3b4e73b61450",
+    "turns": 8,
+    "peak_context": 89387,
+    "total_output": 13134,
+    "total_cost": 8.949,
+    "compactions": 0,
+    "session_start": 1776782370,
+    "session_end": 1776816382,
+    "duration_secs": 34012,
+    "agent_id": null
+  },
+  {
     "session_id": "e8f4c34f-c3a4-434f-9993-258a5a30329b",
-    "turns": 6,
-    "peak_context": 100478,
-    "total_output": 8396,
-    "total_cost": 9.5827,
+    "turns": 9,
+    "peak_context": 142899,
+    "total_output": 23366,
+    "total_cost": 21.9579,
     "compactions": 0,
     "session_start": 1776652315,
-    "session_end": 1776770680,
+    "session_end": 1776853110,
+    "duration_secs": 200795,
     "agent_id": "principal_research"
   },
   {
     "session_id": "5f7141a2-a7cd-4243-aa47-64394b16b443",
-    "turns": 8,
+    "turns": 9,
     "peak_context": 151639,
-    "total_output": 95825,
-    "total_cost": 49.991,
-    "compactions": 1,
+    "total_output": 96266,
+    "total_cost": 54.0611,
+    "compactions": 2,
     "session_start": 1776636206,
-    "session_end": 1776655824,
-    "agent_id": "principal_engineer"
+    "session_end": 1776771264,
+    "duration_secs": 135058,
+    "agent_id": null
   },
   {
     "session_id": "65bf765f-0f11-4e0e-941d-32760dcaf0cb",
-    "turns": 3,
-    "peak_context": 73025,
-    "total_output": 1480,
-    "total_cost": 1.8062,
+    "turns": 4,
+    "peak_context": 79512,
+    "total_output": 3758,
+    "total_cost": 2.4953,
     "compactions": 0,
     "session_start": 1776581281,
-    "session_end": 1776625308,
+    "session_end": 1776853175,
+    "duration_secs": 271894,
     "agent_id": "principal_strategy"
   },
   {
     "session_id": "5e643334-a26c-471f-a914-343f18342f09",
-    "turns": 80,
+    "turns": 127,
     "peak_context": 164674,
-    "total_output": 302112,
-    "total_cost": 61.2403,
-    "compactions": 4,
+    "total_output": 443103,
+    "total_cost": 95.2658,
+    "compactions": 6,
     "session_start": 1776575735,
-    "session_end": 1776739421,
+    "session_end": 1776944141,
+    "duration_secs": 368406,
     "agent_id": "main"
   },
   {
     "session_id": "c56e1a14-d3fc-48cb-b674-8b487b3d6e38",
-    "turns": 48,
+    "turns": 57,
     "peak_context": 159569,
-    "total_output": 192345,
-    "total_cost": 97.5592,
+    "total_output": 242973,
+    "total_cost": 121.2244,
     "compactions": 5,
     "session_start": 1776570175,
-    "session_end": 1776739254,
-    "agent_id": "principal_architect"
+    "session_end": 1776823985,
+    "duration_secs": 253810,
+    "agent_id": null
   },
   {
     "session_id": "edc13cb8-b212-4976-8875-358fd5a54b85",
@@ -539,28 +656,31 @@
     "compactions": 1,
     "session_start": 1776277658,
     "session_end": 1776625298,
+    "duration_secs": 347640,
     "agent_id": null
   },
   {
     "session_id": "1075631d-e89a-455f-ac15-05b97c43175b",
-    "turns": 3,
-    "peak_context": 59094,
-    "total_output": 12077,
-    "total_cost": 1.3111,
+    "turns": 5,
+    "peak_context": 69369,
+    "total_output": 14939,
+    "total_cost": 2.2203,
     "compactions": 0,
     "session_start": 1776221747,
-    "session_end": 1776625315,
+    "session_end": 1776853113,
+    "duration_secs": 631366,
     "agent_id": "principal_delivery"
   },
   {
     "session_id": "3edb79a0-d3cd-4dce-9261-e3739c4fcf03",
-    "turns": 2,
+    "turns": 3,
     "peak_context": 17569,
-    "total_output": 470,
-    "total_cost": 0.1621,
+    "total_output": 1227,
+    "total_cost": 0.3875,
     "compactions": 0,
     "session_start": 1776221643,
-    "session_end": 1776625377,
+    "session_end": 1776771230,
+    "duration_secs": 549587,
     "agent_id": "principal_pipeline"
   },
   {
@@ -572,12 +692,550 @@
     "compactions": 3,
     "session_start": 1776209009,
     "session_end": 1776575231,
+    "duration_secs": 366222,
     "agent_id": null
+  }
+]
+
+  window.__MISSION_DATA__ = [
+  {
+    "id": "50b27f88",
+    "title": "pna-sessions: tracing work context panel",
+    "assigned_agent": "principal_engineer",
+    "status": "running",
+    "priority": 5,
+    "result_preview": null,
+    "error": null,
+    "created_at": 1776944135,
+    "started_at": 1776944165,
+    "completed_at": null,
+    "duration_secs": null
+  },
+  {
+    "id": "ef8bfd49",
+    "title": "claudeclaw: SDK event-loop tool tracing",
+    "assigned_agent": "principal_engineer",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Clean. Here's what was done and what you get:\n\n---\n\n**What changed**\n\n**`src/db.ts`** (2 additions):\n1. `agent_events` table added to `createSchema()` \u2014 `CREATE TABLE IF NOT EXISTS` so it migrates sil",
+    "error": null,
+    "created_at": 1776939952,
+    "started_at": 1776939965,
+    "completed_at": 1776940324,
+    "duration_secs": 359
+  },
+  {
+    "id": "jira-pm-build-01",
+    "title": "Build jira-pm Cowork plugin",
+    "assigned_agent": "main",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Shipped. 9 skills, plugin.json, .mcp.json, CONNECTORS.md. Repo: afoxnyc3/jira-pm. Commit 43789c7.",
+    "error": null,
+    "created_at": 1776896177,
+    "started_at": 1776896177,
+    "completed_at": 1776903377,
+    "duration_secs": 7200
+  },
+  {
+    "id": "e5dfd3e6",
+    "title": "agent-expert-kit Phase 3 implementation",
+    "assigned_agent": "principal_engineer",
+    "status": "failed",
+    "priority": 5,
+    "result_preview": null,
+    "error": "Timed out after 10 minutes",
+    "created_at": 1776899087,
+    "started_at": 1776899103,
+    "completed_at": 1776899704,
+    "duration_secs": 601
+  },
+  {
+    "id": "a5b890b2",
+    "title": "Atlassian Jira+Confluence Claude skills research",
+    "assigned_agent": "research_a",
+    "status": "completed",
+    "priority": 7,
+    "result_preview": "Here is my full result:\n\n---\nquery: Research everything publicly available on Claude skills, Cowork plugins, and AI workflows for Atlassian Jira and Confluence. Cover: (1) official Atlassian Claude Co",
+    "error": null,
+    "created_at": 1776862209,
+    "started_at": 1776862222,
+    "completed_at": 1776862720,
+    "duration_secs": 498
+  },
+  {
+    "id": "e8bdc4d3",
+    "title": "agent-expert-kit Phase 2",
+    "assigned_agent": "principal_engineer",
+    "status": "failed",
+    "priority": 8,
+    "result_preview": null,
+    "error": "Timed out after 10 minutes",
+    "created_at": 1776816880,
+    "started_at": 1776858122,
+    "completed_at": 1776858722,
+    "duration_secs": 600
+  },
+  {
+    "id": "78432eb3",
+    "title": "agent-expert-kit Phase 3 spec",
+    "assigned_agent": "principal_architect",
+    "status": "completed",
+    "priority": 6,
+    "result_preview": "Done. Here's what shipped:\n\n---\n\n**Branch**: `feat/phase3-spec` (pushed to origin \u2014 one note below on why not T1.7)\n\n---\n\n**What was written/updated:**\n\n**TASKS.md \u2014 Phase 3 expanded**\n\nT3.1 went from",
+    "error": null,
+    "created_at": 1776816923,
+    "started_at": 1776858106,
+    "completed_at": 1776858475,
+    "duration_secs": 369
+  },
+  {
+    "id": "47d40f89",
+    "title": "Ingest principal-plugin MVP-5 skills",
+    "assigned_agent": "principal_librarian",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Second audit agent confirms the 5 skills are now in the catalog. It also surfaced a useful side finding: 32 skills installed but not cataloged, 34 cataloged but not installed locally. Worth a future g",
+    "error": null,
+    "created_at": 1776828099,
+    "started_at": 1776828133,
+    "completed_at": 1776828678,
+    "duration_secs": 545
+  },
+  {
+    "id": "3efb34d9",
+    "title": "agent-expert-kit Phase 1",
+    "assigned_agent": "principal_engineer",
+    "status": "failed",
+    "priority": 7,
+    "result_preview": null,
+    "error": "Timed out after 10 minutes",
+    "created_at": 1776797805,
+    "started_at": 1776797820,
+    "completed_at": 1776798420,
+    "duration_secs": 600
+  },
+  {
+    "id": "70926d2a",
+    "title": "Fix alpha_search parsing bug in both research workers",
+    "assigned_agent": "principal_engineer",
+    "status": "failed",
+    "priority": 10,
+    "result_preview": null,
+    "error": "Timed out after 10 minutes",
+    "created_at": 1776797151,
+    "started_at": 1776797160,
+    "completed_at": 1776797760,
+    "duration_secs": 600
+  },
+  {
+    "id": "e690d5ba",
+    "title": "Smoke: attention mechanisms in transformers",
+    "assigned_agent": "research_b",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "I have enough data to produce the structured output. Note the tool failures and that I used web_research fallback per the workflow fallback rule.\n\n---\nquery: Find academic sources on attention mechani",
+    "error": null,
+    "created_at": 1776797578,
+    "started_at": 1776797596,
+    "completed_at": 1776797654,
+    "duration_secs": 58
+  },
+  {
+    "id": "aaa15610",
+    "title": "Smoke: attention mechanisms in transformers",
+    "assigned_agent": "research_a",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "## Smoke Test Result: FAILED\n\nThe `alpha_search` tool is not working. All three queries returned the same error:\n\n```\n{\"ok\": false, \"error\": \"'str' object has no attribute 'get'\"}\n```\n\n### Diagnosis\n\n",
+    "error": null,
+    "created_at": 1776797575,
+    "started_at": 1776797577,
+    "completed_at": 1776797595,
+    "duration_secs": 18
+  },
+  {
+    "id": "122521f5",
+    "title": "smoke: capital of france (B)",
+    "assigned_agent": "research_b",
+    "status": "completed",
+    "priority": 10,
+    "result_preview": "---\nquery: What is the capital of France?\nagent: research_b\ncompleted_at: 2025-01-29T00:00:00Z\nconfidence: high\n---\n\n# Research: What is the capital of France?\n\n## Executive Summary\nThe capital of Fra",
+    "error": null,
+    "created_at": 1776770527,
+    "started_at": 1776770554,
+    "completed_at": 1776770582,
+    "duration_secs": 28
+  },
+  {
+    "id": "5fe1625e",
+    "title": "smoke: capital of france (A)",
+    "assigned_agent": "research_a",
+    "status": "completed",
+    "priority": 10,
+    "result_preview": "---\nquery: What is the capital of France?\nagent: research_a\ncompleted_at: 2026-04-19T23:30:00Z\nconfidence: high\n---\n\n# Research: What is the capital of France?\n\n## Executive Summary\nThe capital of Fra",
+    "error": null,
+    "created_at": 1776770527,
+    "started_at": 1776770548,
+    "completed_at": 1776770574,
+    "duration_secs": 26
+  },
+  {
+    "id": "d656c90b",
+    "title": "NetSuite MCP OAuth fix \u2014 step-by-step resolution",
+    "assigned_agent": "research_a",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "---\n\n```markdown\n---\nquery: The NetSuite MCP SuiteApp (official Anthropic/NetSuite connector) is installed but the OAuth 2.0 authorization flow fails consistently for all roles with the error: 'Your r",
+    "error": null,
+    "created_at": 1776724787,
+    "started_at": 1776724799,
+    "completed_at": 1776725273,
+    "duration_secs": 474
+  },
+  {
+    "id": "cdd64e0b",
+    "title": "NetSuite MCP OAuth fix \u2014 step-by-step resolution",
+    "assigned_agent": "research_b",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Noted. I have enough primary Oracle documentation to build a grounded, actionable resolution guide. Producing the final output now.\n\n---\nquery: Research and produce a complete, step-by-step resolution",
+    "error": null,
+    "created_at": 1776724801,
+    "started_at": 1776724829,
+    "completed_at": 1776724987,
+    "duration_secs": 158
+  },
+  {
+    "id": "cf55095b",
+    "title": "[retry-2] Workflow: extract skills from video/audio",
+    "assigned_agent": "research_a",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Now writing the final schema-compliant output.\n\n---\n\n```markdown\n---\nquery: Research and define a complete workflow for extracting Claude Code skill files (SKILL.md) from YouTube videos, podcast episo",
+    "error": null,
+    "created_at": 1776703058,
+    "started_at": 1776703070,
+    "completed_at": 1776703616,
+    "duration_secs": 546
+  },
+  {
+    "id": "2d02ffb1",
+    "title": "[retry-2] Workflow: extract skills from video/audio",
+    "assigned_agent": "research_b",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "I have strong coverage. Now producing the final output.\n\n---\nquery: Research and define a complete workflow for extracting Claude Code skill files (SKILL.md) from YouTube videos, podcast episodes, con",
+    "error": null,
+    "created_at": 1776703058,
+    "started_at": 1776703069,
+    "completed_at": 1776703235,
+    "duration_secs": 166
+  },
+  {
+    "id": "1747e570",
+    "title": "research_a worker: wire tools.py into create_deep_agent + reload",
+    "assigned_agent": "principal_engineer",
+    "status": "failed",
+    "priority": 8,
+    "result_preview": null,
+    "error": "Timed out after 10 minutes",
+    "created_at": 1776702070,
+    "started_at": 1776702117,
+    "completed_at": 1776702884,
+    "duration_secs": 767
+  },
+  {
+    "id": "b1c12479",
+    "title": "smoke test tools",
+    "assigned_agent": "research_a",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Top 3 result titles:\n\n1. **SKILL.md - anthropics/claude-code** (github.com)\n2. **Deep Dive SKILL.md (Part 1/2)** \u2014 A B Vijay Kumar (Medium)\n3. **Extend Claude with skills** (code.claude.com/docs)",
+    "error": null,
+    "created_at": 1776702514,
+    "started_at": 1776702528,
+    "completed_at": 1776702535,
+    "duration_secs": 7
+  },
+  {
+    "id": "ff8967dc",
+    "title": "research_a tools.py: Exa + feynman + alpha as LangChain tools",
+    "assigned_agent": "principal_engineer",
+    "status": "completed",
+    "priority": 8,
+    "result_preview": "Done. Here's what landed:\n\n**tools.py** \u2014 placed at `~/dev/projects/rnd/deepagents/tools.py` and mirrored into the installed package so `from deepagents import tools` resolves correctly. All three `@t",
+    "error": null,
+    "created_at": 1776702054,
+    "started_at": 1776702057,
+    "completed_at": 1776702283,
+    "duration_secs": 226
+  },
+  {
+    "id": "532e2de0",
+    "title": "research_a: wire Exa + feynman + alpha as direct tools",
+    "assigned_agent": "principal_engineer",
+    "status": "failed",
+    "priority": 5,
+    "result_preview": null,
+    "error": "Timed out after 10 minutes",
+    "created_at": 1776700279,
+    "started_at": 1776700317,
+    "completed_at": 1776700917,
+    "duration_secs": 600
+  },
+  {
+    "id": "99b64faa",
+    "title": "[retry] Workflow: extract skills from video/audio",
+    "assigned_agent": "research_b",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "I have enough material. Let me compile the comprehensive research output.\n\n---\nquery: Research and define a complete workflow for extracting Claude Code skill files (SKILL.md) from YouTube videos, pod",
+    "error": null,
+    "created_at": 1776695391,
+    "started_at": 1776695413,
+    "completed_at": 1776695570,
+    "duration_secs": 157
+  },
+  {
+    "id": "bb50d90c",
+    "title": "[retry] Workflow: extract skills from video/audio",
+    "assigned_agent": "research_a",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "---\n\n## Mission Status: needs_clarification (tooling gap)\n\nThis is a retry run billed as \"tools are now working,\" but they are not wired into my runtime. I am reporting this honestly rather than retur",
+    "error": null,
+    "created_at": 1776695391,
+    "started_at": 1776695416,
+    "completed_at": 1776695544,
+    "duration_secs": 128
+  },
+  {
+    "id": "0fb10bbd",
+    "title": "Research post-processing: publish A/B results + SWOT to pna-sessions + notify",
+    "assigned_agent": "principal_engineer",
+    "status": "completed",
+    "priority": 9,
+    "result_preview": "Done. All three published and Alex notified.\n\n---\n\n**Published:**\n- research_b: https://pna-sessions.vercel.app/sessions/2026-04-20-124232\n- research_a: https://pna-sessions.vercel.app/sessions/2026-0",
+    "error": null,
+    "created_at": 1776688415,
+    "started_at": 1776688436,
+    "completed_at": 1776688976,
+    "duration_secs": 540
+  },
+  {
+    "id": "6620cbc2",
+    "title": "pna-sessions: add research type + mobile-optimised research template",
+    "assigned_agent": "principal_engineer",
+    "status": "completed",
+    "priority": 9,
+    "result_preview": "Done. Here's what shipped:\n\n**generate_session.py**\n- `research` added to `--type` choices\n- Type color: `#06b6d4` (cyan)\n- `parse_frontmatter()`: strips `---` YAML block, extracts `query`, `agent`, `",
+    "error": null,
+    "created_at": 1776688320,
+    "started_at": 1776688376,
+    "completed_at": 1776688832,
+    "duration_secs": 456
+  },
+  {
+    "id": "004700a4",
+    "title": "Workflow: extract skills from video/audio transcriptions",
+    "assigned_agent": "research_a",
+    "status": "completed",
+    "priority": 8,
+    "result_preview": "Note: alpha CLI, feynman CLI, and Exa MCP were not available in this environment. I must honestly flag that in the Confidence Assessment. Now writing the final synthesized output in the Standard Resea",
+    "error": null,
+    "created_at": 1776687096,
+    "started_at": 1776687119,
+    "completed_at": 1776687543,
+    "duration_secs": 424
+  },
+  {
+    "id": "eb7a021c",
+    "title": "Workflow: extract skills from video/audio transcriptions",
+    "assigned_agent": "research_b",
+    "status": "completed",
+    "priority": 8,
+    "result_preview": "All external tooling is broken in this environment (the underlying Exa client has a bad parameter, and feynman + alpha CLIs are not installed). I have to be honest about this and deliver a grounded an",
+    "error": null,
+    "created_at": 1776687089,
+    "started_at": 1776687118,
+    "completed_at": 1776687221,
+    "duration_secs": 103
+  },
+  {
+    "id": "bd21b225",
+    "title": "smoke4: capital of france",
+    "assigned_agent": "research_a",
+    "status": "completed",
+    "priority": 10,
+    "result_preview": "---\nquery: What is the capital of France?\nagent: research_a\ncompleted_at: 2025-01-27T00:00:00Z\nconfidence: high\n---\n\n# Research: What is the capital of France?\n\n## Executive Summary\nParis is the capit",
+    "error": null,
+    "created_at": 1776655321,
+    "started_at": 1776655335,
+    "completed_at": 1776655361,
+    "duration_secs": 26
+  },
+  {
+    "id": "abe23c11",
+    "title": "smoke3: capital of france",
+    "assigned_agent": "research_a",
+    "status": "failed",
+    "priority": 10,
+    "result_preview": null,
+    "error": "No module named 'agents'\nTraceback (most recent call last):\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 479, in start\n    result = await self.run_mission(mission)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 420, in run_mission\n    agent = self._get_agent()\n            ^^^^^^^^^^^^^^^^^\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 404, in _get_agent\n    self._agent = self._build_agent()\n                  ^^^^^^^^^^^^^^^^^^^\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 392, in _build_agent\n    from agents.research_a import spec as research_a_spec\nModuleNotFoundError: No module named 'agents'\n",
+    "created_at": 1776655198,
+    "started_at": 1776655209,
+    "completed_at": 1776655209,
+    "duration_secs": 0
+  },
+  {
+    "id": "dd583bcb",
+    "title": "smoke2: capital of france",
+    "assigned_agent": "research_a",
+    "status": "failed",
+    "priority": 10,
+    "result_preview": null,
+    "error": "No module named 'agents'\nTraceback (most recent call last):\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 479, in start\n    result = await self.run_mission(mission)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 420, in run_mission\n    agent = self._get_agent()\n            ^^^^^^^^^^^^^^^^^\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 404, in _get_agent\n    self._agent = self._build_agent()\n                  ^^^^^^^^^^^^^^^^^^^\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 392, in _build_agent\n    from agents.research_a import spec as research_a_spec\nModuleNotFoundError: No module named 'agents'\n",
+    "created_at": 1776655102,
+    "started_at": 1776655113,
+    "completed_at": 1776655113,
+    "duration_secs": 0
+  },
+  {
+    "id": "b4cd0997",
+    "title": "smoke: capital of france",
+    "assigned_agent": "research_a",
+    "status": "failed",
+    "priority": 10,
+    "result_preview": null,
+    "error": "No module named 'agents'\nTraceback (most recent call last):\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 479, in start\n    result = await self.run_mission(mission)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 420, in run_mission\n    agent = self._get_agent()\n            ^^^^^^^^^^^^^^^^^\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 404, in _get_agent\n    self._agent = self._build_agent()\n                  ^^^^^^^^^^^^^^^^^^^\n  File \"/Users/alex/dev/projects/rnd/deepagents/workers/research_a_worker.py\", line 392, in _build_agent\n    from agents.research_a import spec as research_a_spec\nModuleNotFoundError: No module named 'agents'\n",
+    "created_at": 1776654987,
+    "started_at": 1776655005,
+    "completed_at": 1776655005,
+    "duration_secs": 0
+  },
+  {
+    "id": "fd2e97e2",
+    "title": "Scaffold principal_sandbox daemon",
+    "assigned_agent": "principal_engineer",
+    "status": "completed",
+    "priority": 7,
+    "result_preview": "Done. Here's the full delivery report:\n\n---\n\n**Files created at `~/dev/projects/rnd/sandbox-agent/`:**\n\n| File | Notes |\n|------|-------|\n| `tools.py` | Copied verbatim from agent-design |\n| `CLAUDE.m",
+    "error": null,
+    "created_at": 1776652600,
+    "started_at": 1776652675,
+    "completed_at": 1776653575,
+    "duration_secs": 900
+  },
+  {
+    "id": "8409c36d",
+    "title": "Scaffold research_a deepagents worker",
+    "assigned_agent": "principal_engineer",
+    "status": "completed",
+    "priority": 7,
+    "result_preview": "Done. Here's the full delivery report.\n\n---\n\n## Files created / modified\n\n| File | Status | Notes |\n|------|--------|-------|\n| `agents/research_a.py` | Created | SubAgent spec matching architect.py p",
+    "error": null,
+    "created_at": 1776652571,
+    "started_at": 1776652615,
+    "completed_at": 1776653201,
+    "duration_secs": 586
+  },
+  {
+    "id": "def481a9",
+    "title": "Design artifacts for 4 new agents: research cluster + sandbox",
+    "assigned_agent": "principal_architect",
+    "status": "failed",
+    "priority": 8,
+    "result_preview": null,
+    "error": "Timed out after 10 minutes",
+    "created_at": 1776633691,
+    "started_at": 1776633699,
+    "completed_at": 1776634299,
+    "duration_secs": 600
+  },
+  {
+    "id": "55f7d6cc",
+    "title": "Wire wrap \u2192 pna-sessions auto-publish + push skills repo to GitHub private remote",
+    "assigned_agent": "principal_architect",
+    "status": "completed",
+    "priority": 8,
+    "result_preview": "Task completed with no output.",
+    "error": null,
+    "created_at": 1776613422,
+    "started_at": 1776613459,
+    "completed_at": 1776613686,
+    "duration_secs": 227
+  },
+  {
+    "id": "59b00f53",
+    "title": "Session summary request",
+    "assigned_agent": "principal_engineer",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Here's the full session report.\n\n---\n\n## Principal Engineer \u2014 Session Report\n\n**Date:** 2026-04-19\n**Turns:** 6 | **Cost:** $2.65 | **Output tokens:** ~11k\n**Projects touched:** skill-optimizer (today",
+    "error": null,
+    "created_at": 1776597726,
+    "started_at": 1776597738,
+    "completed_at": 1776597783,
+    "duration_secs": 45
+  },
+  {
+    "id": "ff520508",
+    "title": "Session summary request",
+    "assigned_agent": "principal_architect",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Here's the full synthesis from my most recent session (2026-04-19):\n\n---\n\n## Artifacts Built or Modified\n\n**`~/.claude/hooks/send_event.py`** \u2014 created\nWrites 7 Claude Code hook event types (`PreToolU",
+    "error": null,
+    "created_at": 1776597724,
+    "started_at": 1776597738,
+    "completed_at": 1776597780,
+    "duration_secs": 42
+  },
+  {
+    "id": "6def7d67",
+    "title": "Roadrunner-CLI: Engineer review for roadmap",
+    "assigned_agent": "principal_engineer",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Solid analysis. Here's the synthesis:\n\n---\n\n**Q1: Validation command feasibility**\n\n**init**: Command doesn't exist yet. A good smoke test asserts `tasks/tasks.yaml`, `logs/`, and `.roadmap_state.json",
+    "error": null,
+    "created_at": 1776481718,
+    "started_at": 1776481754,
+    "completed_at": 1776481901,
+    "duration_secs": 147
+  },
+  {
+    "id": "3d9e7bf2",
+    "title": "Roadrunner-CLI: Design review for roadmap tasks.yaml",
+    "assigned_agent": "principal_architect",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "I have enough to give a thorough answer. Here's the architectural review:\n\n---\n\n## Roadrunner CLI \u2014 Architect Review\n\n### 1. Feature Gap Assessment\n\n**Ranked by value:**\n\n**`analyze` \u2014 highest value, ",
+    "error": null,
+    "created_at": 1776481701,
+    "started_at": 1776481754,
+    "completed_at": 1776481884,
+    "duration_secs": 130
+  },
+  {
+    "id": "544a28c9",
+    "title": "T18: CLI run command",
+    "assigned_agent": "principal_engineer",
+    "status": "completed",
+    "priority": 5,
+    "result_preview": "Done. Here's the summary:\n\n**T18 - CLI run command**\n**Status: complete**\n**Branch:** `feat/T19-cli-status-list-runs`\n**Tests:** 310 / 310 passing\n\nWhat shipped:\n- `repolens run <repo> --task TASK [--",
+    "error": null,
+    "created_at": 1776284631,
+    "started_at": 1776284680,
+    "completed_at": 1776284778,
+    "duration_secs": 98
   }
 ]
 
   ;(function () {
     const data = window.__TRACE_DATA__ || []
+    const missions = window.__MISSION_DATA__ || []
 
     // ── Utilities ──────────────────────────────────────────────
 
@@ -618,6 +1276,41 @@
 
     function agentLabel(id) {
       return id ? id.replace(/^principal_/, '') : null
+    }
+
+    function fmtDuration(secs) {
+      if (secs === null || secs === undefined) return 'running...'
+      secs = Math.round(Number(secs))
+      if (isNaN(secs) || secs < 0) return '—'
+      if (secs < 3600) {
+        const m = Math.floor(secs / 60)
+        const s = secs % 60
+        if (m === 0) return s + 's'
+        return m + 'm ' + s + 's'
+      }
+      const h = Math.floor(secs / 3600)
+      const m = Math.floor((secs % 3600) / 60)
+      return h + 'h ' + m + 'm'
+    }
+
+    function escHtml(str) {
+      if (!str) return ''
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+    }
+
+    function agentCostBucket(agentId) {
+      if (!agentId) return { label: 'Est. —', cls: '' }
+      const total = data
+        .filter(function(s) { return s.agent_id === agentId })
+        .reduce(function(sum, s) { return sum + (s.total_cost || 0) }, 0)
+      if (total === 0) return { label: 'Est. —', cls: 'td-dim' }
+      if (total < 10)  return { label: 'Est. Low', cls: 'cost-green' }
+      if (total <= 50) return { label: 'Est. Med', cls: 'cost-amber' }
+      return { label: 'Est. High', cls: 'cost-red' }
     }
 
     // ── KPI chips ─────────────────────────────────────────────
@@ -689,7 +1382,7 @@
       if (!data.length) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="8" style="padding:0">
+            <td colspan="9" style="padding:0">
               <div class="empty-state">
                 <div class="empty-state-title">No session data</div>
                 <div class="empty-state-body">Run python3 scripts/export_trace.py to populate</div>
@@ -721,6 +1414,7 @@
               <td><span class="td-mono">${shortId(r.session_id)}</span></td>
               <td>${agentCell}</td>
               <td class="td-dim">${fmtDate(r.session_start)}</td>
+              <td class="td-mono td-dim">${fmtDuration(r.duration_secs)}</td>
               <td class="td-mono">${r.turns}</td>
               <td class="td-mono td-dim">${fmtK(r.peak_context)}</td>
               <td class="td-mono td-dim">${fmtK(r.total_output)}</td>
@@ -730,13 +1424,9 @@
           `
 
           if (isExp) {
-            const dur = r.session_end && r.session_start
-              ? Math.round((r.session_end - r.session_start) / 60) + ' min'
-              : '—'
-
             html += `
               <tr class="expand-row">
-                <td colspan="8">
+                <td colspan="9">
                   <div class="expand-inner">
                     <div class="expand-field">
                       <span class="expand-key">Full Session ID</span>
@@ -756,7 +1446,7 @@
                     </div>
                     <div class="expand-field">
                       <span class="expand-key">Duration</span>
-                      <span class="expand-val">${dur}</span>
+                      <span class="expand-val">${fmtDuration(r.duration_secs)}</span>
                     </div>
                     <div class="expand-field">
                       <span class="expand-key">Turns</span>
@@ -802,11 +1492,75 @@
       render()
     }
 
+    // ── Missions table ─────────────────────────────────────────
+
+    function renderMissions() {
+      const tbody = document.getElementById('missions-body')
+      const countEl = document.getElementById('mission-count')
+      if (!tbody || !countEl) return
+
+      countEl.textContent = missions.length + ' missions'
+
+      if (!missions.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="padding:0">
+              <div class="empty-state">
+                <div class="empty-state-title">No mission data</div>
+                <div class="empty-state-body">Run python3 scripts/export_trace.py to populate</div>
+              </div>
+            </td>
+          </tr>
+        `
+        return
+      }
+
+      const STATUS_BADGE = {
+        completed: 'badge-green',
+        failed:    'badge-red',
+        queued:    'badge-amber',
+        running:   'badge-blue',
+      }
+
+      tbody.innerHTML = missions.map(function(m) {
+        const agent = agentLabel(m.assigned_agent)
+        const agentCell = agent
+          ? `<span class="agent-pill">${escHtml(agent)}</span>`
+          : '<span class="td-dim">—</span>'
+
+        const badgeCls = STATUS_BADGE[m.status] || ''
+        const statusBadge = `<span class="badge ${badgeCls}">${escHtml(m.status)}</span>`
+
+        const durStr = m.duration_secs !== null && m.duration_secs !== undefined
+          ? fmtDuration(m.duration_secs)
+          : (m.status === 'running' ? 'running...' : '—')
+
+        const rawPreview = m.status === 'failed'
+          ? (m.error || '')
+          : (m.result_preview || '')
+        const preview = escHtml(rawPreview.slice(0, 150)) || '<span style="color:var(--text-muted)">—</span>'
+
+        const bucket = agentCostBucket(m.assigned_agent)
+
+        return `
+          <tr>
+            <td style="white-space:nowrap">${agentCell}</td>
+            <td class="mission-title">${escHtml(m.title)}</td>
+            <td style="white-space:nowrap">${statusBadge}</td>
+            <td class="td-mono td-dim" style="white-space:nowrap">${durStr}</td>
+            <td><span class="result-preview">${preview}</span></td>
+            <td class="td-mono ${bucket.cls}" style="white-space:nowrap">${bucket.label}</td>
+          </tr>
+        `
+      }).join('')
+    }
+
     // ── Init ──────────────────────────────────────────────────
 
     renderKPI()
     renderSpark()
     renderTable()
+    renderMissions()
 
   })()
 </script>
