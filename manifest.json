@@ -407,5 +407,19 @@
       "pna-project-template"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-23-193551.html",
+    "date": "2026-04-23",
+    "title": "principal_engineer session \u2014 2026-04-23",
+    "agent": "principal_engineer",
+    "tags": [
+      "principal_engineer",
+      "2026-04-23",
+      "agent-expert-kit",
+      "phase-2",
+      "pna-library"
+    ],
+    "type": "session"
   }
 ]
