@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>entra-triage — Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #060d1f;
+      --surface: #0d1b35;
+      --surface-2: #111e3d;
+      --surface-3: #0a1628;
+      --border: rgba(59, 130, 246, 0.15);
+      --border-strong: rgba(59, 130, 246, 0.35);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-muted: #475569;
+      --primary: #3b82f6;
+      --primary-dim: rgba(59, 130, 246, 0.12);
+      --cyan: #22d3ee;
+      --cyan-dim: rgba(34, 211, 238, 0.1);
+      --cyan-border: rgba(34, 211, 238, 0.3);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245, 158, 11, 0.1);
+      --amber-border: rgba(245, 158, 11, 0.3);
+      --green: #10b981;
+      --green-dim: rgba(16, 185, 129, 0.1);
+      --green-border: rgba(16, 185, 129, 0.3);
+      --red: #ef4444;
+      --red-dim: rgba(239, 68, 68, 0.1);
+      --red-border: rgba(239, 68, 68, 0.3);
+      --violet: #8b5cf6;
+      --violet-dim: rgba(139, 92, 246, 0.1);
+      --violet-border: rgba(139, 92, 246, 0.3);
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+      --radius: 6px;
+      --radius-lg: 10px;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+      background-size: 32px 32px;
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+    /* HEADER */
+    .site-header {
+      border-top: 3px solid var(--primary);
+      padding: 3rem 0 2.5rem;
+      margin-bottom: 3.5rem;
+      position: relative;
+    }
+    .site-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    }
+    .header-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--primary);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.65rem;
+    }
+    .site-title {
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+    }
+    .site-title span { color: var(--primary); }
+    .site-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      max-width: 640px;
+    }
+    .header-meta {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .meta-label {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .meta-value {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--cyan);
+    }
+
+    /* SECTIONS */
+    .section { margin-bottom: 4rem; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+    .section-number {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--primary);
+      background: var(--primary-dim);
+      border: 1px solid var(--border-strong);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius);
+      letter-spacing: 0.1em;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .section-divider {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border-strong), transparent);
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+    .card-grid {
+      display: grid;
+      gap: 1.25rem;
+    }
+    .card-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+    /* SYSTEM CONTEXT DIAGRAM */
+    .arch-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      overflow-x: auto;
+    }
+    .arch-diagram svg {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    /* COMPONENT TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid var(--border-strong);
+    }
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    td:first-child {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--cyan);
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    /* FLOW DIAGRAMS */
+    .flow-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .flow-title {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.85rem 1.5rem;
+      background: var(--surface-3);
+      border-bottom: 1px solid var(--border);
+    }
+    .flow-body { padding: 1.5rem; }
+
+    /* FLOW STEP */
+    .flow-steps { display: flex; flex-direction: column; gap: 0; }
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .flow-step:last-child { border-bottom: none; }
+    .flow-step-num {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--primary);
+      background: var(--primary-dim);
+      border: 1px solid var(--border-strong);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .flow-step-content { flex: 1; }
+    .flow-step-actor {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .flow-step-action {
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+    .flow-step-action code {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--cyan);
+      background: var(--cyan-dim);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+    }
+    .flow-step-note {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    .flow-connector {
+      margin-left: 14px;
+      border-left: 1px dashed var(--border-strong);
+      height: 8px;
+    }
+    .flow-branch {
+      background: var(--surface-2);
+      border: 1px solid var(--amber-border);
+      border-radius: var(--radius);
+      padding: 0.6rem 1rem;
+      margin-top: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--amber);
+    }
+
+    /* DB SCHEMA */
+    .schema-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .schema-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .schema-table-name {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--primary);
+      background: var(--primary-dim);
+      padding: 0.55rem 0.85rem;
+      border-bottom: 1px solid var(--border-strong);
+      font-weight: 500;
+    }
+    .schema-cols { padding: 0.5rem 0.85rem; }
+    .schema-col {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.2rem 0;
+      font-size: 0.78rem;
+    }
+    .schema-col-name {
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+    }
+    .schema-col-type {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+    .schema-col-pk {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--amber);
+      background: var(--amber-dim);
+      padding: 0.05rem 0.3rem;
+      border-radius: 2px;
+    }
+    .schema-col-fk {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--cyan);
+      background: var(--cyan-dim);
+      padding: 0.05rem 0.3rem;
+      border-radius: 2px;
+    }
+
+    /* ADR LIST */
+    .adr-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .adr-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .adr-id {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--primary);
+      background: var(--primary-dim);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius);
+      white-space: nowrap;
+      margin-top: 1px;
+    }
+    .adr-title {
+      font-size: 0.9rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .adr-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    /* ROADMAP */
+    .roadmap { display: flex; flex-direction: column; gap: 1rem; }
+    .phase {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      background: var(--surface-3);
+      border-bottom: 1px solid var(--border);
+    }
+    .phase-num {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .phase-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+    }
+    .phase-range {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--primary);
+    }
+    .phase-tasks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+    }
+    .task-chip {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .phase-exit {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 0.5rem 1.5rem 1rem;
+      font-style: italic;
+    }
+
+    /* BADGE */
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+    }
+    .badge-blue { background: var(--primary-dim); color: var(--primary); border: 1px solid var(--border-strong); }
+    .badge-cyan { background: var(--cyan-dim); color: var(--cyan); border: 1px solid var(--cyan-border); }
+    .badge-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
+    .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+    .badge-red { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
+    .badge-violet { background: var(--violet-dim); color: var(--violet); border: 1px solid var(--violet-border); }
+
+    /* DEPS DIAGRAM */
+    .dep-graph {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .dep-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .dep-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      min-width: 80px;
+      padding-top: 0.4rem;
+    }
+    .dep-nodes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      flex: 1;
+    }
+    .dep-node {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius);
+      border: 1px solid;
+      cursor: default;
+    }
+    .dep-node-app { background: var(--primary-dim); border-color: var(--border-strong); color: var(--primary); }
+    .dep-node-pkg { background: var(--cyan-dim); border-color: var(--cyan-border); color: var(--cyan); }
+    .dep-node-leaf { background: var(--surface-2); border-color: var(--border); color: var(--text-muted); }
+    .dep-connector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      padding: 0.25rem 0;
+    }
+    .dep-arrow { color: var(--border-strong); }
+
+    /* AGENTS */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .agent-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .agent-name {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .agent-body { padding: 0.85rem 1.1rem; }
+    .agent-input, .agent-output {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-bottom: 0.25rem;
+    }
+    .agent-input strong, .agent-output strong {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* FOOTER */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0;
+      margin-top: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-left {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .footer-right {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 700px) {
+      .card-grid-2, .card-grid-3 { grid-template-columns: 1fr; }
+      .site-title { font-size: 1.9rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-eyebrow">Principal &amp; Agent — Architecture Document</div>
+    <h1 class="site-title"><span>entra-triage</span> Architecture</h1>
+    <p class="site-subtitle">Single-tenant Microsoft Entra ID security operations tool. Ingests identity telemetry, triages risk via specialized agents, evaluates baseline posture, and enforces approval-gated response actions.</p>
+    <div class="header-meta">
+      <div class="meta-item">
+        <span class="meta-label">Repo</span>
+        <span class="meta-value">afoxnyc3/entra-triage</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Stack</span>
+        <span class="meta-value">Next.js · tRPC · Drizzle · PostgreSQL · Anthropic SDK</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Runtime</span>
+        <span class="meta-value">Roadrunner — 14 tasks · 4 phases</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Last Updated</span>
+        <span class="meta-value">2026-04-23</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SYSTEM CONTEXT -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-number">01</span>
+      <h2 class="section-title">System Context</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="arch-diagram">
+      <svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg" width="960" height="520">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="rgba(59,130,246,0.6)"/>
+          </marker>
+          <marker id="arrow-cyan" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="rgba(34,211,238,0.6)"/>
+          </marker>
+          <marker id="arrow-amber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="rgba(245,158,11,0.6)"/>
+          </marker>
+          <marker id="arrow-violet" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="rgba(139,92,246,0.6)"/>
+          </marker>
+        </defs>
+
+        <!-- Background lanes -->
+        <rect x="0" y="0" width="960" height="520" fill="#060d1f"/>
+
+        <!-- Lane: External -->
+        <rect x="780" y="10" width="170" height="500" rx="8" fill="rgba(16,185,129,0.04)" stroke="rgba(16,185,129,0.12)" stroke-width="1"/>
+        <text x="865" y="34" text-anchor="middle" font-family="'Fira Code',monospace" font-size="10" fill="rgba(16,185,129,0.5)" letter-spacing="2">EXTERNAL</text>
+
+        <!-- Lane: Storage -->
+        <rect x="10" y="10" width="170" height="500" rx="8" fill="rgba(59,130,246,0.04)" stroke="rgba(59,130,246,0.12)" stroke-width="1"/>
+        <text x="95" y="34" text-anchor="middle" font-family="'Fira Code',monospace" font-size="10" fill="rgba(59,130,246,0.5)" letter-spacing="2">STORAGE</text>
+
+        <!-- PostgreSQL -->
+        <rect x="25" y="200" width="140" height="60" rx="6" fill="#0d1b35" stroke="rgba(59,130,246,0.35)" stroke-width="1.5"/>
+        <text x="95" y="226" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#3b82f6" font-weight="500">PostgreSQL</text>
+        <text x="95" y="243" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">10 tables</text>
+
+        <!-- Redis -->
+        <rect x="25" y="300" width="140" height="60" rx="6" fill="#0d1b35" stroke="rgba(59,130,246,0.25)" stroke-width="1"/>
+        <text x="95" y="326" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#3b82f6" font-weight="500">Redis</text>
+        <text x="95" y="343" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">queue + cursors</text>
+
+        <!-- Microsoft Graph (external) -->
+        <rect x="795" y="220" width="140" height="60" rx="6" fill="#0a1628" stroke="rgba(16,185,129,0.3)" stroke-width="1.5"/>
+        <text x="865" y="246" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#10b981" font-weight="500">MS Graph</text>
+        <text x="865" y="263" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">single Entra tenant</text>
+
+        <!-- Analyst (user) -->
+        <rect x="400" y="30" width="160" height="55" rx="6" fill="#0a1628" stroke="rgba(245,158,11,0.3)" stroke-width="1.5"/>
+        <text x="480" y="54" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#f59e0b" font-weight="500">Analyst</text>
+        <text x="480" y="71" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">single operator session</text>
+
+        <!-- apps/web -->
+        <rect x="230" y="130" width="160" height="60" rx="6" fill="#0d1b35" stroke="rgba(59,130,246,0.35)" stroke-width="1.5"/>
+        <text x="310" y="156" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#3b82f6" font-weight="500">apps/web</text>
+        <text x="310" y="173" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">Next.js 14 + Tailwind</text>
+
+        <!-- apps/api -->
+        <rect x="400" y="130" width="160" height="60" rx="6" fill="#0d1b35" stroke="rgba(59,130,246,0.35)" stroke-width="1.5"/>
+        <text x="480" y="156" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#3b82f6" font-weight="500">apps/api</text>
+        <text x="480" y="173" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">tRPC + Express + JWT</text>
+
+        <!-- apps/workers -->
+        <rect x="570" y="130" width="160" height="60" rx="6" fill="#0d1b35" stroke="rgba(59,130,246,0.35)" stroke-width="1.5"/>
+        <text x="650" y="156" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#3b82f6" font-weight="500">apps/workers</text>
+        <text x="650" y="173" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">ingestion + triage</text>
+
+        <!-- packages/agents -->
+        <rect x="400" y="260" width="160" height="60" rx="6" fill="#111e3d" stroke="rgba(139,92,246,0.35)" stroke-width="1.5"/>
+        <text x="480" y="286" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#8b5cf6" font-weight="500">pkgs/agents</text>
+        <text x="480" y="303" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">6 Anthropic agents</text>
+
+        <!-- packages/policy -->
+        <rect x="570" y="260" width="160" height="60" rx="6" fill="#111e3d" stroke="rgba(239,68,68,0.3)" stroke-width="1.5"/>
+        <text x="650" y="286" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#ef4444" font-weight="500">pkgs/policy</text>
+        <text x="650" y="303" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">assertActionPermitted()</text>
+
+        <!-- packages/connectors -->
+        <rect x="570" y="370" width="160" height="60" rx="6" fill="#111e3d" stroke="rgba(34,211,238,0.3)" stroke-width="1.5"/>
+        <text x="650" y="396" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#22d3ee" font-weight="500">pkgs/connectors</text>
+        <text x="650" y="413" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">Graph client + mock</text>
+
+        <!-- packages/shared -->
+        <rect x="230" y="370" width="160" height="60" rx="6" fill="#0a1628" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+        <text x="310" y="396" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#64748b" font-weight="500">pkgs/shared</text>
+        <text x="310" y="413" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">types + zod + Drizzle</text>
+
+        <!-- packages/ui -->
+        <rect x="230" y="260" width="160" height="60" rx="6" fill="#0a1628" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+        <text x="310" y="286" text-anchor="middle" font-family="'Fira Code',monospace" font-size="11" fill="#64748b" font-weight="500">pkgs/ui</text>
+        <text x="310" y="303" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#475569">shared components</text>
+
+        <!-- CONNECTIONS -->
+        <!-- Analyst → web -->
+        <line x1="480" y1="85" x2="390" y2="130" stroke="rgba(245,158,11,0.5)" stroke-width="1.5" marker-end="url(#arrow-amber)" stroke-dasharray="4,3"/>
+        <!-- Analyst → api -->
+        <line x1="480" y1="85" x2="480" y2="130" stroke="rgba(245,158,11,0.5)" stroke-width="1.5" marker-end="url(#arrow-amber)" stroke-dasharray="4,3"/>
+        <!-- web → api -->
+        <line x1="390" y1="160" x2="400" y2="160" stroke="rgba(59,130,246,0.5)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- api → DB -->
+        <line x1="400" y1="175" x2="165" y2="225" stroke="rgba(59,130,246,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- api → Redis -->
+        <line x1="400" y1="185" x2="165" y2="320" stroke="rgba(59,130,246,0.3)" stroke-width="1" marker-end="url(#arrow)" stroke-dasharray="3,3"/>
+        <!-- workers → DB -->
+        <line x1="570" y1="175" x2="165" y2="230" stroke="rgba(59,130,246,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- workers → Redis -->
+        <line x1="570" y1="185" x2="165" y2="315" stroke="rgba(59,130,246,0.3)" stroke-width="1" marker-end="url(#arrow)" stroke-dasharray="3,3"/>
+        <!-- workers → connectors -->
+        <line x1="650" y1="190" x2="650" y2="370" stroke="rgba(34,211,238,0.4)" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+        <!-- connectors → Graph -->
+        <line x1="730" y1="400" x2="795" y2="270" stroke="rgba(16,185,129,0.5)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- agents → workers (feeds) -->
+        <line x1="480" y1="260" x2="595" y2="190" stroke="rgba(139,92,246,0.5)" stroke-width="1.5" marker-end="url(#arrow-violet)" stroke-dasharray="4,2"/>
+        <!-- policy → api -->
+        <line x1="650" y1="260" x2="560" y2="190" stroke="rgba(239,68,68,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- policy → workers -->
+        <line x1="650" y1="260" x2="650" y2="190" stroke="rgba(239,68,68,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- web → ui -->
+        <line x1="310" y1="190" x2="310" y2="260" stroke="rgba(59,130,246,0.25)" stroke-width="1" marker-end="url(#arrow)" stroke-dasharray="3,3"/>
+        <!-- all → shared -->
+        <line x1="310" y1="370" x2="310" y2="320" stroke="rgba(59,130,246,0.2)" stroke-width="1" marker-end="url(#arrow)" stroke-dasharray="2,4"/>
+        <line x1="480" y1="370" x2="420" y2="430" stroke="rgba(59,130,246,0.15)" stroke-width="1" marker-end="url(#arrow)" stroke-dasharray="2,4"/>
+
+        <!-- LEGEND -->
+        <g transform="translate(20, 470)">
+          <line x1="0" y1="8" x2="24" y2="8" stroke="rgba(59,130,246,0.5)" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <text x="30" y="12" font-family="'Fira Code',monospace" font-size="9" fill="#475569">data flow</text>
+          <line x1="90" y1="8" x2="114" y2="8" stroke="rgba(59,130,246,0.5)" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="3,2"/>
+          <text x="120" y="12" font-family="'Fira Code',monospace" font-size="9" fill="#475569">optional / async</text>
+          <line x1="220" y1="8" x2="244" y2="8" stroke="rgba(139,92,246,0.5)" stroke-width="1.5" marker-end="url(#arrow-violet)" stroke-dasharray="4,2"/>
+          <text x="250" y="12" font-family="'Fira Code',monospace" font-size="9" fill="#475569">agent output</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- COMPONENT MAP -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-number">02</span>
+      <h2 class="section-title">Component Map</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Responsibility</th>
+            <th>Technology</th>
+            <th>Layer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>apps/web</td>
+            <td>Analyst UI — dashboard, incident explorer, baseline review, approval center, config screen</td>
+            <td>Next.js 14, Tailwind, tRPC client</td>
+            <td><span class="badge badge-blue">app</span></td>
+          </tr>
+          <tr>
+            <td>apps/api</td>
+            <td>HTTP API with JWT auth — all data access, policy enforcement at API boundary</td>
+            <td>tRPC, Express, zod</td>
+            <td><span class="badge badge-blue">app</span></td>
+          </tr>
+          <tr>
+            <td>apps/workers</td>
+            <td>IngestionWorker (Graph polling), TriageWorker (agent pipeline + pre-filter), BaselineWorker</td>
+            <td>TypeScript, BullMQ, pino</td>
+            <td><span class="badge badge-blue">app</span></td>
+          </tr>
+          <tr>
+            <td>packages/agents</td>
+            <td>6 specialized agents via Anthropic SDK tool use — sign-in triage, identity risk, directory change, baseline review, response policy, research</td>
+            <td>Anthropic SDK, tool use</td>
+            <td><span class="badge badge-violet">pkg</span></td>
+          </tr>
+          <tr>
+            <td>packages/connectors</td>
+            <td>Microsoft Graph client with MSAL auth, pagination, exponential backoff, full mock mode</td>
+            <td>@microsoft/microsoft-graph-client, @azure/msal-node</td>
+            <td><span class="badge badge-cyan">pkg</span></td>
+          </tr>
+          <tr>
+            <td>packages/policy</td>
+            <td>Action approval matrix — evaluateAction(), assertActionPermitted(), PolicyViolationError</td>
+            <td>Pure TypeScript, no deps</td>
+            <td><span class="badge badge-red">pkg</span></td>
+          </tr>
+          <tr>
+            <td>packages/shared</td>
+            <td>All zod schemas, enums, constants, Drizzle ORM schema — dependency root</td>
+            <td>zod, drizzle-orm</td>
+            <td><span class="badge badge-amber">pkg</span></td>
+          </tr>
+          <tr>
+            <td>packages/ui</td>
+            <td>Shared React components — Badge, SeverityBadge, Card, Button</td>
+            <td>React, Tailwind</td>
+            <td><span class="badge badge-amber">pkg</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- INGESTION FLOW -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-number">03</span>
+      <h2 class="section-title">Data Flows</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="card-grid card-grid-2">
+      <div class="flow-diagram">
+        <div class="flow-title">Ingestion Pipeline</div>
+        <div class="flow-body">
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">1</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">IngestionWorker</div>
+                <div class="flow-step-action">Load cursor from <code>ingestion_cursors</code> by <code>stream_type</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">2</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">IngestionWorker → Graph</div>
+                <div class="flow-step-action">Paginate <code>/auditLogs/signIns</code> with <code>$skipToken</code> — handle <code>@odata.nextLink</code></div>
+                <div class="flow-step-note">Retry on 429 with Retry-After. Exponential backoff on 503.</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">3</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">IngestionWorker</div>
+                <div class="flow-step-action">Dedup by <code>event_id + content_hash</code> — skip known events</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">4</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">IngestionWorker → PostgreSQL</div>
+                <div class="flow-step-action">INSERT new events, UPDATE <code>ingestion_cursors</code></div>
+                <div class="flow-step-note">Dead-letter on malformed payloads — log, don't crash.</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">5</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">TriageWorker</div>
+                <div class="flow-step-action">Fetch unprocessed events, run <strong>rule-based pre-filter</strong></div>
+                <div class="flow-branch">PASS → suppress &nbsp;|&nbsp; FLAG → direct incident &nbsp;|&nbsp; AMBIGUOUS → agent</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">6</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">Agent → TriageWorker</div>
+                <div class="flow-step-action">Incidents[] + confidence scores returned via tool use</div>
+                <div class="flow-step-note">Dedup against open incidents by hash(actor + category + target) in 24h window.</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">7</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">TriageWorker → PostgreSQL</div>
+                <div class="flow-step-action">INSERT incidents + audit_log entry per incident</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-diagram">
+        <div class="flow-title">Response Action Flow</div>
+        <div class="flow-body">
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="flow-step-num">1</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">Agent (ResponsePolicyAgent)</div>
+                <div class="flow-step-action">Calls <code>evaluateAction(action)</code> in <code>packages/policy</code></div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">2</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">Policy Engine</div>
+                <div class="flow-step-action">Returns decision against the action approval matrix</div>
+                <div class="flow-branch">AutoExecutable &nbsp;|&nbsp; ApprovalRequired &nbsp;|&nbsp; Prohibited</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">3a</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">AutoExecutable path</div>
+                <div class="flow-step-action">Execute immediately → INSERT <code>response_actions</code> (completed)</div>
+                <div class="flow-step-note">E.g. open_case, attach_note, suppress_duplicate, mark_urgent</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">3b</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">ApprovalRequired path</div>
+                <div class="flow-step-action">INSERT <code>response_actions</code> (pending) → appears in Approval Center UI</div>
+                <div class="flow-step-note">E.g. disable_user, revoke_session, remove_role_assignment</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">4b</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">Analyst</div>
+                <div class="flow-step-action">Reviews diff + risk context → Approve / Reject</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">5b</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">System → Graph</div>
+                <div class="flow-step-action">Execute approved action → UPDATE status completed</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-step-num">3c</div>
+              <div class="flow-step-content">
+                <div class="flow-step-actor">Prohibited path</div>
+                <div class="flow-step-action">Throw <code>PolicyViolationError</code> → INSERT <code>audit_log</code> (blocked)</div>
+                <div class="flow-step-note">E.g. bulk_disable_users, delete_application — blocked in v1.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENTS -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-number">04</span>
+      <h2 class="section-title">Agent Definitions</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="agents-grid">
+      <div class="agent-card">
+        <div class="agent-header">
+          <div class="agent-dot" style="background:#8b5cf6"></div>
+          <div class="agent-name">SignInTriageAgent</div>
+          <span class="badge badge-violet">sign-in</span>
+        </div>
+        <div class="agent-body">
+          <div class="agent-input"><strong>In:</strong> sign_in_events batch, user metadata</div>
+          <div class="agent-output"><strong>Out:</strong> incidents[] with confidence scores, MFA anomaly flags, recommended actions</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-header">
+          <div class="agent-dot" style="background:#ef4444"></div>
+          <div class="agent-name">IdentityRiskAgent</div>
+          <span class="badge badge-red">risk</span>
+        </div>
+        <div class="agent-body">
+          <div class="agent-input"><strong>In:</strong> risk_events (risky users, risky sign-ins)</div>
+          <div class="agent-output"><strong>Out:</strong> urgency classification, whether CA/MFA is sufficient or escalation needed</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-header">
+          <div class="agent-dot" style="background:#f59e0b"></div>
+          <div class="agent-name">DirectoryChangeAgent</div>
+          <span class="badge badge-amber">directory</span>
+        </div>
+        <div class="agent-body">
+          <div class="agent-input"><strong>In:</strong> directory_audit_events clustered by actor + time window</div>
+          <div class="agent-output"><strong>Out:</strong> incident clusters, blast radius estimate, MITRE tactic tags</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-header">
+          <div class="agent-dot" style="background:#22d3ee"></div>
+          <div class="agent-name">BaselineReviewAgent</div>
+          <span class="badge badge-cyan">baseline</span>
+        </div>
+        <div class="agent-body">
+          <div class="agent-input"><strong>In:</strong> baseline_controls catalog + Graph-collected evidence</div>
+          <div class="agent-output"><strong>Out:</strong> scored posture report, prioritized gaps, remediation steps</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-header">
+          <div class="agent-dot" style="background:#3b82f6"></div>
+          <div class="agent-name">ResponsePolicyAgent</div>
+          <span class="badge badge-blue">policy</span>
+        </div>
+        <div class="agent-body">
+          <div class="agent-input"><strong>In:</strong> proposed action + risk context</div>
+          <div class="agent-output"><strong>Out:</strong> policy decision via assertActionPermitted() — auto / approval / prohibited + rationale</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-header">
+          <div class="agent-dot" style="background:#10b981"></div>
+          <div class="agent-name">ResearchAgent</div>
+          <span class="badge badge-green">research</span>
+        </div>
+        <div class="agent-body">
+          <div class="agent-input"><strong>In:</strong> incident bundle, entity identifiers</div>
+          <div class="agent-output"><strong>Out:</strong> evidence-backed narrative citing Microsoft docs, for analyst review</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DB SCHEMA -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-number">05</span>
+      <h2 class="section-title">Database Schema</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="schema-grid">
+      <div class="schema-table">
+        <div class="schema-table-name">sign_in_events</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">raw</span><span class="schema-col-type">JSONB</span></div>
+          <div class="schema-col"><span class="schema-col-name">user_principal_name</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">ip_address</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">risk_level</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">content_hash</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">created_at</span><span class="schema-col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-name">directory_audit_events</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">category</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">activity</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">actor_id</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">target_id</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">content_hash</span><span class="schema-col-type">TEXT</span></div>
+        </div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-name">risk_events</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">type</span><span class="schema-col-type">risky_user | risky_sign_in</span></div>
+          <div class="schema-col"><span class="schema-col-name">risk_level</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">risk_state</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">detected_at</span><span class="schema-col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-name">incidents</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">UUID</span></div>
+          <div class="schema-col"><span class="schema-col-fk">FK</span><span class="schema-col-name">case_id</span><span class="schema-col-type">UUID?</span></div>
+          <div class="schema-col"><span class="schema-col-name">severity</span><span class="schema-col-type">critical|high|med|low|info</span></div>
+          <div class="schema-col"><span class="schema-col-name">confidence_score</span><span class="schema-col-type">FLOAT 0-1</span></div>
+          <div class="schema-col"><span class="schema-col-name">mitre_tactics</span><span class="schema-col-type">TEXT[]</span></div>
+          <div class="schema-col"><span class="schema-col-name">source_event_ids</span><span class="schema-col-type">TEXT[]</span></div>
+        </div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-name">cases</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">UUID</span></div>
+          <div class="schema-col"><span class="schema-col-name">title</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">status</span><span class="schema-col-type">open|closed</span></div>
+          <div class="schema-col"><span class="schema-col-name">assignee_id</span><span class="schema-col-type">TEXT?</span></div>
+        </div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-name">response_actions</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">UUID</span></div>
+          <div class="schema-col"><span class="schema-col-fk">FK</span><span class="schema-col-name">incident_id</span><span class="schema-col-type">UUID?</span></div>
+          <div class="schema-col"><span class="schema-col-name">action_type</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">status</span><span class="schema-col-type">pending|approved|completed|failed</span></div>
+          <div class="schema-col"><span class="schema-col-name">approved_by</span><span class="schema-col-type">TEXT?</span></div>
+          <div class="schema-col"><span class="schema-col-name">audit_trail</span><span class="schema-col-type">JSONB</span></div>
+        </div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-name">baseline_controls</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">TEXT (ctrl-001)</span></div>
+          <div class="schema-col"><span class="schema-col-name">family</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">severity</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">microsoft_ref</span><span class="schema-col-type">TEXT (URL)</span></div>
+          <div class="schema-col"><span class="schema-col-name">automatable</span><span class="schema-col-type">BOOLEAN</span></div>
+          <div class="schema-col"><span class="schema-col-name">license_required</span><span class="schema-col-type">TEXT?</span></div>
+        </div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-name">ingestion_cursors</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">stream_type</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">cursor</span><span class="schema-col-type">TEXT? (skipToken)</span></div>
+          <div class="schema-col"><span class="schema-col-name">last_ingested_at</span><span class="schema-col-type">TIMESTAMPTZ?</span></div>
+        </div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-name">audit_log</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">UUID</span></div>
+          <div class="schema-col"><span class="schema-col-name">actor_type</span><span class="schema-col-type">operator|agent|system</span></div>
+          <div class="schema-col"><span class="schema-col-name">action</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">details</span><span class="schema-col-type">JSONB</span></div>
+          <div class="schema-col" style="font-size:0.72rem;color:#475569;font-style:italic">immutable append-only</div>
+        </div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-name">config</div>
+        <div class="schema-cols">
+          <div class="schema-col"><span class="schema-col-pk">PK</span><span class="schema-col-name">key</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col"><span class="schema-col-name">value</span><span class="schema-col-type">TEXT</span></div>
+          <div class="schema-col" style="font-size:0.72rem;color:#475569;font-style:italic">non-secret runtime state only</div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.78rem;color:#475569;margin-top:1rem;font-family:'Fira Code',monospace;">No tenant_id columns. Single Entra tenant — credentials configured via .env only.</p>
+  </section>
+
+  <!-- PACKAGE DEPS -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-number">06</span>
+      <h2 class="section-title">Package Dependency Graph</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="card">
+      <div class="dep-graph">
+        <div class="dep-row">
+          <div class="dep-label">Apps</div>
+          <div class="dep-nodes">
+            <span class="dep-node dep-node-app">apps/web</span>
+            <span class="dep-node dep-node-app">apps/api</span>
+            <span class="dep-node dep-node-app">apps/workers</span>
+          </div>
+        </div>
+        <div class="dep-connector"></div>
+        <div class="dep-row">
+          <div class="dep-label">Packages</div>
+          <div class="dep-nodes">
+            <span class="dep-node dep-node-pkg">pkgs/agents</span>
+            <span class="dep-node dep-node-pkg">pkgs/connectors</span>
+            <span class="dep-node dep-node-pkg">pkgs/policy</span>
+            <span class="dep-node dep-node-pkg">pkgs/ui</span>
+          </div>
+        </div>
+        <div class="dep-connector"></div>
+        <div class="dep-row">
+          <div class="dep-label">Root</div>
+          <div class="dep-nodes">
+            <span class="dep-node dep-node-leaf">pkgs/shared</span>
+            <span style="font-size:0.78rem;color:#475569;padding:0.35rem 0;align-self:center">← dependency root — no internal deps</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border);">
+        <table>
+          <thead><tr><th>App / Package</th><th>Depends on</th></tr></thead>
+          <tbody>
+            <tr><td>apps/web</td><td>pkgs/shared, pkgs/ui</td></tr>
+            <tr><td>apps/api</td><td>pkgs/shared, pkgs/connectors, pkgs/policy, pkgs/agents</td></tr>
+            <tr><td>apps/workers</td><td>pkgs/shared, pkgs/connectors, pkgs/agents, pkgs/policy</td></tr>
+            <tr><td>pkgs/agents</td><td>pkgs/shared, pkgs/policy</td></tr>
+            <tr><td>pkgs/policy</td><td>pkgs/shared</td></tr>
+            <tr><td>pkgs/connectors</td><td>pkgs/shared</td></tr>
+            <tr><td>pkgs/ui</td><td>(none)</td></tr>
+            <tr><td>pkgs/shared</td><td>(none — dependency root)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADRS -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-number">07</span>
+      <h2 class="section-title">Architecture Decision Records</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="adr-list">
+      <div class="adr-item">
+        <span class="adr-id">ADR-0001</span>
+        <div>
+          <div class="adr-title">Monorepo — Turborepo + npm workspaces</div>
+          <div class="adr-desc">Apps and packages share types via a single workspace. Type changes in pkgs/shared surface as compile errors in all consumers immediately. Rejected: separate repos (too much friction), Nx (more complexity than needed).</div>
+        </div>
+      </div>
+      <div class="adr-item">
+        <span class="adr-id">ADR-0002</span>
+        <div>
+          <div class="adr-title">Anthropic SDK direct — no Pi framework</div>
+          <div class="adr-desc">Spec cited Pi ecosystem but those references link to unstable/unclear repos. Direct Anthropic SDK with tool use gives full control. No external agent framework dependency in v1.</div>
+        </div>
+      </div>
+      <div class="adr-item">
+        <span class="adr-id">ADR-0003</span>
+        <div>
+          <div class="adr-title">Rule-based pre-filter before agent invocation</div>
+          <div class="adr-desc">At volume, running an LLM per event is cost-prohibitive. Pre-filter classifies pass / flag / ambiguous. Only ambiguous events reach the agent. Target: under 10% of events require LLM reasoning.</div>
+        </div>
+      </div>
+      <div class="adr-item">
+        <span class="adr-id">ADR-0004</span>
+        <div>
+          <div class="adr-title">Env-var secret management in v1</div>
+          <div class="adr-desc">Graph credentials (client_id, client_secret) live in .env only. DB stores non-secret runtime state. Migration path to HashiCorp Vault in v2 requires no schema change.</div>
+        </div>
+      </div>
+      <div class="adr-item">
+        <span class="adr-id">ADR-0005</span>
+        <div>
+          <div class="adr-title">Single-tenant architecture — no MSP multi-tenancy</div>
+          <div class="adr-desc">Initial deployment is Chelsea Piers or dev Entra tenant. Multi-tenancy (tenants + connectors tables, tenant_id FKs, Redis namespace) is straightforward to add in v2 without breaking the current schema.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-number">08</span>
+      <h2 class="section-title">Implementation Roadmap</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="roadmap">
+      <div class="phase">
+        <div class="phase-header">
+          <span class="phase-num">Phase 1</span>
+          <span class="phase-title">Foundation</span>
+          <span class="phase-range">T1 – T4</span>
+        </div>
+        <div class="phase-tasks">
+          <span class="task-chip">T1 Install + build verify</span>
+          <span class="task-chip">T2 Shared entities (zod)</span>
+          <span class="task-chip">T3 Drizzle ORM + migrate</span>
+          <span class="task-chip">T4 Graph connectors + mock</span>
+        </div>
+        <div class="phase-exit">Exit: npm run build passes all packages; mock client returns typed data for all stream types</div>
+      </div>
+      <div class="phase">
+        <div class="phase-header">
+          <span class="phase-num">Phase 2</span>
+          <span class="phase-title">Data Pipeline</span>
+          <span class="phase-range">T5 – T7</span>
+        </div>
+        <div class="phase-tasks">
+          <span class="task-chip">T5 Ingestion worker (checkpoint + dedup)</span>
+          <span class="task-chip">T6 6 triage agents</span>
+          <span class="task-chip">T7 Triage worker + pre-filter</span>
+        </div>
+        <div class="phase-exit">Exit: MOCK_GRAPH_API=true produces incidents in DB; audit_log has entries</div>
+      </div>
+      <div class="phase">
+        <div class="phase-header">
+          <span class="phase-num">Phase 3</span>
+          <span class="phase-title">API + UI</span>
+          <span class="phase-range">T8 – T10</span>
+        </div>
+        <div class="phase-tasks">
+          <span class="task-chip">T8 tRPC API routes</span>
+          <span class="task-chip">T9 Next.js frontend</span>
+          <span class="task-chip">T10 Config + settings screen</span>
+        </div>
+        <div class="phase-exit">Exit: Can view incidents in dashboard, drill into detail, approve a response action</div>
+      </div>
+      <div class="phase">
+        <div class="phase-header">
+          <span class="phase-num">Phase 4</span>
+          <span class="phase-title">Quality + Hardening</span>
+          <span class="phase-range">T11 – T14</span>
+        </div>
+        <div class="phase-tasks">
+          <span class="task-chip">T11 Unit tests (policy + parsers)</span>
+          <span class="task-chip">T12 Mock mode + docker-compose</span>
+          <span class="task-chip">T13 Integration tests</span>
+          <span class="task-chip">T14 Playwright E2E</span>
+        </div>
+        <div class="phase-exit">Exit: npm test passes; dev-setup.sh produces working local env from scratch</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-left">entra-triage · Principal &amp; Agent · 2026-04-23</div>
+    <div class="footer-right">afoxnyc3/entra-triage · single-tenant · Roadrunner</div>
+  </footer>
+
+</div>
+</body>
+</html>
