@@ -4,29 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>P&A Archive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0d0d0d;
-      --surface: #141414;
-      --border: #222;
-      --text: #e8e8e8;
-      --muted: #666;
-      --accent: #fff;
-      --tag-bg: #1e1e1e;
-      --tag-border: #333;
-      --hover: #1a1a1a;
+      --bg:            #060d1f;
+      --surface:       #0d1b35;
+      --surface-2:     #111e3d;
+      --border:        rgba(59,130,246,0.15);
+      --border-strong: rgba(59,130,246,0.35);
+      --text:          #e2e8f0;
+      --muted:         #94a3b8;
+      --text-muted:    #475569;
+      --primary:       #3b82f6;
+      --accent:        #3b82f6;
+      --tag-bg:        #111e3d;
+      --tag-border:    rgba(59,130,246,0.15);
+      --hover:         #111e3d;
+      --font-body:     'DM Sans', system-ui, sans-serif;
+      --font-mono:     'Fira Code', 'Courier New', monospace;
       --dot-session:    #22c55e;
       --dot-diagram:    #3b82f6;
       --dot-brainstorm: #f59e0b;
       --dot-design:     #a855f7;
-      --dot-research:     #06b6d4;
-      --dot-postmortem:   #ef4444;
+      --dot-research:   #06b6d4;
+      --dot-postmortem: #ef4444;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px);
+      background-size: 32px 32px;
       color: var(--text);
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-family: var(--font-body);
       font-size: 13px;
       line-height: 1.6;
       min-height: 100vh;
@@ -69,8 +82,8 @@
       cursor: pointer;
       transition: border-color 0.1s, color 0.1s;
     }
-    .filter-btn:hover    { color: var(--text); border-color: #444; }
-    .filter-btn.active   { color: var(--accent); border-color: #555; }
+    .filter-btn:hover    { color: var(--text); border-color: var(--border-strong); }
+    .filter-btn.active   { color: var(--accent); border-color: var(--border-strong); }
     .legend {
       display: flex;
       gap: 16px;

@@ -6,21 +6,21 @@
 <title>Session Status — 2026-04-19</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   /* ============ BLUEPRINT THEME ============ */
   :root {
-    --font-body: 'IBM Plex Sans', system-ui, sans-serif;
-    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'Fira Code', 'Courier New', monospace;
 
-    --bg:              #0b0f1a;
-    --surface:         #101622;
-    --surface2:        #141b2c;
-    --surface-elevated:#192033;
-    --border:          rgba(255,255,255,0.06);
-    --border-bright:   rgba(255,255,255,0.14);
-    --text:            #c8d6e8;
-    --text-dim:        #4e5f75;
+    --bg:              #060d1f;
+    --surface:         #0d1b35;
+    --surface2:        #111e3d;
+    --surface-elevated:#111e3d;
+    --border:          rgba(59,130,246,0.15);
+    --border-bright:   rgba(59,130,246,0.35);
+    --text:            #e2e8f0;
+    --text-dim:        #94a3b8;
 
     /* Blueprint palette — blue/cyan/amber, no violet */
     --blue:            #3b82f6;
@@ -40,12 +40,11 @@
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
   body {
-    background: var(--bg);
+    background-color: var(--bg);
     background-image:
-      radial-gradient(circle, rgba(59,130,246,0.025) 1px, transparent 1px),
-      radial-gradient(ellipse at 15% 0%, rgba(59,130,246,0.07) 0%, transparent 55%),
-      radial-gradient(ellipse at 85% 100%, rgba(34,211,238,0.04) 0%, transparent 45%);
-    background-size: 24px 24px, 100% 100%, 100% 100%;
+      linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
     color: var(--text);
     font-family: var(--font-body);
     font-size: 14px;
