@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AEC Data &amp; RAG Pattern Survey (merged best-of-3)</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">body { max-width: 860px; margin: 2.5rem auto; padding: 0 1.25rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; color: #1a1a1a; line-height: 1.65; font-size: 16px; }
+h1 { font-size: 2rem; margin-top: 0; color: #0a0a0a; border-bottom: 2px solid #eaeaea; padding-bottom: 0.6rem; }
+h2 { font-size: 1.4rem; margin-top: 2.2rem; color: #0a0a0a; border-bottom: 1px solid #f0f0f0; padding-bottom: 0.35rem; }
+h3 { font-size: 1.1rem; margin-top: 1.6rem; color: #222; }
+p, li { color: #1f1f1f; }
+em { color: #555; }
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+code { background: #f5f5f5; padding: 0.08em 0.35em; border-radius: 3px; }
+pre { background: #f8f8f8; padding: 1rem; border-radius: 6px; overflow-x: auto; border: 1px solid #eaeaea; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.93em; }
+th, td { border: 1px solid #e0e0e0; padding: 0.55rem 0.75rem; text-align: left; vertical-align: top; }
+th { background: #fafafa; font-weight: 600; }
+tr:nth-child(even) td { background: #fcfcfc; }
+a { color: #0a66c2; text-decoration: none; }
+a:hover { text-decoration: underline; }
+blockquote { border-left: 3px solid #ccc; padding-left: 1rem; color: #555; margin: 1rem 0; }
+hr { border: none; border-top: 1px solid #eaeaea; margin: 2rem 0; }
+.footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eaeaea; font-size: 0.85em; color: #777; }
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">AEC Data &amp; RAG Pattern Survey (merged
+best-of-3)</h1>
+</header>
+<h1 id="research-aec-data-rag-pattern-survey">Research: AEC Data &amp;
+RAG Pattern Survey</h1>
+<p><em>Merged canonical output from 3 parallel research_a replicates.
+Support counts <code>[k/3]</code> annotate cross-replicate
+agreement.</em></p>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>AEC platforms are actively decoupling project data from file formats,
+and this shift is what makes production RAG tractable. Today, AEC RAG is
+three loosely-joined stacks: <strong>text-RAG</strong> over
+specs/RFIs/submittals is production-grade (Autodesk Assistant, Newforma
+Konekt AI, Snaptrude, Nomic); <strong>drawing-aware retrieval</strong>
+via OCR + panoptic symbol spotting is production for navigation and beta
+for semantic reasoning (Procore, ACC Symbol Detection, CADTransformer,
+ArchCAD-400k, BLUEPRINT); and <strong>3D/BIM retrieval</strong> is
+converging on <strong>IFC Graph-RAG</strong> (Neo4j + LLM-generated
+Cypher) as the emerging academic consensus, with geometric-similarity
+embeddings still research-only. Autodesk’s AEC Data Model API (GraphQL,
+public beta) and Speckle’s open object model (Apache 2.0) are the two
+realistic substrates for a multi-tenant, platform-agnostic firm-wide
+system. Speckle is the only stack explicitly designed to be self-hosted
+end-to-end.</p>
+<p><strong>Headline agreement across 3 replicates: YES.</strong> All
+three converged on the three-primitive architecture, the
+Speckle-vs-Autodesk substrate choice, the Graph-RAG-over-IFC
+recommendation, and the geometric-embedding whitespace. Confidence is
+medium across all three.</p>
+<h2 id="key-findings">Key Findings</h2>
+<ol type="1">
+<li><p><strong>[3/3] Files are losing to cloud-native data
+models.</strong> Autodesk’s AEC Data Model API exposes Revit elements as
+GraphQL-queryable objects with mutations in public beta (2025),
+explicitly framed as “from files to data.” Bentley iModels are
+self-describing, versioned, component-level, queryable via ECSQL.
+Speckle stores every object in a typed, versioned graph with GraphQL
+access. This cloud-graph shift eliminates the RVT/PLN parse step.
+Source: <a href="https://aps.autodesk.com/blog/files-data-unlocking-data-driven-aec-workflows-aec-data-model-apis">APS:
+From Files to Data</a> — first-party Autodesk.</p></li>
+<li><p><strong>[3/3] Graph-RAG over IFC is the emerging academic
+consensus for BIM Q&amp;A.</strong> Iranmanesh et al. (EC3 2025, arXiv
+2504.16813), Zhu et al. (Advanced Engineering Informatics 2026),
+Cypher4BIM (arXiv 2405.16345), BIMConverse (IAAC 2024), and IFC
+Whisperer (CISBAT 2025) independently show LLMs generating Cypher over
+IFC-to-Neo4j graphs outperform naive vector-RAG because BIM is
+inherently relational (Wall hosts Door, Room bounds Wall). Reported
+accuracy ceiling ~80% on NL-to-IFC queries; failures dominated by IFC’s
+multiple-valid-encoding problem. Sources: <a href="https://arxiv.org/abs/2504.16813">arXiv 2504.16813</a>, <a href="https://www.sciencedirect.com/science/article/pii/S147403462501122X">Zhu
+2026 AEI</a>.</p></li>
+<li><p><strong>[3/3] Drawing retrieval splits into text-OCR and
+CV-symbol-spotting primitives.</strong> OCR over vector-PDF text +
+callout geometry is production (Procore Drawings, ACC Sheets). Panoptic
+symbol spotting (FloorPlanCAD ICCV 2021, CADTransformer CVPR 2022,
+ArchCAD-400k 2025) is the SOTA backbone for countable-object retrieval
+(“how many GFCI outlets on sheet E-201”). BLUEPRINT (ORNL arXiv
+2602.13345) combines region detection + VLM OCR + hybrid lexical+ANN
+retrieval for legacy archives. ColPali (PaliGemma + late interaction)
+offers an OCR-free alternative for intact digital sheets. Sources: <a href="https://openaccess.thecvf.com/content/CVPR2022/html/Fan_CADTransformer_Panoptic_Symbol_Spotting_Transformer_for_CAD_Drawings_CVPR_2022_paper.html">CADTransformer
+CVPR 2022</a>, <a href="https://openreview.net/pdf/88027c10ed21ef8b6a08e304bc957f87f3ab7edc.pdf">ArchCAD-400k</a>,
+<a href="https://www.arxiv.org/pdf/2602.13345">BLUEPRINT</a>.</p></li>
+<li><p><strong>[3/3] Speckle is the only shipping open-source BIM data
+bus with a documented v3 object model.</strong> DataObjects,
+Collections, and Proxies form an AOT-free graph that receives from
+Revit, Rhino, ArchiCAD, IFC. Apache 2.0, self-hostable, multi-region.
+Snaptrude uses Speckle under the hood for its bidirectional Revit link.
+Source: <a href="https://docs.speckle.systems/developers/data-schema/concepts">Speckle
+Core Concepts</a>, <a href="https://github.com/specklesystems/speckle-server/">speckle-server
+GitHub</a>.</p></li>
+<li><p><strong>[3/3] Production AEC LLM assistants today do text-RAG
+only.</strong> Autodesk Assistant (Forma), Newforma Konekt Aggregate
+Search, Snaptrude AI, Nomic, and SpecGenius all operate on specs, RFIs,
+submittals, emails, and BIM metadata. None performs element-level BIM
+reasoning at GA. Autodesk Symbol Detection in Takeoff is a separate,
+narrow CV feature. Sources: <a href="https://www.autodesk.com/blogs/construction/meet-autodesk-assistant-ai-native-intelligence-in-forma/">Autodesk
+Assistant</a>, <a href="https://www.newforma.com/jump-into-the-future-with-newforma-ai/">Newforma
+Konekt</a>, <a href="https://www.snaptrude.com/blog/enterprise-ai-knowledge-integration">Snaptrude
+AI</a>.</p></li>
+<li><p><strong>[3/3] Geometric-similarity embeddings for BIM are
+research-grade, not productised.</strong> BIMSeek++ (Automation in
+Construction 2020), Lin et al. (Buildings 2025, GSTF embeddings fusing
+geometric + semantic + topological features, reported 780x speed-up over
+manual retrieval with 4-6% accuracy gain), and Gu et al. (2022 AAAI
+workshop, PointNet + graph-relational) all exist but no vendor surfaces
+“find elements like this” as a retrievable primitive. This is the
+clearest open whitespace. Source: <a href="https://www.mdpi.com/2075-5309/15/6/951">Lin 2025 MDPI Buildings
+15(6):951</a>.</p></li>
+<li><p><strong>[3/3] Hypar’s Elements library (MIT) is a rare neutral
+BIM code primitive.</strong> C# library modeling buildings as typed
+objects with IFC and glTF output, ~400 GitHub stars. Closest thing to a
+composable server-side building ontology available to a firm today.
+Source: <a href="https://github.com/hypar-io/Elements">hypar-io/Elements</a>.</p></li>
+<li><p><strong>[3/3] ConserveAI in the brief cannot be
+disambiguated.</strong> All three replicates independently reported:
+Conserve.AI (BLP Industry.AI) is an energy-efficiency product, not AEC
+RAG. Conserve Solutions is an India-based BIM automation services firm,
+not a RAG product vendor. Recommend clarification with Alex before
+citing ConserveAI in any downstream work.</p></li>
+<li><p><strong>[2/3] Augmenta is generative, not RAG.</strong>
+Augmenta’s ACP (Autonomous Construction Platform) does agentic
+electrical raceway routing inside Revit — spatial AI for geometry
+synthesis, not retrieval. It does not belong in a RAG vendor matrix.
+Flagged by A1 explicitly and A3 in footnote.</p></li>
+</ol>
+<h2 id="deep-dive">Deep Dive</h2>
+<h3 id="data-layers-across-the-five-platform-stacks">Data layers across
+the five platform stacks</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Native format</th>
+<th>Cloud data model</th>
+<th>IFC path</th>
+<th>Programmatic access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revit + ACC / Forma</td>
+<td>RVT (binary)</td>
+<td>AEC Data Model API (GraphQL, element-level, beta)</td>
+<td>Model Derivative API → IFC; Data Exchange IFC GA Nov 2025</td>
+<td>APS REST/GraphQL; Forge viewer SVF</td>
+</tr>
+<tr>
+<td>ArchiCAD + BIMcloud</td>
+<td>PLN + BIMcloud Teamwork objects</td>
+<td>BIMcloud REST API (reservation model)</td>
+<td>Native IFC export + BCF</td>
+<td>Archicad C++ API, BIMcloud OpenAPI</td>
+</tr>
+<tr>
+<td>Vectorworks</td>
+<td>VWX + .vwxp</td>
+<td>None first-party; record-format DB links; VGS API (limited)</td>
+<td>IFC import/export + COBie</td>
+<td>SDK (C++), Marionette, Python</td>
+</tr>
+<tr>
+<td>Bentley OpenBuildings / iTwin</td>
+<td>DGN + iModel (SQLite-backed, versioned via Changesets)</td>
+<td>iTwin Platform REST (iTwins, iModels, Mappings, Changed
+Elements)</td>
+<td>IFC via connectors</td>
+<td>iTwin.js, ECSchema/ECSQL</td>
+</tr>
+<tr>
+<td>Rhino + Grasshopper</td>
+<td>3DM + GH definitions</td>
+<td>Rhino.Compute (stateless REST, 2400+ ops); Speckle de facto</td>
+<td>Via IFC plug-ins or Speckle</td>
+<td>RhinoCommon, Rhino.Compute</td>
+</tr>
+</tbody>
+</table>
+<p>Two observations, reinforced across all three replicates: (1) only
+<strong>Autodesk AEC Data Model</strong> and <strong>Bentley
+iTwin</strong> offer first-party element-granular cloud query APIs; the
+others still expect you to parse files. <strong>Speckle sits on top as a
+vendor-neutral overlay</strong> that exposes all of them through one
+object graph. (2) IFC remains the common denominator for vendor-neutral
+element data, but IFC’s permissive schema (multiple valid encodings of
+the same wall) is a documented RAG pain point.</p>
+<h3 id="retrieval-patterns-by-asset-type">Retrieval patterns by asset
+type</h3>
+<p><strong>Text-class assets (specs, RFIs, submittals, emails, meeting
+minutes, contracts).</strong> Standard chunk-embed-retrieve. Chunking
+quality and metadata (project, phase, discipline, CSI MasterFormat
+section) dominate recall; AEC-specific gains come from CSI-aware
+chunking, RFI thread reconstruction, and sheet-coordinate anchoring for
+citations. Production at Newforma Konekt Aggregate Search, Autodesk
+Assistant, SpecGenius, Constructable, Snaptrude AI, Nomic.</p>
+<p><strong>2D drawings (PDF, DWG plots, scanned archives).</strong>
+Three stacked primitives: OCR for vector-PDF text and callouts (Procore,
+ACC Sheets — production); panoptic symbol spotting for countable-object
+queries (CADTransformer, ArchCAD-400k — beta); region/tile embedding for
+fuzzy visual match (ColPali, BLUEPRINT — emerging). Best retrieval is
+<strong>hybrid</strong>: symbol-spotting inventory + OCR text index +
+tile embeddings.</p>
+<p><strong>3D / BIM elements and relationships.</strong> Four
+primitives, ordered by maturity: - <em>Property / parameter query</em>
+via platform APIs (Revit, ECSQL, IfcOpenShell) — production,
+deterministic, exact-match only. - <em>Graph-RAG on IFC/Speckle
+graph</em> — LLM emits Cypher against Neo4j or GraphQL against Speckle.
+BIMConverse, IFC Whisperer, Cypher4BIM, simpleIfcAIAgentWithGraphRAG,
+mac999/BIM_graph_agent. Beta, reproducible. - <em>Code-agent RAG</em> —
+LLM writes Python against IfcOpenShell or Rhino.Compute and reads
+results. Text2BIM class, MCP4IFC. Higher compositional ceiling, harder
+sandboxing. - <em>Geometric embeddings</em> — BIMSeek++, Lin 2025 GSTF,
+Gu 2022. Research.</p>
+<p><strong>Point clouds.</strong> Out of scope for v1 firm RAG. Bentley
+iTwin has first-party Reality Data; Autodesk ReCap handles capture. No
+RAG product surfaces point-cloud semantic retrieval.</p>
+<h3 id="pattern-matrix">Pattern matrix</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Data layer</th>
+<th>Retrieval method</th>
+<th>Example stack</th>
+<th>Maturity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Specs / RFIs / submittals / email</td>
+<td>Chunk + vector RAG + reranker</td>
+<td>Autodesk Assistant, Newforma Konekt, SpecGenius, Nomic</td>
+<td><strong>Production</strong></td>
+</tr>
+<tr>
+<td>Drawing sheets (vector PDF text)</td>
+<td>OCR + callout linking</td>
+<td>Procore Drawings, ACC Sheets, Newforma Aggregate Search</td>
+<td><strong>Production</strong></td>
+</tr>
+<tr>
+<td>Drawing regions (symbols)</td>
+<td>Panoptic symbol spotting</td>
+<td>CADTransformer, ArchCAD-400k, ACC Symbol Detection</td>
+<td><strong>Prod (narrow) / Beta (general)</strong></td>
+</tr>
+<tr>
+<td>Drawing tiles (visual)</td>
+<td>Region embedding + ANN, ColPali</td>
+<td>Autodesk/Nomic internal; BLUEPRINT reference</td>
+<td><strong>Beta</strong></td>
+</tr>
+<tr>
+<td>Scanned legacy drawings</td>
+<td>OCR + region + hybrid retrieval</td>
+<td>BLUEPRINT (ORNL)</td>
+<td><strong>Beta</strong></td>
+</tr>
+<tr>
+<td>BIM element + parameter</td>
+<td>Direct API query (GraphQL / ECSQL / IfcOpenShell)</td>
+<td>APS AEC Data Model, iTwin.js, RevitLookup</td>
+<td><strong>Production</strong></td>
+</tr>
+<tr>
+<td>BIM element + relationship</td>
+<td>IFC → Neo4j Graph-RAG, LLM-generated Cypher</td>
+<td>BIMConverse, IFC Whisperer, Cypher4BIM</td>
+<td><strong>Beta</strong></td>
+</tr>
+<tr>
+<td>BIM compositional query</td>
+<td>Code-agent (LLM writes IfcOpenShell / Compute)</td>
+<td>Text2BIM class, Speckle Automate-style</td>
+<td><strong>Beta</strong></td>
+</tr>
+<tr>
+<td>3D geometry similarity</td>
+<td>Learned shape / topology embeddings</td>
+<td>BIMSeek++, Lin 2025 GSTF, Gu 2022</td>
+<td><strong>Research</strong></td>
+</tr>
+<tr>
+<td>Multi-authoring object graph</td>
+<td>Speckle object model + GraphQL</td>
+<td>Speckle v3</td>
+<td><strong>Production (open source)</strong></td>
+</tr>
+<tr>
+<td>Point clouds</td>
+<td>Spatial index + scan-to-BIM</td>
+<td>Autodesk ReCap, NavVis, PDAL</td>
+<td><strong>Prod (non-RAG)</strong></td>
+</tr>
+<tr>
+<td>Cross-asset linking</td>
+<td>Stable object IDs (IFC GlobalId, Revit UniqueId, Speckle id)</td>
+<td>Native to AEC Data Model / Speckle</td>
+<td><strong>Production</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="three-reference-architectures-for-firm-wide-aec-rag">Three
+reference architectures for firm-wide AEC RAG</h3>
+<p><strong>A. Speckle-centred open stack</strong> (lowest cloud lock-in,
+self-hostable). Speckle Server (Apache 2.0) as canonical object graph;
+specklepy to ingest Revit / Rhino / ArchiCAD; pgvector or Qdrant for
+text-RAG over SharePoint + project specs; per-project IFC → Neo4j mirror
+(nightly) for Graph-RAG; Poppler for vector-PDF OCR + optional
+CADTransformer microservice. Tenancy: one Speckle workspace per project,
+row-level security in Postgres. <strong>Trade-off</strong>:
+vendor-neutral, IFC-agnostic, data-residency control, but more glue
+code; Speckle’s schema is less MEP-rich than native Revit; Automate
+(code-agent layer) is Enterprise-only.</p>
+<p><strong>B. Autodesk-native stack</strong> (fastest for Revit+ACC
+firms). Ingest: Revit → ACC projects → AEC Data Model API (GraphQL).
+Text: ACC Docs + Model Derivative sheet PDFs → managed vector DB. BIM:
+GraphQL for element queries, Forge viewer for grounded citations.
+Tenancy: ACC hub/project IDs = firm tenants. <strong>Trade-off</strong>:
+zero file-parsing and mature sheet pipeline, but Autodesk lock-in at
+every layer; GraphQL still beta; pricing scales with ACC seats and APS
+usage tokens; non-Revit authoring becomes second-class.</p>
+<p><strong>C. iTwin-based federated twin</strong> (infra-heavy firms).
+iTwin connectors pull from Revit, OpenBuildings, DGN, IFC into
+per-project iModels. Text: SharePoint + iTwin Issues via iTwin Platform
+REST. BIM: ECSQL over iModel (SQLite-backed) + Graph-RAG for semantic
+questions. Tenancy: iTwin per client, Bentley Entra ID.
+<strong>Trade-off</strong>: strongest schema discipline (ECSchema), best
+for infrastructure-heavy firms, but Bentley-centric tooling, steeper
+learning curve, less community content, consumption-based opaque
+licensing.</p>
+<h3 id="gap-analysis-where-text-rag-transfers-cleanly-vs.-where-new-primitives-are-needed">Gap
+analysis: where text-RAG transfers cleanly vs. where new primitives are
+needed</h3>
+<ul>
+<li><strong>Transfers cleanly</strong>: specs, RFIs, submittals, meeting
+minutes, emails, contracts, regulatory codes, drawing metadata (title
+blocks), OCR’d vector-PDF sheet text. Standard chunk/embed/rerank
+works.</li>
+<li><strong>Transfers with adaptation</strong>: drawing regions (need
+bbox as a first-class retrieval key), BIM property sets (category-aware
+chunking by IfcEntity), Revit schedules (tabular — better as SQL than
+vectors).</li>
+<li><strong>Requires new primitives</strong>:
+<ul>
+<li><em>Geometric similarity</em> — needs learned shape embeddings; no
+production vendor ships this.</li>
+<li><em>Relational BIM queries</em> — graph traversal, not vector
+similarity; hence Graph-RAG.</li>
+<li><em>Spatial containment / adjacency</em> — needs IFC spatial
+structure tree (IfcRelContainedInSpatialStructure, IfcRelSpaceBoundary);
+vector stores cannot answer “which doors egress from assembly
+spaces.”</li>
+<li><em>Cross-discipline clash reasoning</em> — clash detection is a
+geometric engine problem (Navisworks, Solibri); RAG can explain clashes
+but cannot find them.</li>
+<li><em>Countable-symbol queries on drawings</em> — symbol-spotting CV
+service, not a generic vision embedding.</li>
+</ul></li>
+</ul>
+<h3 id="vendor-scan">Vendor scan</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Vendor</th>
+<th>What it does</th>
+<th>Deployment</th>
+<th>Pricing posture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Autodesk AI (Forma/ACC)</td>
+<td>Assistant, Construction IQ, Symbol Detection, AutoSpecs; AEC Data
+Model GraphQL</td>
+<td>SaaS only (Autodesk cloud)</td>
+<td>Bundled with Forma/ACC; usage-gated; quote-only enterprise</td>
+</tr>
+<tr>
+<td>Newforma Konekt AI</td>
+<td>Aggregate Search across email/files/RFIs/BIM metadata; 2D/3D
+viewer</td>
+<td>SaaS (AWS Marketplace)</td>
+<td>Package-tiered (Info/BIM/CA Track); prices on request</td>
+</tr>
+<tr>
+<td>Snaptrude AI</td>
+<td>AI-native BIM authoring + firm-knowledge RAG; Revit bidirectional
+link via Speckle</td>
+<td>SaaS</td>
+<td>Per-seat; public tiers $0 / $60 / $100; free education</td>
+</tr>
+<tr>
+<td>Speckle</td>
+<td>Open AEC object graph + GraphQL + Intelligence dashboards; Automate
+(code agents, Enterprise)</td>
+<td><strong>SaaS or self-hosted</strong> (Apache 2.0)</td>
+<td>Free / Team $99mo / Enterprise quote</td>
+</tr>
+<tr>
+<td>Hypar</td>
+<td>Generative design + Elements BIM object library (MIT)</td>
+<td>SaaS + open-source lib</td>
+<td>Platform subscription; Elements free</td>
+</tr>
+<tr>
+<td>Augmenta (ACP)</td>
+<td><strong>Generative</strong> electrical raceway routing inside Revit
+— not RAG</td>
+<td>Revit plugin + cloud</td>
+<td>Enterprise-only, Series B firm</td>
+</tr>
+<tr>
+<td>Bentley iTwin</td>
+<td>iModels + ECSQL + iTwin.js SDK</td>
+<td>SaaS + on-prem hybrid</td>
+<td>Enterprise quote, consumption-based</td>
+</tr>
+<tr>
+<td>Nomic (AEC)</td>
+<td>Document RAG platform for AEC firms</td>
+<td>SaaS</td>
+<td>Enterprise quote</td>
+</tr>
+<tr>
+<td>Conserve.AI / ConserveAI</td>
+<td><strong>Could not disambiguate.</strong> BLP Conserve.AI is
+energy-efficiency, not AEC RAG; Conserve Solutions is BIM services, not
+a product.</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cloud-lock-in flags</strong>: Autodesk Assistant /
+Construction IQ / AEC Data Model (Autodesk-cloud-bound). Procore Drawing
+OCR (Procore-only). Bentley iTwin Platform (Bentley-hosted; iModels can
+be exported as snapshots). Newforma Konekt (AWS-hosted SaaS).
+<strong>Speckle is the only stack explicitly designed to be self-hosted
+end-to-end</strong>; Hypar Elements, Rhino.Compute, pgvector/Qdrant,
+Neo4j, and any IFC-to-graph pipeline are all cloud-agnostic.</p>
+<h2 id="feynman-bridge">Feynman Bridge</h2>
+<p>A BIM model is not a document — it is a graph of typed objects (wall,
+door, duct) with relationships (contains, connects-to, is-hosted-by).
+Vanilla RAG, the kind that powers most chatbots, works by cutting text
+into chunks, turning each chunk into a vector, and finding the chunks
+whose vectors sit closest to your question’s vector. That works
+beautifully for a spec PDF. It fails for a question like “list every
+unrated fire door on floor 3,” because the answer is not a passage — it
+is the result of a query over structured relationships.</p>
+<p>Think of an architecture firm’s project data as three shelves in a
+library. One shelf is novels — the specs, RFIs, and emails.
+Reading-comprehension AI handles those. One shelf is a card catalog —
+the BIM model as typed objects cross-referenced by host, level, and
+system. A smart research assistant reads the catalog index, not the
+novels, to answer “how many fire doors on level 3.” One shelf is an
+atlas — the drawings, full of maps studded with standardised icons. You
+need icon-recognition glasses (symbol spotting) to count fixtures, and
+you need OCR to read callouts. Production-grade AEC RAG is exactly this:
+three retrieval tools stitched together by a shared “which object are we
+talking about” identifier (IFC GlobalId, Revit UniqueId, Speckle object
+id) — not one magic vector search stretched over everything.</p>
+<h2 id="actionable-insights">Actionable Insights</h2>
+<ol type="1">
+<li><strong>[3/3] Design the firm-wide stack around three retrieval
+primitives, not one.</strong> Text-RAG for docs, Graph-RAG for BIM,
+symbol-spotting + OCR for drawings. A single vector DB alone will
+underperform on any real AEC question involving counts, relationships,
+or code compliance.</li>
+<li><strong>[3/3] Anchor the substrate on Speckle + IFC → Neo4j, mirror
+from Autodesk AEC Data Model where licensed.</strong> Speckle is the
+only shipping vendor-neutral object graph; Neo4j mirror unlocks
+Graph-RAG. ACC integration is additive, not foundational.</li>
+<li><strong>[3/3] Make stable object IDs a first-class concern.</strong>
+IFC GlobalId, Revit UniqueId, and Speckle object IDs are the glue that
+lets a chunked spec paragraph cite a specific element. AEC liability
+demands it; every LLM answer should link back to an IfcGUID or ElementId
+for audit.</li>
+<li><strong>[3/3] Treat Graph-RAG on IFC as the highest-leverage
+investment.</strong> Peer-reviewed accuracy bounds (~80%), multiple
+independent reproductions (BIMConverse, Cypher4BIM, Iranmanesh, Zhu),
+and it answers the parametric questions architects ask daily. Budget for
+IFC normalisation — “same wall, five encodings” is a real problem.</li>
+<li><strong>[3/3] Defer geometric-similarity embeddings to v2.</strong>
+Promising research (BIMSeek++, GSTF) but no vendor ships it. Build the
+other three primitives first; revisit when a vendor productises or the
+firm has labelled shape data.</li>
+<li><strong>[2/3] Separate sheet search (OCR today, cheap win) from
+symbol search (CV service).</strong> Indices, latencies, and costs
+differ. Line up a CADTransformer / ArchCAD-400k benchmark against
+whatever Autodesk/Procore ship; this is where firm-specific
+differentiation is achievable.</li>
+<li><strong>[3/3] Flag and avoid ACC-only and iTwin-only features in
+phase 1.</strong> Autodesk Assistant, Construction IQ, Bentley Grouping
+&amp; Mapping are all cloud-locked; save them for tenants who already
+pay for the platform.</li>
+<li><strong>[3/3] Treat Autodesk Assistant, Newforma Konekt, Snaptrude
+AI, and Nomic as complementary SaaS silos, not platform bets.</strong>
+Let them serve their native domains; the firm-wide AI aggregates via
+connectors.</li>
+<li><strong>[3/3] Treat multi-tenancy boundary as project, not
+client.</strong> Matches Speckle workspaces, ACC projects, iTwins; lets
+joint ventures work without contortions.</li>
+<li><strong>[3/3] Feed Mission 2 (Spector discovery) these probe
+questions</strong>:
+<ul>
+<li>Does Spector ingest via Speckle, ACC AEC Data Model, direct IFC, or
+a mix?</li>
+<li>Is the BIM retrieval path vector-only or does it include a graph
+layer (Neo4j, Memgraph, or equivalent)?</li>
+<li>How are drawing regions indexed — sheet-level only, or per-region
+symbol detection?</li>
+<li>How is multi-tenancy implemented — project-scoped vector namespaces,
+row-level security, or separate graph DBs per tenant?</li>
+<li>Do responses cite IfcGUIDs / ElementIds, and is there a
+human-verifiable audit trail?</li>
+<li>Which features are cloud-locked (ACC, iTwin, Procore)
+vs. portable?</li>
+<li>Does Spector offer any geometric-similarity primitive, or is it
+deferred like every other shipping vendor?</li>
+</ul></li>
+</ol>
+<h2 id="confidence-assessment">Confidence Assessment</h2>
+<ul>
+<li><strong>Overall</strong>: medium (unanimous across 3
+replicates).</li>
+<li><strong>Coverage gaps (union)</strong>:
+<ul>
+<li>“ConserveAI” identity unresolvable — all three replicates flagged
+this independently. Recommend Alex clarify intended vendor.</li>
+<li>No verifiable public pricing for Augmenta, Hypar enterprise,
+Newforma AI Strategy Packages, Snaptrude enterprise, Speckle enterprise,
+Nomic, or Bentley iTwin; all quote-only.</li>
+<li>Geometric-embedding productisation in AEC could not be confirmed —
+all examples are research or internal.</li>
+<li>Alpha academic search tool was degraded during one replicate;
+academic coverage is via Exa-indexed arXiv + direct vendor docs.</li>
+<li>Internal architectures of Autodesk Assistant, Snaptrude AI, Newforma
+AI are not publicly documented; capability claims inferred from
+marketing + product docs.</li>
+<li>Bentley iTwin’s AI layer (Cognition / Seequent) and point cloud
+retrieval both deliberately out of scope.</li>
+</ul></li>
+<li><strong>Conflicting signals (within-merge)</strong>:
+<ul>
+<li>Speckle’s v3 object model is strong on geometry but ArchiCAD
+connector maturity is historically behind Revit (A1).</li>
+<li>Autodesk AEC Data Model is the cleanest API but still beta —
+production commitments carry risk (A1, A2).</li>
+<li>Vendors describe identical retrieval capabilities (“aggregate
+search,” “ask the model”) without distinguishing text-RAG from
+Graph-RAG; marketing collapses the three primitives into one (A3).</li>
+</ul></li>
+<li><strong>Within-side variance</strong>: 3/3 replicates valid.
+Headline agreement: yes. Source overlap: ~10 of ~35 URLs appeared in 2+
+replicates; union widened academic + vendor coverage meaningfully. No
+within-side contradictions on core recommendations.</li>
+<li><strong>Recommended follow-up</strong>:
+<ol type="1">
+<li>Clarify ConserveAI identity with Alex before citing downstream.</li>
+<li>Verify whether Autodesk AEC Data Model has a bulk export path (not
+just query) for ingestion into a firm-controlled vector store.</li>
+<li>Run a scoped benchmark: BIMConverse or simpleIfcAIAgentWithGraphRAG
+against an anonymised firm IFC to measure real-world query quality
+before committing to Graph-RAG as v1 primitive.</li>
+<li>Queue Mission 2 (Spector discovery) with the probe list above baked
+in.</li>
+</ol></li>
+</ul>
+<h2 id="source-ledger-union-deduped-by-url">Source Ledger (union,
+deduped by URL)</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Source</th>
+<th>Type</th>
+<th>Credibility</th>
+<th>Key Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="https://aps.autodesk.com/blog/files-data-unlocking-data-driven-aec-workflows-aec-data-model-apis">APS:
+From Files to Data</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Autodesk cloud data-model pivot</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://aps.autodesk.com/blog/extending-aec-data-model-graphql-api-now-public-beta">APS
+AEC Data Model GraphQL beta</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Mutations beta Aug 2025</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://forge.autodesk.com/developer/overview/model-derivative-api">APS
+Model Derivative API</a></td>
+<td>Official</td>
+<td>H</td>
+<td>RVT → IFC/SVF conversion</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://aps.autodesk.com/blog/announcing-general-availability-data-exchange-cloud-connector-ifc">APS
+Data Exchange IFC GA</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Granular IFC subsets</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://developer.api.autodesk.com/data-connector/v1/doc/schema?format=html&amp;name=submittalsacc">ACC
+Data Connector submittalsacc schema</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Shape of ACC admin records</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="https://github.com/GRAPHISOFT/bimcloud-api">Archicad
+BIMcloud API</a></td>
+<td>Official</td>
+<td>H</td>
+<td>ArchiCAD Teamwork model</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="https://developer.vectorworks.net/index.php/SDK:Using_the_VGS_API_for_Vectorworks_model_export_and_live_sync">Vectorworks
+VGS API</a></td>
+<td>Official</td>
+<td>M</td>
+<td>Project-sharing storage</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="https://developer.bentley.com/apis/">Bentley iTwin Platform
+APIs</a></td>
+<td>Official</td>
+<td>H</td>
+<td>iTwins/iModels/ECSchema</td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://developer.bentley.com/apis/imodels-v2/overview/">iModels
+API v2</a></td>
+<td>Official</td>
+<td>H</td>
+<td>iModel + changesets</td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="https://docs.speckle.systems/developers/data-schema/concepts">Speckle
+Core Concepts</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Open BIM object model</td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="https://docs.speckle.systems/developers/server/architecture">Speckle
+Server Architecture</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Self-hostable server</td>
+</tr>
+<tr>
+<td>12</td>
+<td><a href="https://github.com/specklesystems/speckle-server/">speckle-server
+GitHub</a></td>
+<td>OSS (Apache 2.0)</td>
+<td>H</td>
+<td>Canonical open graph impl</td>
+</tr>
+<tr>
+<td>13</td>
+<td><a href="https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/chapter-5/index.html">buildingSMART
+IFC 4.3 schemas</a></td>
+<td>Standard</td>
+<td>H</td>
+<td>Interchange graph semantics</td>
+</tr>
+<tr>
+<td>14</td>
+<td><a href="https://arxiv.org/abs/2504.16813">Iranmanesh et al.,
+Graph-RAG over IFC, arXiv 2504.16813</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>Graph-RAG beats vector-RAG for IFC</td>
+</tr>
+<tr>
+<td>15</td>
+<td><a href="https://www.sciencedirect.com/science/article/pii/S147403462501122X">Zhu
+et al., IFC-Graph internal structure, AEI 2026</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>IFC graph internal structure</td>
+</tr>
+<tr>
+<td>16</td>
+<td><a href="https://arxiv.org/abs/2405.16345">Cypher4BIM, arXiv
+2405.16345</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>Graph query language for IFC</td>
+</tr>
+<tr>
+<td>17</td>
+<td><a href="https://blog.iaac.net/bimconverse-graphrag-for-ifc-natural-language-queries/">BIMConverse,
+IAAC 2024</a></td>
+<td>Academic</td>
+<td>M</td>
+<td>Reference NL-to-IFC impl</td>
+</tr>
+<tr>
+<td>18</td>
+<td><a href="https://openaccess.thecvf.com/content/ICCV2021/papers/Fan_FloorPlanCAD_A_Large-Scale_CAD_Drawing_Dataset_for_Panoptic_Symbol_Spotting_ICCV_2021_paper.pdf">FloorPlanCAD,
+ICCV 2021</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>Drawing symbol spotting SOTA (I)</td>
+</tr>
+<tr>
+<td>19</td>
+<td><a href="https://openaccess.thecvf.com/content/CVPR2022/html/Fan_CADTransformer_Panoptic_Symbol_Spotting_Transformer_for_CAD_Drawings_CVPR_2022_paper.html">CADTransformer,
+CVPR 2022</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>Drawing symbol spotting SOTA (II)</td>
+</tr>
+<tr>
+<td>20</td>
+<td><a href="https://openreview.net/pdf/88027c10ed21ef8b6a08e304bc957f87f3ab7edc.pdf">ArchCAD-400k,
+OpenReview 2025</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>400k architectural CAD benchmark</td>
+</tr>
+<tr>
+<td>21</td>
+<td><a href="https://www.arxiv.org/pdf/2602.13345">BLUEPRINT, arXiv
+2602.13345 (ORNL)</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>Production-scale drawing retrieval</td>
+</tr>
+<tr>
+<td>22</td>
+<td><a href="https://www.mdpi.com/2075-5309/15/6/951">Lin et al., GSTF
+embeddings, MDPI Buildings 2025</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>Geometric+semantic+topological</td>
+</tr>
+<tr>
+<td>23</td>
+<td><a href="https://www.sciencedirect.com/science/article/abs/pii/S0166361519307146">BIMSeek++,
+Automation in Construction 2020</a></td>
+<td>Academic</td>
+<td>H</td>
+<td>Attribute-based BIM retrieval</td>
+</tr>
+<tr>
+<td>24</td>
+<td><a href="https://vespa.ai/solutions/visual-retrieval-augmented-generation/colpali">ColPali
+(Vespa)</a></td>
+<td>Vendor/academic</td>
+<td>H</td>
+<td>OCR-free visual RAG primitive</td>
+</tr>
+<tr>
+<td>25</td>
+<td><a href="https://support.procore.com/products/online/user-guide/project-level/drawings/tutorials/automatic-drawing-sheet-linking">Procore
+Drawing OCR</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Production sheet-linking</td>
+</tr>
+<tr>
+<td>26</td>
+<td><a href="https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/AI-features-in-Autodesk-Construction-Cloud.html">Autodesk
+AI features in ACC</a></td>
+<td>Official</td>
+<td>H</td>
+<td>AI feature inventory</td>
+</tr>
+<tr>
+<td>27</td>
+<td><a href="https://www.autodesk.com/blogs/construction/meet-autodesk-assistant-ai-native-intelligence-in-forma/">Autodesk
+Assistant in Forma</a></td>
+<td>Official</td>
+<td>M</td>
+<td>Production AEC text-RAG</td>
+</tr>
+<tr>
+<td>28</td>
+<td><a href="https://devwpen.newforma.com/newforma-konekt/aggregate-search/">Newforma
+Aggregate Search</a></td>
+<td>Official</td>
+<td>M</td>
+<td>Cross-source search stack</td>
+</tr>
+<tr>
+<td>29</td>
+<td><a href="https://www.newforma.com/jump-into-the-future-with-newforma-ai/">Newforma
+AI page</a></td>
+<td>Vendor</td>
+<td>M</td>
+<td>AI Strategy Packages</td>
+</tr>
+<tr>
+<td>30</td>
+<td><a href="https://www.snaptrude.com/blog/enterprise-ai-knowledge-integration">Snaptrude
+AI blog</a></td>
+<td>Vendor</td>
+<td>M</td>
+<td>Firm-knowledge RAG over SharePoint/ACC</td>
+</tr>
+<tr>
+<td>31</td>
+<td><a href="https://www.snaptrude.com/blog/how-we-built-revit-snaptrude-bi-directional-import-export-link">Snaptrude-Revit
+via Speckle</a></td>
+<td>Vendor</td>
+<td>M</td>
+<td>Snaptrude uses Speckle</td>
+</tr>
+<tr>
+<td>32</td>
+<td><a href="https://github.com/hypar-io/Elements">hypar-io/Elements
+GitHub</a></td>
+<td>OSS (MIT)</td>
+<td>H</td>
+<td>Open BIM element library</td>
+</tr>
+<tr>
+<td>33</td>
+<td><a href="https://aecmag.com/mep/agentic-ai-accelerates-electrical-design/">Augmenta
+AEC Magazine</a></td>
+<td>Industry press</td>
+<td>M</td>
+<td>Augmenta ACP scope (generative, not RAG)</td>
+</tr>
+<tr>
+<td>34</td>
+<td><a href="https://developer.rhino3d.com/en/guides/compute">Rhino.Compute
+guides</a></td>
+<td>Official</td>
+<td>H</td>
+<td>NURBS kernel as REST</td>
+</tr>
+<tr>
+<td>35</td>
+<td><a href="https://developer.nvidia.com/blog/a-guide-to-retrieval-augmented-generation-for-aec/">NVIDIA
+Guide to RAG for AEC</a></td>
+<td>Vendor (infra)</td>
+<td>M</td>
+<td>End-to-end pattern writeup</td>
+</tr>
+<tr>
+<td>36</td>
+<td><a href="https://help.autodesk.com/cloudhelp/2018/ENU/Revit-API/Revit_API_Developers_Guide/Basic_Interaction_with_Revit_Elements/Parameters.html">Revit
+API Parameters docs</a></td>
+<td>Official</td>
+<td>H</td>
+<td>Element parameter model</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Methodology note: This brief is the merged canonical output of 3
+parallel research_a replicates (mission IDs <code>19422820</code>,
+<code>12378dc0</code>, <code>3f259826</code>) run via the baked-in 3x
+best-of-N protocol. Within-side variance was low: all three replicates
+converged on the three-primitive architecture and Speckle-vs-Autodesk
+substrate choice. Source union across replicates widened the academic +
+vendor ledger from ~15-17 per replicate to 36 deduped entries. Raw
+replicates available on request.</em></p>
+</body>
+</html>

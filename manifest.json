@@ -434,5 +434,20 @@
       "skills",
       "2026-04-24"
     ]
+  },
+  {
+    "type": "session",
+    "title": "AEC Data & RAG Pattern Survey (merged best-of-3)",
+    "date": "2026-04-24",
+    "agent": "principal_research",
+    "path": "sessions/2026-04-24-aec-data--rag-pattern-survey-merged-best-of-3.html",
+    "tags": [
+      "aec",
+      "bim",
+      "rag",
+      "research",
+      "best-of-n",
+      "merged"
+    ]
   }
 ]
