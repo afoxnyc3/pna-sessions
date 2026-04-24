@@ -421,5 +421,18 @@
       "pna-library"
     ],
     "type": "session"
+  },
+  {
+    "type": "session",
+    "title": "P&A Skill Library",
+    "date": "2026-04-24",
+    "agent": "principal_librarian",
+    "path": "sessions/2026-04-24-pa-skill-library.html",
+    "tags": [
+      "library",
+      "catalog",
+      "skills",
+      "2026-04-24"
+    ]
   }
 ]

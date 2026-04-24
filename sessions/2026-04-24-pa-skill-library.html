@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P&A Skill Library</title>
+<style>
+  :root {
+    --navy: #070d1a;
+    --navy-mid: #0d1930;
+    --navy-card: #111f38;
+    --navy-border: #1a2d4a;
+    --blue: #1d6fa4;
+    --cyan: #00b4d8;
+    --amber: #f59e0b;
+    --text: #c9d8ed;
+    --text-dim: #7a9bbf;
+    --text-bright: #e8f4ff;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sans: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    background-image:
+      linear-gradient(rgba(0,180,216,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,180,216,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--navy-mid);
+    border-right: 1px solid var(--navy-border);
+    padding: 24px 0;
+  }
+
+  .sidebar-logo {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--navy-border);
+    margin-bottom: 12px;
+  }
+  .sidebar-logo h1 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cyan);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sidebar-logo .total {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 20px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 12px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .nav-item:hover {
+    color: var(--text-bright);
+    background: rgba(0,180,216,0.06);
+    border-left-color: var(--cyan);
+  }
+  .nav-label { flex: 1; }
+  .nav-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    background: rgba(0,180,216,0.08);
+    border-radius: 8px;
+    padding: 1px 6px;
+    margin-left: 8px;
+  }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    padding: 40px 48px;
+    max-width: 1200px;
+  }
+
+  .page-header {
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--navy-border);
+  }
+  .page-header h1 {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: -0.02em;
+  }
+  .page-header h1 span { color: var(--cyan); }
+  .page-header .meta {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-top: 8px;
+    font-family: var(--mono);
+  }
+  .page-header .meta strong { color: var(--amber); }
+
+  /* ── Search ── */
+  .search-bar {
+    margin-bottom: 40px;
+  }
+  .search-input {
+    width: 100%;
+    max-width: 520px;
+    background: var(--navy-card);
+    border: 1px solid var(--navy-border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-input::placeholder { color: var(--text-dim); }
+  .search-input:focus { border-color: var(--cyan); }
+
+  /* ── Category ── */
+  .category { margin-bottom: 56px; }
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--navy-border);
+  }
+  .category-header h2 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .count-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    background: rgba(0,180,216,0.08);
+    border: 1px solid rgba(0,180,216,0.15);
+    border-radius: 10px;
+    padding: 2px 8px;
+  }
+
+  /* ── Skill Grid ── */
+  .skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+  .skill-card {
+    background: var(--navy-card);
+    border: 1px solid var(--navy-border);
+    border-radius: 8px;
+    padding: 16px;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .skill-card:hover {
+    border-color: rgba(0,180,216,0.3);
+    transform: translateY(-1px);
+  }
+  .skill-card.hidden { display: none; }
+  .skill-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .skill-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-bright);
+    flex: 1;
+    line-height: 1.4;
+  }
+  .skill-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+  .skill-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid var(--navy-border);
+    padding: 24px 0;
+    margin-top: 40px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── No results ── */
+  .no-results {
+    display: none;
+    padding: 40px;
+    text-align: center;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <h1>P&A Library</h1>
+      <div class="total">111 skills &middot; 15 categories</div>
+    </div>
+    <a href="#research" class="nav-item"><span class="nav-label">Research &amp; Analysis</span><span class="nav-count">11</span></a><a href="#web" class="nav-item"><span class="nav-label">Web &amp; Content</span><span class="nav-count">4</span></a><a href="#documents" class="nav-item"><span class="nav-label">Document &amp; File Operations</span><span class="nav-count">6</span></a><a href="#engineering" class="nav-item"><span class="nav-label">Engineering &amp; Code</span><span class="nav-count">16</span></a><a href="#practices" class="nav-item"><span class="nav-label">Engineering Practices</span><span class="nav-count">16</span></a><a href="#gemini" class="nav-item"><span class="nav-label">Gemini &amp; Google AI</span><span class="nav-count">3</span></a><a href="#orchestration" class="nav-item"><span class="nav-label">Multi-Agent &amp; Orchestration</span><span class="nav-count">4</span></a><a href="#skill-dev" class="nav-item"><span class="nav-label">Skill Development &amp; Optimization</span><span class="nav-count">6</span></a><a href="#session" class="nav-item"><span class="nav-label">Session &amp; Memory Management</span><span class="nav-count">4</span></a><a href="#obsidian" class="nav-item"><span class="nav-label">Obsidian &amp; Vault</span><span class="nav-count">6</span></a><a href="#academic" class="nav-item"><span class="nav-label">Paper &amp; Academic</span><span class="nav-count">5</span></a><a href="#consulting" class="nav-item"><span class="nav-label">Principal &amp; Agent Consulting</span><span class="nav-count">5</span></a><a href="#publishing" class="nav-item"><span class="nav-label">P&amp;A Publishing</span><span class="nav-count">2</span></a><a href="#business" class="nav-item"><span class="nav-label">Client &amp; Business</span><span class="nav-count">2</span></a><a href="#creator" class="nav-item"><span class="nav-label">Creator &amp; Content</span><span class="nav-count">21</span></a>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <h1>P&A <span>Skill Library</span></h1>
+      <div class="meta">
+        <strong>111 skills</strong> &nbsp;&middot;&nbsp; 15 categories &nbsp;&middot;&nbsp; updated 2026-04-24 &nbsp;&middot;&nbsp; source: afoxnyc3/pna-library
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <input class="search-input" type="text" placeholder="filter skills..." id="search" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div id="no-results" class="no-results">no skills match that filter</div>
+
+    
+      <section class="category" id="research">
+        <div class="category-header">
+          <h2>Research &amp; Analysis</h2>
+          <span class="count-badge">11</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="deep-research" data-desc="thorough source-heavy investigation on any topic. produces a durable cited research brief.">
+          <div class="skill-header">
+            <span class="skill-name">deep-research</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Thorough source-heavy investigation on any topic. Produces a durable cited research brief.</p>
+        </div>
+        <div class="skill-card" data-name="feynman-bridge" data-desc="invoke the feynman cli for deep academic and long-horizon research. use before synthesising findings.">
+          <div class="skill-header">
+            <span class="skill-name">feynman-bridge</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Invoke the feynman CLI for deep academic and long-horizon research. Use before synthesising findings.</p>
+        </div>
+        <div class="skill-card" data-name="source-comparison" data-desc="grounded comparison matrix across tools, papers, frameworks, or approaches.">
+          <div class="skill-header">
+            <span class="skill-name">source-comparison</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Grounded comparison matrix across tools, papers, frameworks, or approaches.</p>
+        </div>
+        <div class="skill-card" data-name="literature-review" data-desc="comprehensive academic literature review with synthesis and consensus mapping.">
+          <div class="skill-header">
+            <span class="skill-name">literature-review</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Comprehensive academic literature review with synthesis and consensus mapping.</p>
+        </div>
+        <div class="skill-card" data-name="novelty-check" data-desc="verify whether a research idea or approach is genuinely novel against recent literature.">
+          <div class="skill-header">
+            <span class="skill-name">novelty-check</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Verify whether a research idea or approach is genuinely novel against recent literature.</p>
+        </div>
+        <div class="skill-card" data-name="peer-review" data-desc="simulate tough peer review of any research artifact — paper, draft, proposal, report.">
+          <div class="skill-header">
+            <span class="skill-name">peer-review</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Simulate tough peer review of any research artifact — paper, draft, proposal, report.</p>
+        </div>
+        <div class="skill-card" data-name="idea-refine" data-desc="refine ideas through structured divergent and convergent thinking.">
+          <div class="skill-header">
+            <span class="skill-name">idea-refine</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Refine ideas through structured divergent and convergent thinking.</p>
+        </div>
+        <div class="skill-card" data-name="eli5" data-desc="explain research papers or technical concepts in plain english with concrete analogies.">
+          <div class="skill-header">
+            <span class="skill-name">eli5</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Explain research papers or technical concepts in plain English with concrete analogies.</p>
+        </div>
+        <div class="skill-card" data-name="alpha-research" data-desc="search, read, and query academic research papers via the alpha cli (alphaxiv-backed).">
+          <div class="skill-header">
+            <span class="skill-name">alpha-research</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Search, read, and query academic research papers via the alpha CLI (alphaXiv-backed).</p>
+        </div>
+        <div class="skill-card" data-name="research-wiki" data-desc="persistent research knowledge base. karpathy llm wiki pattern — compile once, keep current.">
+          <div class="skill-header">
+            <span class="skill-name">research-wiki</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Persistent research knowledge base. Karpathy LLM Wiki pattern — compile once, keep current.</p>
+        </div>
+        <div class="skill-card" data-name="research-refine" data-desc="turn a vague research direction into a concrete, problem-anchored implementation-ready plan.">
+          <div class="skill-header">
+            <span class="skill-name">research-refine</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Turn a vague research direction into a concrete, problem-anchored implementation-ready plan.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="web">
+        <div class="category-header">
+          <h2>Web &amp; Content</h2>
+          <span class="count-badge">4</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="media-extract" data-desc="universal media extraction — youtube, web articles, local video/audio/pdf, transcripts. uses yt-dlp + gemini.">
+          <div class="skill-header">
+            <span class="skill-name">media-extract</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Universal media extraction — YouTube, web articles, local video/audio/PDF, transcripts. Uses yt-dlp + Gemini.</p>
+        </div>
+        <div class="skill-card" data-name="defuddle" data-desc="extract clean markdown from web pages using the defuddle cli, removing clutter.">
+          <div class="skill-header">
+            <span class="skill-name">defuddle</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Extract clean markdown from web pages using the Defuddle CLI, removing clutter.</p>
+        </div>
+        <div class="skill-card" data-name="jobs" data-desc="inspect active background research — running processes, scheduled tasks, pending missions.">
+          <div class="skill-header">
+            <span class="skill-name">jobs</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Inspect active background research — running processes, scheduled tasks, pending missions.</p>
+        </div>
+        <div class="skill-card" data-name="watch" data-desc="set up a recurring research watch on a topic, company, or paper area.">
+          <div class="skill-header">
+            <span class="skill-name">watch</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Set up a recurring research watch on a topic, company, or paper area.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="documents">
+        <div class="category-header">
+          <h2>Document &amp; File Operations</h2>
+          <span class="count-badge">6</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="pdf" data-desc="read, extract, merge, or process pdf files.">
+          <div class="skill-header">
+            <span class="skill-name">pdf</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Read, extract, merge, or process PDF files.</p>
+        </div>
+        <div class="skill-card" data-name="docx" data-desc="create, read, edit, or manipulate word documents (.docx files).">
+          <div class="skill-header">
+            <span class="skill-name">docx</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Create, read, edit, or manipulate Word documents (.docx files).</p>
+        </div>
+        <div class="skill-card" data-name="xlsx" data-desc="open, read, edit, or fix spreadsheet files.">
+          <div class="skill-header">
+            <span class="skill-name">xlsx</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Open, read, edit, or fix spreadsheet files.</p>
+        </div>
+        <div class="skill-card" data-name="pptx" data-desc="create, read, or edit powerpoint presentation files.">
+          <div class="skill-header">
+            <span class="skill-name">pptx</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Create, read, or edit PowerPoint presentation files.</p>
+        </div>
+        <div class="skill-card" data-name="file-intel" data-desc="run gemini file processor on any folder. extracts pdf, pptx, xlsx, docx, csv, json into obsidian summaries.">
+          <div class="skill-header">
+            <span class="skill-name">file-intel</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Run Gemini file processor on any folder. Extracts PDF, PPTX, XLSX, DOCX, CSV, JSON into Obsidian summaries.</p>
+        </div>
+        <div class="skill-card" data-name="preview" data-desc="preview or export markdown, latex, or research artifacts as rendered documents or pdfs.">
+          <div class="skill-header">
+            <span class="skill-name">preview</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Preview or export Markdown, LaTeX, or research artifacts as rendered documents or PDFs.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="engineering">
+        <div class="category-header">
+          <h2>Engineering &amp; Code</h2>
+          <span class="count-badge">16</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="spec-driven-development" data-desc="write a spec before coding starts. use when requirements are unclear or unstated.">
+          <div class="skill-header">
+            <span class="skill-name">spec-driven-development</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Write a spec before coding starts. Use when requirements are unclear or unstated.</p>
+        </div>
+        <div class="skill-card" data-name="planning-and-task-breakdown" data-desc="break a spec into atomic, implementable tasks. use before writing any code.">
+          <div class="skill-header">
+            <span class="skill-name">planning-and-task-breakdown</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Break a spec into atomic, implementable tasks. Use before writing any code.</p>
+        </div>
+        <div class="skill-card" data-name="api-and-interface-design" data-desc="guides stable api and interface design. use when designing rest endpoints or module boundaries.">
+          <div class="skill-header">
+            <span class="skill-name">api-and-interface-design</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Guides stable API and interface design. Use when designing REST endpoints or module boundaries.</p>
+        </div>
+        <div class="skill-card" data-name="documentation-and-adrs" data-desc="write adrs and project docs. use when making architectural decisions or shipping features.">
+          <div class="skill-header">
+            <span class="skill-name">documentation-and-adrs</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Write ADRs and project docs. Use when making architectural decisions or shipping features.</p>
+        </div>
+        <div class="skill-card" data-name="verification-before-completion" data-desc="evidence before assertions. run before any completion claim, commit, or pr.">
+          <div class="skill-header">
+            <span class="skill-name">verification-before-completion</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Evidence before assertions. Run before any completion claim, commit, or PR.</p>
+        </div>
+        <div class="skill-card" data-name="systematic-debugging" data-desc="root-cause before fixes. use when encountering any bug or unexpected behavior.">
+          <div class="skill-header">
+            <span class="skill-name">systematic-debugging</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Root-cause before fixes. Use when encountering any bug or unexpected behavior.</p>
+        </div>
+        <div class="skill-card" data-name="requesting-code-review" data-desc="dispatch a code reviewer subagent. use after completing a task or major feature.">
+          <div class="skill-header">
+            <span class="skill-name">requesting-code-review</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Dispatch a code reviewer subagent. Use after completing a task or major feature.</p>
+        </div>
+        <div class="skill-card" data-name="receiving-code-review" data-desc="receive and evaluate code review feedback with technical rigor, not performative agreement.">
+          <div class="skill-header">
+            <span class="skill-name">receiving-code-review</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Receive and evaluate code review feedback with technical rigor, not performative agreement.</p>
+        </div>
+        <div class="skill-card" data-name="finishing-a-development-branch" data-desc="guide completion of development work — verify tests, merge options, cleanup.">
+          <div class="skill-header">
+            <span class="skill-name">finishing-a-development-branch</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Guide completion of development work — verify tests, merge options, cleanup.</p>
+        </div>
+        <div class="skill-card" data-name="mcp-builder" data-desc="scaffold and build mcp (model context protocol) servers. use when building new mcp integrations.">
+          <div class="skill-header">
+            <span class="skill-name">mcp-builder</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Scaffold and build MCP (Model Context Protocol) servers. Use when building new MCP integrations.</p>
+        </div>
+        <div class="skill-card" data-name="anthropic-claude-api" data-desc="build, debug, and optimize claude api / anthropic sdk apps. handles prompt caching, model migrations, tool use, batch, citations.">
+          <div class="skill-header">
+            <span class="skill-name">anthropic-claude-api</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Build, debug, and optimize Claude API / Anthropic SDK apps. Handles prompt caching, model migrations, tool use, batch, citations.</p>
+        </div>
+        <div class="skill-card" data-name="agent-sandboxes" data-desc="operate e2b agent sandboxes via cli. use when running code in isolation or testing packages safely.">
+          <div class="skill-header">
+            <span class="skill-name">agent-sandboxes</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Operate E2B agent sandboxes via CLI. Use when running code in isolation or testing packages safely.</p>
+        </div>
+        <div class="skill-card" data-name="audit-python" data-desc="audit and optimize python codebases. quality review, structure analysis, improvement recommendations.">
+          <div class="skill-header">
+            <span class="skill-name">audit-python</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Audit and optimize Python codebases. Quality review, structure analysis, improvement recommendations.</p>
+        </div>
+        <div class="skill-card" data-name="audit-typescript" data-desc="audit and optimize typescript codebases. quality review, structure analysis, improvement recommendations.">
+          <div class="skill-header">
+            <span class="skill-name">audit-typescript</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Audit and optimize TypeScript codebases. Quality review, structure analysis, improvement recommendations.</p>
+        </div>
+        <div class="skill-card" data-name="bounded-shell" data-desc="context-preserving shell execution. caps long command output and auto-summarizes to prevent token overflow.">
+          <div class="skill-header">
+            <span class="skill-name">bounded-shell</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Context-preserving shell execution. Caps long command output and auto-summarizes to prevent token overflow.</p>
+        </div>
+        <div class="skill-card" data-name="webapp-testing" data-desc="test local web applications using playwright. verify frontend functionality and debug ui.">
+          <div class="skill-header">
+            <span class="skill-name">webapp-testing</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Test local web applications using Playwright. Verify frontend functionality and debug UI.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="practices">
+        <div class="category-header">
+          <h2>Engineering Practices</h2>
+          <span class="count-badge">16</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="browser-testing-with-devtools" data-desc="test and debug browser-based apps using devtools. inspect dom, capture console errors, verify frontend behaviour.">
+          <div class="skill-header">
+            <span class="skill-name">browser-testing-with-devtools</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Test and debug browser-based apps using DevTools. Inspect DOM, capture console errors, verify frontend behaviour.</p>
+        </div>
+        <div class="skill-card" data-name="ci-cd-and-automation" data-desc="set up or modify ci/cd pipelines. automate quality gates, configure builds, wire deployment workflows.">
+          <div class="skill-header">
+            <span class="skill-name">ci-cd-and-automation</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Set up or modify CI/CD pipelines. Automate quality gates, configure builds, wire deployment workflows.</p>
+        </div>
+        <div class="skill-card" data-name="code-review-and-quality" data-desc="multi-axis code review across correctness, readability, architecture, security, and performance.">
+          <div class="skill-header">
+            <span class="skill-name">code-review-and-quality</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Multi-axis code review across correctness, readability, architecture, security, and performance.</p>
+        </div>
+        <div class="skill-card" data-name="code-simplification" data-desc="refactor code for clarity without changing behaviour. use when code works but is hard to read or extend.">
+          <div class="skill-header">
+            <span class="skill-name">code-simplification</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Refactor code for clarity without changing behaviour. Use when code works but is hard to read or extend.</p>
+        </div>
+        <div class="skill-card" data-name="context-engineering" data-desc="optimize agent context setup. use when starting a session or when output quality degrades.">
+          <div class="skill-header">
+            <span class="skill-name">context-engineering</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Optimize agent context setup. Use when starting a session or when output quality degrades.</p>
+        </div>
+        <div class="skill-card" data-name="debugging-and-error-recovery" data-desc="systematic root-cause debugging before proposing fixes. use when tests fail or behaviour is unexpected.">
+          <div class="skill-header">
+            <span class="skill-name">debugging-and-error-recovery</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Systematic root-cause debugging before proposing fixes. Use when tests fail or behaviour is unexpected.</p>
+        </div>
+        <div class="skill-card" data-name="deprecation-and-migration" data-desc="manage removal of old systems, apis, or features. migrate users between implementations safely.">
+          <div class="skill-header">
+            <span class="skill-name">deprecation-and-migration</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Manage removal of old systems, APIs, or features. Migrate users between implementations safely.</p>
+        </div>
+        <div class="skill-card" data-name="frontend-ui-engineering" data-desc="build production-quality uis. creating components, implementing layouts, managing state, handling accessibility.">
+          <div class="skill-header">
+            <span class="skill-name">frontend-ui-engineering</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Build production-quality UIs. Creating components, implementing layouts, managing state, handling accessibility.</p>
+        </div>
+        <div class="skill-card" data-name="git-workflow-and-versioning" data-desc="structure git workflow — committing, branching, resolving conflicts, prs. use on any code change.">
+          <div class="skill-header">
+            <span class="skill-name">git-workflow-and-versioning</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Structure git workflow — committing, branching, resolving conflicts, PRs. Use on any code change.</p>
+        </div>
+        <div class="skill-card" data-name="incremental-implementation" data-desc="deliver changes incrementally. ship in small, reviewable slices when touching more than one file.">
+          <div class="skill-header">
+            <span class="skill-name">incremental-implementation</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Deliver changes incrementally. Ship in small, reviewable slices when touching more than one file.</p>
+        </div>
+        <div class="skill-card" data-name="performance-optimization" data-desc="optimize application performance. use when performance requirements exist or regressions are suspected.">
+          <div class="skill-header">
+            <span class="skill-name">performance-optimization</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Optimize application performance. Use when performance requirements exist or regressions are suspected.</p>
+        </div>
+        <div class="skill-card" data-name="security-and-hardening" data-desc="harden code against vulnerabilities. use when handling user input, auth, data storage, or external integrations.">
+          <div class="skill-header">
+            <span class="skill-name">security-and-hardening</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Harden code against vulnerabilities. Use when handling user input, auth, data storage, or external integrations.</p>
+        </div>
+        <div class="skill-card" data-name="shipping-and-launch" data-desc="prepare production launches. pre-launch checklist, monitoring, rollback planning.">
+          <div class="skill-header">
+            <span class="skill-name">shipping-and-launch</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Prepare production launches. Pre-launch checklist, monitoring, rollback planning.</p>
+        </div>
+        <div class="skill-card" data-name="source-driven-development" data-desc="ground every implementation decision in official documentation. authoritative, source-cited code.">
+          <div class="skill-header">
+            <span class="skill-name">source-driven-development</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Ground every implementation decision in official documentation. Authoritative, source-cited code.</p>
+        </div>
+        <div class="skill-card" data-name="test-driven-development" data-desc="drive development with tests. tests first, code second. use when implementing logic or fixing bugs.">
+          <div class="skill-header">
+            <span class="skill-name">test-driven-development</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Drive development with tests. Tests first, code second. Use when implementing logic or fixing bugs.</p>
+        </div>
+        <div class="skill-card" data-name="using-agent-skills" data-desc="discover and invoke agent skills. use at session start to determine which skill applies to the current task.">
+          <div class="skill-header">
+            <span class="skill-name">using-agent-skills</span>
+            <span class="skill-badge" style="background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44">agent-skills</span>
+          </div>
+          <p class="skill-desc">Discover and invoke agent skills. Use at session start to determine which skill applies to the current task.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="gemini">
+        <div class="category-header">
+          <h2>Gemini &amp; Google AI</h2>
+          <span class="count-badge">3</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="gemini-interactions-api" data-desc="call the gemini api for text generation, chat, streaming, and function calling. python and js/ts.">
+          <div class="skill-header">
+            <span class="skill-name">gemini-interactions-api</span>
+            <span class="skill-badge" style="background:#10b98122;color:#10b981;border-color:#10b98144">Google</span>
+          </div>
+          <p class="skill-desc">Call the Gemini API for text generation, chat, streaming, and function calling. Python and JS/TS.</p>
+        </div>
+        <div class="skill-card" data-name="gemini-live-api-dev" data-desc="build real-time bidirectional streaming apps with the gemini live api over websockets.">
+          <div class="skill-header">
+            <span class="skill-name">gemini-live-api-dev</span>
+            <span class="skill-badge" style="background:#10b98122;color:#10b981;border-color:#10b98144">Google</span>
+          </div>
+          <p class="skill-desc">Build real-time bidirectional streaming apps with the Gemini Live API over WebSockets.</p>
+        </div>
+        <div class="skill-card" data-name="vertex-ai-api-dev" data-desc="use gemini on google cloud vertex ai. enterprise environments, adc auth, gen ai sdk.">
+          <div class="skill-header">
+            <span class="skill-name">vertex-ai-api-dev</span>
+            <span class="skill-badge" style="background:#10b98122;color:#10b981;border-color:#10b98144">Google</span>
+          </div>
+          <p class="skill-desc">Use Gemini on Google Cloud Vertex AI. Enterprise environments, ADC auth, Gen AI SDK.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="orchestration">
+        <div class="category-header">
+          <h2>Multi-Agent &amp; Orchestration</h2>
+          <span class="count-badge">4</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="dispatching-parallel-agents" data-desc="dispatch independent tasks to parallel agents with isolated context windows.">
+          <div class="skill-header">
+            <span class="skill-name">dispatching-parallel-agents</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Dispatch independent tasks to parallel agents with isolated context windows.</p>
+        </div>
+        <div class="skill-card" data-name="subagent-driven-development" data-desc="execute implementation plans by dispatching fresh subagents per task with two-stage review.">
+          <div class="skill-header">
+            <span class="skill-name">subagent-driven-development</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Execute implementation plans by dispatching fresh subagents per task with two-stage review.</p>
+        </div>
+        <div class="skill-card" data-name="brainstorming" data-desc="explore intent and requirements before any implementation. hard gate before building.">
+          <div class="skill-header">
+            <span class="skill-name">brainstorming</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Explore intent and requirements before any implementation. HARD GATE before building.</p>
+        </div>
+        <div class="skill-card" data-name="writing-plans" data-desc="write comprehensive implementation plans before touching code.">
+          <div class="skill-header">
+            <span class="skill-name">writing-plans</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Write comprehensive implementation plans before touching code.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="skill-dev">
+        <div class="category-header">
+          <h2>Skill Development &amp; Optimization</h2>
+          <span class="count-badge">6</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="writing-skills" data-desc="tdd for skill creation — red-green-refactor cycle using pressure scenarios and subagent testing.">
+          <div class="skill-header">
+            <span class="skill-name">writing-skills</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">TDD for skill creation — RED-GREEN-REFACTOR cycle using pressure scenarios and subagent testing.</p>
+        </div>
+        <div class="skill-card" data-name="skill-creator" data-desc="create new skills, modify and improve existing skills, and measure skill performance.">
+          <div class="skill-header">
+            <span class="skill-name">skill-creator</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Create new skills, modify and improve existing skills, and measure skill performance.</p>
+        </div>
+        <div class="skill-card" data-name="skill-optimizer" data-desc="karpathy autoresearch loop for autonomously improving claude code skill files.">
+          <div class="skill-header">
+            <span class="skill-name">skill-optimizer</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Karpathy autoresearch loop for autonomously improving Claude Code skill files.</p>
+        </div>
+        <div class="skill-card" data-name="meta-optimize" data-desc="analyze skill invocation logs and propose improvements to skill files and workflow sequences.">
+          <div class="skill-header">
+            <span class="skill-name">meta-optimize</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Analyze skill invocation logs and propose improvements to skill files and workflow sequences.</p>
+        </div>
+        <div class="skill-card" data-name="autoresearch" data-desc="autonomous experiment loop — try ideas, measure results, keep what works, repeat.">
+          <div class="skill-header">
+            <span class="skill-name">autoresearch</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Autonomous experiment loop — try ideas, measure results, keep what works, repeat.</p>
+        </div>
+        <div class="skill-card" data-name="library" data-desc="private skill distribution system. install, push, remove, sync, list, or search skills from the p&amp;a catalog.">
+          <div class="skill-header">
+            <span class="skill-name">library</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Private skill distribution system. Install, push, remove, sync, list, or search skills from the P&amp;A catalog.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="session">
+        <div class="category-header">
+          <h2>Session &amp; Memory Management</h2>
+          <span class="count-badge">4</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="agent-session-summary" data-desc="structured end-of-session handoff. saves to deepagents/sessions/. invoked by /wrap.">
+          <div class="skill-header">
+            <span class="skill-name">agent-session-summary</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Structured end-of-session handoff. Saves to deepagents/sessions/. Invoked by /wrap.</p>
+        </div>
+        <div class="skill-card" data-name="session-log" data-desc="write a durable session log capturing completed work, findings, open questions, next steps.">
+          <div class="skill-header">
+            <span class="skill-name">session-log</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Write a durable session log capturing completed work, findings, open questions, next steps.</p>
+        </div>
+        <div class="skill-card" data-name="session-search" data-desc="search past session transcripts and logs to recover prior work and decisions.">
+          <div class="skill-header">
+            <span class="skill-name">session-search</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Search past session transcripts and logs to recover prior work and decisions.</p>
+        </div>
+        <div class="skill-card" data-name="tldr" data-desc="save a summary of this conversation to the vault. key decisions, things to remember, next actions.">
+          <div class="skill-header">
+            <span class="skill-name">tldr</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Save a summary of this conversation to the vault. Key decisions, things to remember, next actions.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="obsidian">
+        <div class="category-header">
+          <h2>Obsidian &amp; Vault</h2>
+          <span class="count-badge">6</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="obsidian-cli" data-desc="interact with obsidian vaults — read, create, search, manage notes and tasks.">
+          <div class="skill-header">
+            <span class="skill-name">obsidian-cli</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Interact with Obsidian vaults — read, create, search, manage notes and tasks.</p>
+        </div>
+        <div class="skill-card" data-name="obsidian-markdown" data-desc="create and edit obsidian flavored markdown with wikilinks, callouts, and properties.">
+          <div class="skill-header">
+            <span class="skill-name">obsidian-markdown</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Create and edit Obsidian Flavored Markdown with wikilinks, callouts, and properties.</p>
+        </div>
+        <div class="skill-card" data-name="obsidian-bases" data-desc="create and edit obsidian bases (.base files) — database-like views of notes.">
+          <div class="skill-header">
+            <span class="skill-name">obsidian-bases</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Create and edit Obsidian Bases (.base files) — database-like views of notes.</p>
+        </div>
+        <div class="skill-card" data-name="daily" data-desc="start the day with vault context. read or create today&#x27;s daily note, surface top priorities.">
+          <div class="skill-header">
+            <span class="skill-name">daily</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Start the day with vault context. Read or create today&#x27;s daily note, surface top priorities.</p>
+        </div>
+        <div class="skill-card" data-name="vault-setup" data-desc="interactive obsidian vault configurator. builds personalized vault structure, claude.md, and slash commands.">
+          <div class="skill-header">
+            <span class="skill-name">vault-setup</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Interactive Obsidian vault configurator. Builds personalized vault structure, CLAUDE.md, and slash commands.</p>
+        </div>
+        <div class="skill-card" data-name="json-canvas" data-desc="create and edit json canvas files (.canvas) with nodes, edges, and groups. visual canvases and mind maps.">
+          <div class="skill-header">
+            <span class="skill-name">json-canvas</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Create and edit JSON Canvas files (.canvas) with nodes, edges, and groups. Visual canvases and mind maps.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="academic">
+        <div class="category-header">
+          <h2>Paper &amp; Academic</h2>
+          <span class="count-badge">5</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="paper-writing" data-desc="turn research findings into a polished paper-style draft with sections and citations.">
+          <div class="skill-header">
+            <span class="skill-name">paper-writing</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Turn research findings into a polished paper-style draft with sections and citations.</p>
+        </div>
+        <div class="skill-card" data-name="paper-code-audit" data-desc="compare a paper&#x27;s claims against its public codebase. identify mismatches and gaps.">
+          <div class="skill-header">
+            <span class="skill-name">paper-code-audit</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Compare a paper&#x27;s claims against its public codebase. Identify mismatches and gaps.</p>
+        </div>
+        <div class="skill-card" data-name="replication" data-desc="plan or execute a replication of a paper&#x27;s results, claims, or benchmarks.">
+          <div class="skill-header">
+            <span class="skill-name">replication</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Plan or execute a replication of a paper&#x27;s results, claims, or benchmarks.</p>
+        </div>
+        <div class="skill-card" data-name="idea-discovery" data-desc="full idea discovery pipeline — survey field, generate ideas, check novelty, refine.">
+          <div class="skill-header">
+            <span class="skill-name">idea-discovery</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Full idea discovery pipeline — survey field, generate ideas, check novelty, refine.</p>
+        </div>
+        <div class="skill-card" data-name="auto-review-loop" data-desc="autonomous multi-round review and improvement loop until quality threshold is met.">
+          <div class="skill-header">
+            <span class="skill-name">auto-review-loop</span>
+            <span class="skill-badge" style="background:#0ea5e922;color:#0ea5e9;border-color:#0ea5e944">RND</span>
+          </div>
+          <p class="skill-desc">Autonomous multi-round review and improvement loop until quality threshold is met.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="consulting">
+        <div class="category-header">
+          <h2>Principal &amp; Agent Consulting</h2>
+          <span class="count-badge">5</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="saas-decommission" data-desc="audit a client&#x27;s saas stack for consolidation, ai-replacement, and license-reclamation opportunities. cfo-ready savings memo. phase 0 — wedge.">
+          <div class="skill-header">
+            <span class="skill-name">saas-decommission</span>
+            <span class="skill-badge" style="background:#ec489922;color:#ec4899;border-color:#ec489944">consulting</span>
+          </div>
+          <p class="skill-desc">Audit a client&#x27;s SaaS stack for consolidation, AI-replacement, and license-reclamation opportunities. CFO-ready savings memo. Phase 0 — Wedge.</p>
+        </div>
+        <div class="skill-card" data-name="problem-decomposition" data-desc="decompose a client problem into a mece issue tree using the 5 ways to mece framework. spine of every engagement. phase 2 — design.">
+          <div class="skill-header">
+            <span class="skill-name">problem-decomposition</span>
+            <span class="skill-badge" style="background:#ec489922;color:#ec4899;border-color:#ec489944">consulting</span>
+          </div>
+          <p class="skill-desc">Decompose a client problem into a MECE issue tree using the 5 Ways to MECE framework. Spine of every engagement. Phase 2 — Design.</p>
+        </div>
+        <div class="skill-card" data-name="agentic-workflow-solutioning" data-desc="design agent or workflow architecture for a defined problem. choose between llm call, workflow, agent, multi-agent. phase 2 — design.">
+          <div class="skill-header">
+            <span class="skill-name">agentic-workflow-solutioning</span>
+            <span class="skill-badge" style="background:#ec489922;color:#ec4899;border-color:#ec489944">consulting</span>
+          </div>
+          <p class="skill-desc">Design agent or workflow architecture for a defined problem. Choose between LLM call, workflow, agent, multi-agent. Phase 2 — Design.</p>
+        </div>
+        <div class="skill-card" data-name="threat-model" data-desc="stride-style threat model for ai agents. identifies prompt injection, tool abuse, data exfiltration, runaway behavior. phase 3 — govern.">
+          <div class="skill-header">
+            <span class="skill-name">threat-model</span>
+            <span class="skill-badge" style="background:#ec489922;color:#ec4899;border-color:#ec489944">consulting</span>
+          </div>
+          <p class="skill-desc">STRIDE-style threat model for AI agents. Identifies prompt injection, tool abuse, data exfiltration, runaway behavior. Phase 3 — Govern.</p>
+        </div>
+        <div class="skill-card" data-name="engagement-retrospective" data-desc="structured 6-part post-engagement retro. writes to p&amp;a case base. phase 4 — deliver.">
+          <div class="skill-header">
+            <span class="skill-name">engagement-retrospective</span>
+            <span class="skill-badge" style="background:#ec489922;color:#ec4899;border-color:#ec489944">consulting</span>
+          </div>
+          <p class="skill-desc">Structured 6-part post-engagement retro. Writes to P&amp;A case base. Phase 4 — Deliver.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="publishing">
+        <div class="category-header">
+          <h2>P&amp;A Publishing</h2>
+          <span class="count-badge">2</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="pna-publish" data-desc="publish any artifact to the p&amp;a sessions archive at pna-sessions.vercel.app.">
+          <div class="skill-header">
+            <span class="skill-name">pna-publish</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Publish any artifact to the P&amp;A sessions archive at pna-sessions.vercel.app.</p>
+        </div>
+        <div class="skill-card" data-name="publish-research" data-desc="publish research results to pna-sessions as formatted pages. runs comparative analysis across results.">
+          <div class="skill-header">
+            <span class="skill-name">publish-research</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Publish research results to pna-sessions as formatted pages. Runs comparative analysis across results.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="business">
+        <div class="category-header">
+          <h2>Client &amp; Business</h2>
+          <span class="count-badge">2</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="cerberus" data-desc="deep client research and architecture validation for principal &amp; agent engagements.">
+          <div class="skill-header">
+            <span class="skill-name">cerberus</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Deep client research and architecture validation for Principal &amp; Agent engagements.</p>
+        </div>
+        <div class="skill-card" data-name="doc-coauthoring" data-desc="structured workflow for co-authoring documentation, proposals, and technical specs.">
+          <div class="skill-header">
+            <span class="skill-name">doc-coauthoring</span>
+            <span class="skill-badge" style="background:#6366f122;color:#6366f1;border-color:#6366f144">P&amp;A</span>
+          </div>
+          <p class="skill-desc">Structured workflow for co-authoring documentation, proposals, and technical specs.</p>
+        </div>
+        </div>
+      </section>
+      <section class="category" id="creator">
+        <div class="category-header">
+          <h2>Creator &amp; Content</h2>
+          <span class="count-badge">21</span>
+        </div>
+        <div class="skill-grid">
+          
+        <div class="skill-card" data-name="write" data-desc="generalized writing for any platform — newsletters, youtube scripts, guides, sales pages, social posts.">
+          <div class="skill-header">
+            <span class="skill-name">write</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Generalized writing for any platform — newsletters, YouTube scripts, guides, sales pages, social posts.</p>
+        </div>
+        <div class="skill-card" data-name="voice" data-desc="apply an authentic writing voice to produced content. personality layer for other writing skills.">
+          <div class="skill-header">
+            <span class="skill-name">voice</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Apply an authentic writing voice to produced content. Personality layer for other writing skills.</p>
+        </div>
+        <div class="skill-card" data-name="research-creator" data-desc="topic and competitor research for any content type. identifies content gaps before writing.">
+          <div class="skill-header">
+            <span class="skill-name">research-creator</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Topic and competitor research for any content type. Identifies content gaps before writing.</p>
+        </div>
+        <div class="skill-card" data-name="title" data-desc="generate optimized titles, headlines, and subject lines for youtube, newsletters, blog, social.">
+          <div class="skill-header">
+            <span class="skill-name">title</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Generate optimized titles, headlines, and subject lines for YouTube, newsletters, blog, social.</p>
+        </div>
+        <div class="skill-card" data-name="hook" data-desc="create retention-optimized opening hooks — video intros, newsletter leads, social post openers.">
+          <div class="skill-header">
+            <span class="skill-name">hook</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Create retention-optimized opening hooks — video intros, newsletter leads, social post openers.</p>
+        </div>
+        <div class="skill-card" data-name="extract-ideas" data-desc="mine source material for repurposable content angles and ideas.">
+          <div class="skill-header">
+            <span class="skill-name">extract-ideas</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Mine source material for repurposable content angles and ideas.</p>
+        </div>
+        <div class="skill-card" data-name="thumbnail" data-desc="design high-ctr youtube thumbnails and cover images. title-aware, concept-first.">
+          <div class="skill-header">
+            <span class="skill-name">thumbnail</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Design high-CTR YouTube thumbnails and cover images. Title-aware, concept-first.</p>
+        </div>
+        <div class="skill-card" data-name="social-graphic" data-desc="create social media graphics, newsletter headers, og images, profile banners.">
+          <div class="skill-header">
+            <span class="skill-name">social-graphic</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Create social media graphics, newsletter headers, OG images, profile banners.</p>
+        </div>
+        <div class="skill-card" data-name="design-system" data-desc="create, update, or refresh a visual design system or art style guide.">
+          <div class="skill-header">
+            <span class="skill-name">design-system</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Create, update, or refresh a visual design system or art style guide.</p>
+        </div>
+        <div class="skill-card" data-name="brand-guidelines" data-desc="define, codify, or update brand identity and connect it to visual design systems.">
+          <div class="skill-header">
+            <span class="skill-name">brand-guidelines</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Define, codify, or update brand identity and connect it to visual design systems.</p>
+        </div>
+        <div class="skill-card" data-name="nanobanana" data-desc="ai image generation and editing using google gemini models. requires gemini_api_key.">
+          <div class="skill-header">
+            <span class="skill-name">nanobanana</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">AI image generation and editing using Google Gemini models. Requires GEMINI_API_KEY.</p>
+        </div>
+        <div class="skill-card" data-name="plan-newsletter" data-desc="plan a complete newsletter issue — research, draft, subject line, hook, and social promotion posts.">
+          <div class="skill-header">
+            <span class="skill-name">plan-newsletter</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Plan a complete newsletter issue — research, draft, subject line, hook, and social promotion posts.</p>
+        </div>
+        <div class="skill-card" data-name="optimize-newsletter" data-desc="optimize a newsletter draft or write a full issue from an outline.">
+          <div class="skill-header">
+            <span class="skill-name">optimize-newsletter</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Optimize a newsletter draft or write a full issue from an outline.</p>
+        </div>
+        <div class="skill-card" data-name="newsletter-visuals" data-desc="audit a newsletter draft for visual opportunities and generate on-brand visual assets.">
+          <div class="skill-header">
+            <span class="skill-name">newsletter-visuals</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Audit a newsletter draft for visual opportunities and generate on-brand visual assets.</p>
+        </div>
+        <div class="skill-card" data-name="newsletter-to-video" data-desc="repurpose a newsletter issue into a youtube video outline.">
+          <div class="skill-header">
+            <span class="skill-name">newsletter-to-video</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Repurpose a newsletter issue into a YouTube video outline.</p>
+        </div>
+        <div class="skill-card" data-name="plan-video" data-desc="complete youtube video plan — title options, thumbnail concepts, hooks, content outline.">
+          <div class="skill-header">
+            <span class="skill-name">plan-video</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Complete YouTube video plan — title options, thumbnail concepts, hooks, content outline.</p>
+        </div>
+        <div class="skill-card" data-name="repurpose-video" data-desc="repurpose a completed youtube video into newsletter issues, social posts, and other formats.">
+          <div class="skill-header">
+            <span class="skill-name">repurpose-video</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Repurpose a completed YouTube video into newsletter issues, social posts, and other formats.</p>
+        </div>
+        <div class="skill-card" data-name="community-post" data-desc="create youtube community posts that drive views and audience engagement.">
+          <div class="skill-header">
+            <span class="skill-name">community-post</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Create YouTube community posts that drive views and audience engagement.</p>
+        </div>
+        <div class="skill-card" data-name="ideate-notes" data-desc="generate substack note ideas by scanning published videos, newsletters, and notes.">
+          <div class="skill-header">
+            <span class="skill-name">ideate-notes</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Generate Substack Note ideas by scanning published videos, newsletters, and Notes.</p>
+        </div>
+        <div class="skill-card" data-name="write-note" data-desc="create high-engagement substack notes. single posts or newsletter promotion.">
+          <div class="skill-header">
+            <span class="skill-name">write-note</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Create high-engagement Substack Notes. Single posts or newsletter promotion.</p>
+        </div>
+        <div class="skill-card" data-name="youtube-data" data-desc="retrieve youtube data via the data api — video search, channel details, transcripts, comments.">
+          <div class="skill-header">
+            <span class="skill-name">youtube-data</span>
+            <span class="skill-badge" style="background:#8b5cf622;color:#8b5cf6;border-color:#8b5cf644">AI Launchpad</span>
+          </div>
+          <p class="skill-desc">Retrieve YouTube data via the Data API — video search, channel details, transcripts, comments.</p>
+        </div>
+        </div>
+      </section>
+
+    <div class="footer">
+      principal_librarian &nbsp;&middot;&nbsp; pna-library/library.yaml &nbsp;&middot;&nbsp; 2026-04-24
+    </div>
+  </main>
+
+</div>
+
+<script>
+  const input = document.getElementById('search');
+  const noResults = document.getElementById('no-results');
+
+  input.addEventListener('input', () => {
+    const q = input.value.toLowerCase().trim();
+    let total = 0;
+
+    document.querySelectorAll('.skill-card').forEach(card => {
+      const match = !q || card.dataset.name.includes(q) || card.dataset.desc.includes(q);
+      card.classList.toggle('hidden', !match);
+      if (match) total++;
+    });
+
+    document.querySelectorAll('.category').forEach(cat => {
+      const visible = cat.querySelectorAll('.skill-card:not(.hidden)').length > 0;
+      cat.style.display = visible ? '' : 'none';
+    });
+
+    noResults.style.display = total === 0 ? 'block' : 'none';
+  });
+</script>
+</body>
+</html>
