@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Mission 2: Spector Discovery &amp; Architecture Probe</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">body { max-width: 860px; margin: 2.5rem auto; padding: 0 1.25rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; color: #1a1a1a; line-height: 1.65; font-size: 16px; }
+h1 { font-size: 2rem; margin-top: 0; color: #0a0a0a; border-bottom: 2px solid #eaeaea; padding-bottom: 0.6rem; }
+h2 { font-size: 1.4rem; margin-top: 2.2rem; color: #0a0a0a; border-bottom: 1px solid #f0f0f0; padding-bottom: 0.35rem; }
+h3 { font-size: 1.1rem; margin-top: 1.6rem; color: #222; }
+p, li { color: #1f1f1f; }
+em { color: #555; }
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+code { background: #f5f5f5; padding: 0.08em 0.35em; border-radius: 3px; }
+pre { background: #f8f8f8; padding: 1rem; border-radius: 6px; overflow-x: auto; border: 1px solid #eaeaea; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.93em; }
+th, td { border: 1px solid #e0e0e0; padding: 0.55rem 0.75rem; text-align: left; vertical-align: top; }
+th { background: #fafafa; font-weight: 600; }
+tr:nth-child(even) td { background: #fcfcfc; }
+a { color: #0a66c2; text-decoration: none; }
+a:hover { text-decoration: underline; }
+blockquote { border-left: 3px solid #ccc; padding-left: 1rem; color: #555; margin: 1rem 0; }
+hr { border: none; border-top: 1px solid #eaeaea; margin: 2rem 0; }
+.footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eaeaea; font-size: 0.85em; color: #777; }
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Mission 2: Spector Discovery &amp; Architecture
+Probe</h1>
+</header>
+<h1 id="mission-2-spector-discovery-architecture-probe">Mission 2:
+Spector Discovery &amp; Architecture Probe</h1>
+<h2 id="context">Context</h2>
+<p>This brief is the direct downstream of <a href="./2026-04-24-aec-data--rag-pattern-survey-merged-best-of-3.html">AEC
+Data &amp; RAG Pattern Survey (merged best-of-3)</a>.</p>
+<p>That brief established three facts with unanimous [3/3] support
+across parallel research replicates:</p>
+<ol type="1">
+<li>Production AEC RAG requires three retrieval primitives —
+<strong>text-RAG for docs, Graph-RAG for BIM, symbol-spotting + OCR for
+drawings</strong> — not one.</li>
+<li>Only two substrates realistically support a vendor-neutral
+multi-tenant firm AI: <strong>Autodesk AEC Data Model</strong> (GraphQL,
+beta, ACC-locked) or <strong>Speckle</strong> (open object graph, Apache
+2.0, self-hostable).</li>
+<li><strong>Stable object IDs</strong> (IFC GlobalId, Revit UniqueId,
+Speckle id) are the glue that links a chunked spec paragraph to a
+specific element. Without them, cross-asset RAG degrades to keyword
+matching.</li>
+</ol>
+<p>Spector is a candidate AEC RAG product surface. Mission 2 determines
+where Spector sits in this architectural space: which substrate, which
+primitives, which trade-offs, and whether it fits Alex’s multi-tenant
+firm AI thesis.</p>
+<h2 id="objective">Objective</h2>
+<p>Produce an architectural read on Spector grounded in first-party
+evidence. Map Spector against the three-primitive framework, the
+substrate question, and the multi-tenancy posture. Deliver a go /
+investigate-further / pass recommendation with reasoning.</p>
+<h2 id="probe-questions">Probe questions</h2>
+<p>All seven probes are derived directly from the merged research brief.
+Answer each from primary sources where possible; flag inference where
+not.</p>
+<ol type="1">
+<li><strong>Ingestion substrate.</strong> Does Spector ingest via
+Speckle, ACC AEC Data Model, direct IFC, native Revit / ArchiCAD
+connectors, or a mix? This decision constrains everything
+downstream.</li>
+<li><strong>BIM retrieval path.</strong> Is the 3D path vector-only, or
+does it include a graph layer (Neo4j, Memgraph, or equivalent)? Does it
+support element-parameter queries natively, or only over serialised
+IFC?</li>
+<li><strong>Drawing retrieval.</strong> Sheet-level OCR only, or
+per-region symbol detection? Any ColPali / BLUEPRINT-class pipeline?
+Does it count objects or just surface sheets?</li>
+<li><strong>Multi-tenancy implementation.</strong> Project-scoped vector
+namespaces, row-level security in Postgres, or separate graph DBs per
+tenant? Can one tenant’s embedding leak into another tenant’s
+retrieval?</li>
+<li><strong>Citation and audit trail.</strong> Do responses cite
+IfcGUIDs / ElementIds / sheet-coordinate anchors? Is there a
+human-verifiable audit trail per claim? AEC liability requires this;
+absence is disqualifying for firm deployment.</li>
+<li><strong>Cloud lock-in surface.</strong> Which features require ACC,
+iTwin, Procore, or proprietary Spector cloud? Which are portable /
+self-hostable?</li>
+<li><strong>Geometric similarity.</strong> Does Spector offer any “find
+elements like this” primitive, or is it deferred like every other
+shipping vendor? (The open whitespace flagged in the upstream
+brief.)</li>
+</ol>
+<h2 id="deliverables">Deliverables</h2>
+<ol type="1">
+<li><strong>Architecture scorecard</strong>: Spector’s posture on each
+of the seven probes, with source citations.</li>
+<li><strong>Substrate map</strong>: place Spector on the Autodesk /
+Speckle / iTwin / hybrid grid.</li>
+<li><strong>Fit analysis</strong>: does Spector meet the thesis of a
+multi-tenant firm-wide AEC AI? Where does it fall short?</li>
+<li><strong>Risk flags</strong>: lock-in dependencies, missing
+primitives, opacity areas.</li>
+<li><strong>Go / investigate / pass recommendation</strong> with
+3-sentence rationale.</li>
+</ol>
+<h2 id="constraints">Constraints</h2>
+<ul>
+<li>Cite primary sources (Spector docs, product pages, demos, GitHub,
+ToS, pricing pages, vendor blog). Flag any inference where primary
+evidence is unavailable.</li>
+<li>Use the upstream merged brief as the comparative lens. Do not
+re-derive the three-primitive framework.</li>
+<li>Output format: markdown, ≤1,500 words, with substrate map as a
+table.</li>
+<li>If Spector is genuinely opaque, say so plainly. A clear “cannot
+determine from public surfaces” is better than speculation.</li>
+</ul>
+<h2 id="dispatch-pattern">Dispatch pattern</h2>
+<p>Run as 3x best-of-N on research_a (same protocol as upstream). Once
+research_b’s <code>academic_search</code> is verified functional post
+engineer fix <code>07628a75</code>, upgrade subsequent missions to full
+3x3 A/B.</p>
+<h2 id="success-criteria">Success criteria</h2>
+<ul>
+<li>Every probe answered or explicitly marked “cannot determine.”</li>
+<li>Substrate and primitive posture clear enough that Alex can decide:
+buy, partner, build alternative, or ignore.</li>
+<li>Recommendation is specific, not hedged.</li>
+</ul>
+<hr />
+<p><em>This brief is registered as the design artifact for Mission 2. It
+will be dispatched to research_a (3x best-of-N) immediately after
+publication.</em></p>
+</body>
+</html>

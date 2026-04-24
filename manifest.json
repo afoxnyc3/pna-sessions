@@ -449,5 +449,19 @@
       "best-of-n",
       "merged"
     ]
+  },
+  {
+    "type": "design",
+    "title": "Mission 2 Spector Discovery Architecture Probe",
+    "date": "2026-04-24",
+    "agent": "principal_research",
+    "path": "designs/2026-04-24-mission-2-spector-discovery-architecture-probe.html",
+    "tags": [
+      "aec",
+      "spector",
+      "discovery",
+      "mission-brief",
+      "design"
+    ]
   }
 ]
