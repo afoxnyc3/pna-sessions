@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>principal_engineer session — 2026-04-24 — P&amp;A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060d1f; --surface: #0d1b35; --surface-2: #111e3d; --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15); --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0; --muted: #94a3b8; --text-muted: #475569;
+      --primary: #3b82f6; --accent: #3b82f6;
+      --code-bg: #0a1628; --tag-bg: #111e3d; --tag-border: rgba(59,130,246,0.15);
+      --link: #93c5fd; --type-color: #22c55e;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 32px 32px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: var(--font-mono); }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: var(--font-mono); margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: var(--font-mono); }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; color: #93c5fd; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-25</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_engineer</div>
+    <h1>principal_engineer session — 2026-04-24</h1>
+    <div class="tags"><span class="tag">principal_engineer</span><span class="tag">2026-04-24</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — principal_engineer — 2026-04-24</h1>
+
+<p><strong>Agent:</strong> principal_engineer</p>
+<p><strong>Date:</strong> 2026-04-24</p>
+<p><strong>Session duration:</strong> ~half-day, multi-context (continuation across compaction)</p>
+<p><strong>Project(s):</strong> roadrunner-cli (primary), claudeclaw (DevOps draft)</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Resolution-plan answers encoded — status Draft→Approved, cap=100, "(hotfix)" naming, weekly Mon 06:00 UTC, DevOps queued (<code>docs/resolution-plan-2026-04-24.md</code>, commit <code>7df0935</code>)</li>
+<li><input type="checkbox" disabled checked> ROAD-010 queued in tasks.yaml (commit <code>2db7fa6</code>)</li>
+<li><input type="checkbox" disabled checked> DevOps agent scoping doc drafted (<code>~/.claudeclaw/agents/_drafts/principal_devops.md</code>, commit <code>cb72639</code>)</li>
+<li><input type="checkbox" disabled checked> ROAD-010 implementation shipped end-to-end on <code>feat/ROAD-010-queue-session-iteration</code> (commit <code>55b5ac4</code>):</li>
+</ul>
+<p>  - State schema v1→v2 with <code>session_iteration: int</code>, setdefault-based migration</p>
+<p>  - <code>write_state</code> preservation kwarg (<code>session_iteration: int | None = None</code>)</p>
+<p>  - <code>cmd_check_stop</code> increments both counters; cap gates on session counter</p>
+<p>  - <code>cmd_session_start</code> resets session counter to 0 on every hook fire</p>
+<p>  - New <code>reset-iteration [--soft|--hard]</code> subcommand</p>
+<p>  - <code>cmd_status</code> and <code>_build_task_brief</code> surface both counters</p>
+<p>  - Default <code>max_iter</code> raised 50→100 (argparse default + <code>hooks/stop_hook.sh</code>)</p>
+<p>  - 143/143 tests passing (added <code>TestSessionIteration</code> class, ~18 cases)</p>
+<p>  - ruff + mypy clean</p>
+<p>  - Work log at <code>logs/ROAD-010.md</code>, CHANGELOG entry appended</p>
+<p>  - <code>docs/configuration.md</code> created (later expanded by ROAD-006 into full tunables/env-vars/schemas reference)</p>
+<p>  - tasks.yaml ROAD-010 marked <code>done</code></p>
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Hive-mind logged: plan-execution + ROAD-010 commit</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>ROAD-010 merge to main</td>
+<td>local-only</td>
+<td>DevOps owns push; can fast-forward locally on Alex's call</td>
+</tr>
+<tr>
+<td>ROAD-009 (hello-roadrunner worked example)</td>
+<td>todo</td>
+<td>Last remaining roadmap item; mission to engineer when ready</td>
+</tr>
+<tr>
+<td>Resolution-plan issues 3-8</td>
+<td>open</td>
+<td>Sweep needed — some shipped via loop runs (status-enum gate in <code>0acb8ce</code>), others may need new task IDs</td>
+</tr>
+<tr>
+<td>principal_devops agent</td>
+<td>drafted, not created</td>
+<td>Awaits Alex's Telegram bot creation + <code>agent-create-cli.js</code> invocation</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Branch B for ROAD-010: hand-over-hand impl, not loop-driven</td>
+<td>Bug being fixed lives IN the loop; bootstrap hazard to let bugged loop ship its own fix</td>
+<td>ROAD-010 process; future "fix the fixer" work</td>
+</tr>
+<tr>
+<td>`session_iteration: int \</td>
+<td>None = None` kwarg with disk-preservation fallback</td>
+<td>Keeps change surface local; unrelated callers (cmd_start/complete/block/reset) don't need to thread the new field</td>
+<td><code>write_state</code> callers; future schema additions</td>
+</tr>
+<tr>
+<td>setdefault-based v1→v2 migration</td>
+<td>Vendored copies in entra-triage migrate transparently on first load post-sync</td>
+<td>entra-triage coordination; future schema bumps</td>
+</tr>
+<tr>
+<td>Cap default 50→100</td>
+<td>Alex approval 2026-04-24; 50 was tripping legitimate long sessions</td>
+<td>All check-stop invocations and <code>hooks/stop_hook.sh</code></td>
+</tr>
+<tr>
+<td>Both counters surfaced separately in cmd_status</td>
+<td>Lets operator distinguish runaway-imminent from accumulated-cycles at a glance</td>
+<td>UX for <code>roadrunner status</code></td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+docs/resolution-plan-2026-04-24.md         modified  (status Approved, answers encoded)
+tasks/tasks.yaml                            modified  (ROAD-010 queued, then marked done)
+roadrunner.py                               modified  (+189 lines: schema v2, session_iteration, reset-iteration, cmd_status, _build_task_brief)
+hooks/stop_hook.sh                          modified  (default 50→100)
+tests/test_roadrunner.py                    modified  (+280 lines: TestSessionIteration + cap test seed update + read_state shape fixes)
+docs/configuration.md                       created   (later expanded by ROAD-006)
+logs/ROAD-010.md                            created
+logs/CHANGELOG.md                           modified  (ROAD-010 entry)
+~/.claudeclaw/agents/_drafts/principal_devops.md  created
+</code></pre>
+
+<p>Commits (roadrunner-cli):</p>
+<pre><code class="lang-text">
+55b5ac4  feat(ROAD-010): per-session iteration counter with reset on SessionStart
+2db7fa6  feat(ROAD-010): queue per-session iteration counter task
+7df0935  docs: encode resolution-plan answers (cap 100, weekly CI, DevOps queued) — on docs/resolution-plan-2026-04-24
+</code></pre>
+
+<p>Commit (claudeclaw):</p>
+<pre><code class="lang-text">
+cb72639  draft: principal_devops agent scoping
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>principal_engineer (next session):</strong> merge <code>feat/ROAD-010-queue-session-iteration</code> → <code>main</code> locally so subsequent loop runs operate under the new schema/cap.</li>
+<li><strong>principal_engineer (next session):</strong> pick up ROAD-009 — <code>hello-roadrunner</code> minimal demo, 3 tasks, no external deps. Last <code>todo</code> in tasks.yaml.</li>
+<li><strong>principal_engineer (next session):</strong> sweep resolution-plan issues 3-8 against post-loop reality; queue any still-real items as ROAD-011..N.</li>
+<li><strong>clarke / alex:</strong> create Telegram bot for principal_devops via @BotFather, then run <code>agent-create-cli.js</code> per draft at <code>~/.claudeclaw/agents/_drafts/principal_devops.md</code>.</li>
+<li><strong>devops (when live):</strong> owns push, PR open/merge, CI/CD, Vercel/Render/Cloudflare/Supabase deploys. Will pick up ROAD-010 push and ROAD-008's PyPI publish path.</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>Should ROAD-010 be force-merged to <code>main</code> locally before DevOps exists, or wait? → needs: alex</li>
+<li>Resolution-plan issue 4 (entra-triage sync coordination) — does ROAD-010's setdefault migration count as fully resolved, or is there a separate doc deliverable? → needs: clarke / alex</li>
+<li>Loop ran ROAD-005..008 to done autonomously across this session; any of those need engineer-side audit before merging the chain to main? → needs: alex (or self-audit pass)</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<p>The loop kept running while engineer worked. Between ROAD-010 commit and end of session, ROAD-005, ROAD-006, ROAD-007, ROAD-008 all moved to <code>done</code> on their own <code>roadrunner/ROAD-NNN</code> branches. ROAD-006 in particular significantly expanded <code>docs/configuration.md</code> from the minimal version engineer created — that expansion is intentional and adds a full tunables/env-vars/tasks.yaml/state-schemas reference section. CHANGELOG reflects the full sequence.</p>
+
+<p>Branch state at session end: 7 unmerged feature/roadrunner branches sitting on top of <code>main</code>. Merge-into-main strategy needs a call (one big merge, sequential, or wait for DevOps).</p>
+
+<p>Engineering quality bar held throughout: every commit shipped tested, linted, type-checked. No <code>git add -A</code>. No remote push. No deletion of files engineer didn't author.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
