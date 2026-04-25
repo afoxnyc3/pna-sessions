@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roadrunner CLI — Design Document — P&amp;A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060d1f; --surface: #0d1b35; --surface-2: #111e3d; --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15); --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0; --muted: #94a3b8; --text-muted: #475569;
+      --primary: #3b82f6; --accent: #3b82f6;
+      --code-bg: #0a1628; --tag-bg: #111e3d; --tag-border: rgba(59,130,246,0.15);
+      --link: #93c5fd; --type-color: #a855f7;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 32px 32px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: var(--font-mono); }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: var(--font-mono); margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: var(--font-mono); }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; color: #93c5fd; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-25</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>design</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>Roadrunner CLI — Design Document</h1>
+    <div class="tags"></div>
+  </div>
+  <article>
+    <h1>Roadrunner CLI — Design Document</h1>
+
+<p><strong>Date:</strong> 2026-04-24</p>
+<p><strong>Author:</strong> principal_architect (via Clarke)</p>
+<p><strong>Status:</strong> Current — reflects ROAD-010 merge</p>
+
+<hr>
+
+<h2>1. What It Is</h2>
+
+<p>Roadrunner is a deterministic agentic loop harness for Claude Code. It solves the problem of a language model that doesn't stop: once you drop it into a project with a tasks.yaml, it will keep running, picking up tasks, validating its own work, and moving forward until the roadmap is done. Python owns control flow. Claude owns implementation. Bash hooks enforce boundaries.</p>
+
+<p>The tool grew out of dogfooding: the roadrunner-cli roadmap is itself driven by roadrunner. Every ADR in <code>docs/adr/</code> records a real defect found during that self-hosting run and the fix applied.</p>
+
+<hr>
+
+<h2>2. Architecture</h2>
+
+<h3>2.1 The three-layer split</h3>
+
+<pre><code class="lang-text">
+Layer 1: Control Plane (roadrunner.py, 2083 lines)
+  Task selection, dep resolution, validation, state writes
+
+Layer 2: Hooks (hooks/*.sh → roadrunner.py Python entry points)
+  Stop, SessionStart, PreCompact, PostCompact, PostToolUse
+
+Layer 3: Claude Code (implementation agent)
+  Reads brief, writes code, runs validate/complete
+</code></pre>
+
+<p>No task advances without passing <code>validation_commands</code>. No loop exits without an explicit <code>ROADMAP_COMPLETE</code> signal or a hard iteration cap. Claude cannot bypass either — they are enforced at the Python layer, not by prompt.</p>
+
+<h3>2.2 roadrunner.py structure</h3>
+
+<p>The file is a single-module CLI dispatcher (2083 lines). Internal organisation:</p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Section</th>
+<th>Responsibility</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Constants (lines 86-93)</td>
+<td>Tunables: timeouts, attempt caps, schema versions, log rotation</td>
+</tr>
+<tr>
+<td>TypedDicts</td>
+<td><code>Task</code>, <code>RoadmapState</code>, <code>ContextSnapshot</code> — typed state schemas</td>
+</tr>
+<tr>
+<td>State I/O</td>
+<td>Atomic YAML/JSON read-write, schema migration, fcntl locking</td>
+</tr>
+<tr>
+<td>Validation engine</td>
+<td>Subprocess executor with timeout, structured trace output</td>
+</tr>
+<tr>
+<td>Log management</td>
+<td>Rotation, retention, per-task work logs, trace.jsonl</td>
+</tr>
+<tr>
+<td>Hook implementations</td>
+<td><code>write_context_snapshot</code>, <code>cmd_session_start</code></td>
+</tr>
+<tr>
+<td>Task lifecycle</td>
+<td><code>cmd_start</code>, <code>cmd_validate</code>, <code>cmd_complete</code>, <code>cmd_block</code>, <code>cmd_reset</code></td>
+</tr>
+<tr>
+<td>Status and analysis</td>
+<td><code>cmd_status</code>, <code>cmd_next</code>, <code>cmd_analyze</code>, <code>cmd_health</code>, <code>cmd_watch</code></td>
+</tr>
+<tr>
+<td>Loop control</td>
+<td><code>cmd_check_stop</code>, iteration counter, auto-block logic</td>
+</tr>
+<tr>
+<td>Scaffolding</td>
+<td><code>cmd_init</code> — copies hooks, settings.json, creates tasks.yaml stub</td>
+</tr>
+<tr>
+<td>Utility</td>
+<td><code>cmd_commit</code>, <code>cmd_snapshot</code>, <code>cmd_post_compact</code>, <code>cmd_reset_iteration</code></td>
+</tr>
+<tr>
+<td>CLI dispatch</td>
+<td>argparse registration, <code>main()</code></td>
+</tr>
+</tbody></table></div>
+
+<p>17 subcommands: <code>status</code>, <code>next</code>, <code>start</code>, <code>validate</code>, <code>complete</code>, <code>block</code>, <code>reset</code>, <code>reset-iteration</code>, <code>commit</code>, <code>health</code>, <code>watch</code>, <code>check-stop</code>, <code>snapshot</code>, <code>post-compact</code>, <code>init</code>, <code>analyze</code>, <code>session-start</code></p>
+
+<h3>2.3 Hook system</h3>
+
+<p>All hooks are thin shell wrappers that pipe stdin to a Python entry point in <code>roadrunner.py</code>. The convention (ADR-010) is that no logic lives in the shell files — they exist purely to satisfy Claude Code's requirement for an executable at a registered path.</p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Hook</th>
+<th>Fires when</th>
+<th>Python entry</th>
+<th>Behaviour</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>stop_hook.sh</code></td>
+<td>Claude finishes a response turn</td>
+<td><code>cmd_check_stop</code></td>
+<td>Decides block/continue/halt; emits JSON decision to stdout</td>
+</tr>
+<tr>
+<td><code>session_start_hook.sh</code></td>
+<td>Claude Code session initialises</td>
+<td><code>cmd_session_start</code></td>
+<td>Resets <code>session_iteration</code> to 0; injects context snapshot as <code>additionalContext</code></td>
+</tr>
+<tr>
+<td><code>precompact_hook.sh</code></td>
+<td>Before context compaction</td>
+<td><code>cmd_snapshot</code></td>
+<td>Writes <code>.context_snapshot.json</code> with active task, iteration counts, last events</td>
+</tr>
+<tr>
+<td><code>postcompact_hook.sh</code></td>
+<td>After compaction completes</td>
+<td><code>cmd_post_compact</code></td>
+<td>Reads snapshot, verifies schema, logs <code>post_compact_verify</code> to trace.jsonl</td>
+</tr>
+<tr>
+<td><code>post_write_hook.sh</code></td>
+<td>After file write</td>
+<td>(direct shell check)</td>
+<td>Lightweight guard; no Python dispatch</td>
+</tr>
+</tbody></table></div>
+
+<p>Hook paths are registered in <code>.claude/settings.json</code> using <code>$CLAUDE_PROJECT_DIR/hooks/...</code> (ADR-005). Relative paths silently fail when hooks fire from a different working directory.</p>
+
+<p><strong>Stop hook decision protocol</strong> — two distinct JSON shapes, never mixed:</p>
+
+<pre><code class="lang-json">
+// Loop continues: inject brief and resume
+{"decision": "block", "reason": "Continue. Task ROAD-009 is eligible..."}
+
+// Hard halt: iteration cap reached
+{"continue": false, "stopReason": "Max iterations (100) reached. Roadmap halted."}
+</code></pre>
+
+<p>Per the Claude Code spec, <code>{"continue": false}</code> overrides any <code>decision: block</code> and terminates the session. The hook emits silent <code>exit 0</code> (no JSON) in three cases: <code>stop_hook_active=true</code> (re-entrant guard), <code>ROADMAP_COMPLETE</code> detected, and post-halt cleanup.</p>
+
+<h3>2.4 YAML task queue</h3>
+
+<p><code>tasks/tasks.yaml</code> is the source of truth. Every load validates the schema before use. Writes are atomic: write to a tempfile, <code>fsync</code>, <code>os.replace</code> (ADR-004). Rolling backups at <code>tasks/tasks.yaml.bak[.1..5]</code> (configurable via <code>TASKS_BACKUP_KEEP</code>).</p>
+
+<p>Task schema (all fields):</p>
+
+<pre><code class="lang-yaml">
+- id: ROAD-001              # required; regex ^[A-Z]+-\d+$ enforced (ADR-008)
+  title: "..."              # required
+  status: todo              # todo | in_progress | done | blocked
+  depends_on: []            # list of task IDs; checked before eligibility
+  goal: "..."               # multi-line description; injected into task brief
+  acceptance_criteria: []   # list of testable criteria; surfaced in brief
+  validation_commands: []   # shell commands run by cmd_validate; exit 0 = pass
+  validation_timeout: 300   # optional per-task override (default 300s, ADR-008)
+  documentation_targets: [] # files the agent should update on completion
+  files_expected: []        # scope guard; listed in the brief
+  notes: "..."              # optional context injected into brief
+</code></pre>
+
+<h3>2.5 Dependency graph</h3>
+
+<p><code>cmd_analyze</code> runs a depth-first traversal to detect cycles and unreachable tasks before execution. <code>is_eligible()</code> (called by <code>cmd_check_stop</code> and <code>cmd_next</code>) checks that all <code>depends_on</code> entries are <code>done</code> before a task is surfaced.</p>
+
+<p>Current task graph (ROAD-010 merge state):</p>
+
+<pre><code class="lang-text">
+ROAD-001 (done) --- ROAD-002 (done) --- ROAD-009 (todo)  &lt;- only remaining task
+                 \-- ROAD-004 (done) --- ROAD-008 (done)
+
+ROAD-003 (done) --- ROAD-007 (done)
+ROAD-005 (done)
+ROAD-006 (done)
+ROAD-010 (done)     (no deps)
+</code></pre>
+
+<p>ROAD-009 has two prerequisites (ROAD-002 and ROAD-003), both done. It is the sole remaining roadmap task.</p>
+
+<hr>
+
+<h2>3. State Model</h2>
+
+<h3>3.1 State files</h3>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>File</th>
+<th>Schema version</th>
+<th>Purpose</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>tasks/tasks.yaml</code></td>
+<td>-</td>
+<td>Task definitions and status; source of truth</td>
+</tr>
+<tr>
+<td><code>.roadmap_state.json</code></td>
+<td>v2 (current)</td>
+<td>Active task, iteration counters, per-task attempt map</td>
+</tr>
+<tr>
+<td><code>.context_snapshot.json</code></td>
+<td>v1 (current)</td>
+<td>PreCompact snapshot; read by SessionStart</td>
+</tr>
+<tr>
+<td><code>logs/CHANGELOG.md</code></td>
+<td>-</td>
+<td>Append-only audit log; rotated at 10 MB</td>
+</tr>
+<tr>
+<td><code>logs/ROAD-XXX.md</code></td>
+<td>-</td>
+<td>Per-task work log with validation output</td>
+</tr>
+<tr>
+<td><code>logs/trace.jsonl</code></td>
+<td>-</td>
+<td>Structured event log; retained 7 days</td>
+</tr>
+<tr>
+<td><code>.roadmap_state.lock</code></td>
+<td>-</td>
+<td>fcntl advisory lock; survives <code>os.replace</code> on state file</td>
+</tr>
+<tr>
+<td><code>.reset_ROAD-XXX</code></td>
+<td>-</td>
+<td>Boundary marker written on task completion</td>
+</tr>
+</tbody></table></div>
+
+<h3>3.2 Iteration counter model (ROAD-010)</h3>
+
+<p>Before ROAD-010, a single <code>iteration</code> counter incremented on every Stop-hook fire and persisted across all <code>claude</code> invocations. With 92 lifetime iterations against a cap of 50, the loop was halting at the start of every new session before any work could happen.</p>
+
+<p>ROAD-010 split the counter:</p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Field</th>
+<th>Semantics</th>
+<th>Reset behaviour</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>iteration</code></td>
+<td>Lifetime audit counter</td>
+<td>Preserved across sessions; never decremented</td>
+</tr>
+<tr>
+<td><code>session_iteration</code></td>
+<td>Per-session runaway guard</td>
+<td>Reset to 0 on every <code>cmd_session_start</code></td>
+</tr>
+</tbody></table></div>
+
+<p><code>cmd_check_stop</code> now gates on <code>session_iteration</code>. Default cap raised from 50 to 100 (approved 2026-04-24 in resolution plan: per-session is a runaway guard, not a budget cap; 100 gives headroom for legitimate multi-task runs while still catching true runaways). <code>STATE_SCHEMA_VERSION</code> bumped to 2; older state files without <code>session_iteration</code> load cleanly via <code>setdefault(0)</code> migration.</p>
+
+<p><code>reset-iteration --soft</code> resets <code>session_iteration</code> only. <code>--hard</code> zeros both. Both counters surface in <code>cmd_status</code> and in the task brief injected by the Stop hook.</p>
+
+<h3>3.3 Concurrency protection (ADR-009)</h3>
+
+<p><code>fcntl.flock()</code> wraps the read-increment-write cycle in <code>cmd_check_stop</code>. The lockfile (<code>.roadmap_state.lock</code>) is a stable sibling to the state file — it survives the <code>os.replace</code> that atomically swaps in new state. This serialises concurrent Stop-hook fires (which can occur on rapid model responses) without data races.</p>
+
+<hr>
+
+<h2>4. Tunables</h2>
+
+<p>All configurable via constants at the top of <code>roadrunner.py</code>:</p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Constant</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>DEFAULT_VALIDATION_TIMEOUT</code></td>
+<td>300s</td>
+<td>Per-task validation subprocess timeout; overridable in tasks.yaml</td>
+</tr>
+<tr>
+<td><code>MAX_TASK_ATTEMPTS</code></td>
+<td>5</td>
+<td>Auto-block a task after N resume cycles without completion</td>
+</tr>
+<tr>
+<td><code>TASKS_BACKUP_KEEP</code></td>
+<td>5</td>
+<td>Rolling <code>.bak.N</code> copies retained after each tasks.yaml write</td>
+</tr>
+<tr>
+<td><code>LOG_ROTATE_BYTES</code></td>
+<td>10 MB</td>
+<td>Rotate when a log file exceeds this size</td>
+</tr>
+<tr>
+<td><code>LOG_RETAIN_DAYS</code></td>
+<td>7</td>
+<td>Delete rotated logs older than this</td>
+</tr>
+<tr>
+<td><code>STATE_SCHEMA_VERSION</code></td>
+<td>2</td>
+<td>Current <code>.roadmap_state.json</code> schema; version mismatch exits 2</td>
+</tr>
+<tr>
+<td><code>SNAPSHOT_SCHEMA_VERSION</code></td>
+<td>1</td>
+<td>Current <code>.context_snapshot.json</code> schema</td>
+</tr>
+</tbody></table></div>
+
+<p>Environment override: <code>ROADMAP_MAX_ITERATIONS</code> — passed as <code>--max-iterations</code> to <code>check-stop</code> by the Stop hook shell script, allowing per-project override without touching source.</p>
+
+<hr>
+
+<h2>5. Current Status</h2>
+
+<h3>5.1 ROAD-010 merged (2026-04-24)</h3>
+
+<p>ROAD-010 fixes the state drift bug discovered when <code>iteration=92</code> was observed against a cap of 50, causing the loop to halt immediately at session start rather than after a runaway. The bug was diagnosed in <code>docs/resolution-plan-2026-04-24.md</code> (approved 2026-04-24 with all open questions resolved).</p>
+
+<p>Changes shipped:</p>
+<ul>
+<li><code>RoadmapState</code> TypedDict gains <code>session_iteration</code> field</li>
+<li><code>cmd_session_start</code> resets <code>session_iteration=0</code>, preserves <code>iteration</code></li>
+<li><code>cmd_check_stop</code> gates on <code>session_iteration</code></li>
+<li>Default cap raised 50 to 100</li>
+<li><code>reset-iteration [--soft|--hard]</code> subcommand added</li>
+<li>Both counters surfaced in <code>cmd_status</code> and <code>_build_task_brief</code></li>
+<li><code>STATE_SCHEMA_VERSION</code> bumped to 2 with backward-compat migration</li>
+<li>New tests covering SessionStart boundary, counter isolation, reset modes</li>
+</ul>
+
+<h3>5.2 Test suite</h3>
+
+<p>150 tests, 5.25s runtime. CI matrix runs on Python 3.10, 3.11, 3.12 with <code>fail-fast: false</code>. Lint (ruff) and type-check (mypy, standard mode) run as separate jobs pinned to Node24-native action majors (checkout@v5, setup-python@v6) ahead of the Node20 deprecation on 2026-06-02.</p>
+
+<p>Weekly smoke tests at Monday 06:00 UTC via <code>.github/workflows/weekly-smoke.yml</code> (chosen over nightly: low code-churn rate outside feature bursts). <code>workflow_dispatch</code> attached for manual runs.</p>
+
+<h3>5.3 ADR summary (10 merged)</h3>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>ADR</th>
+<th>Problem fixed</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>001</td>
+<td>False-positive <code>ROADMAP_COMPLETE</code> from quoted references</td>
+</tr>
+<tr>
+<td>002</td>
+<td>Mid-task Stop hook incorrectly triggered "all done"</td>
+</tr>
+<tr>
+<td>003</td>
+<td>Unbounded retry storms on stuck tasks (auto-block at 5 attempts)</td>
+</tr>
+<tr>
+<td>004</td>
+<td>State corruption from SIGINT during write (atomic writes via tempfile + os.replace)</td>
+</tr>
+<tr>
+<td>005</td>
+<td>Hooks silently failing from wrong working directory</td>
+</tr>
+<tr>
+<td>006</td>
+<td>Unstructured logs blocking post-run analysis (trace.jsonl)</td>
+</tr>
+<tr>
+<td>007</td>
+<td>Dead hook code: TaskCompleted namespace mismatch, MultiEdit matcher, PreCompact additionalContext misuse</td>
+</tr>
+<tr>
+<td>008</td>
+<td>Subprocess timeout gap; task ID path traversal via unsanitized IDs</td>
+</tr>
+<tr>
+<td>009</td>
+<td>Schema version detection; fcntl concurrency lock on state file</td>
+</tr>
+<tr>
+<td>010</td>
+<td>Hook-to-Python entry point unification; <code>session-start</code> promoted to operator-invokable CLI command</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>6. Open Items</h2>
+
+<h3>6.1 ROAD-009 — Worked example (todo, eligible now)</h3>
+
+<p>The single remaining roadmap task. Deliverable: <code>docs/examples/hello-roadrunner/</code> — a self-contained 3-task demo project (word counter CLI: create function, add CLI entry point, add tests). Purpose: let a new user see the loop complete on something trivial before trusting it with their own project.</p>
+
+<p>Both prerequisites (ROAD-002 init command, ROAD-003 analyze command) are done. ROAD-009 is eligible for execution immediately. No code changes to <code>roadrunner.py</code> — documentation only.</p>
+
+<p>Acceptance: <code>python3 roadrunner.py analyze --tasks-file docs/examples/hello-roadrunner/tasks/tasks.yaml</code> exits 0. Example README explains the full workflow in under 30 lines.</p>
+
+<h3>6.2 DevOps agent scoping (parallel workstream)</h3>
+
+<p>Multiple shipped tasks require remote operations that roadrunner-cli has no automation for yet: PyPI OIDC Trusted Publishing credential configuration (ROAD-008 documents the manual steps), remote git push, tag creation. These currently fall to Alex manually.</p>
+
+<p>Resolution-plan decision (2026-04-24): scope and queue a DevOps principal as a parallel workstream outside the roadrunner-cli roadmap. The <code>agent-create-cli</code> create command and CLAUDE.md draft are ready to execute once a Telegram bot token arrives from Alex via @BotFather.</p>
+
+<h3>6.3 entra-triage state file sync</h3>
+
+<p><code>entra-triage</code> vendors <code>.roadmap_state.json</code> and syncs periodically. The ROAD-010 schema version bump (v1 to v2) is backward-compatible: readers using <code>setdefault("session_iteration", 0)</code> handle old files cleanly. ROAD-010 notes confirm entra-triage uses this migration approach — no pre-coordination was needed.</p>
+
+<p>Recommended: smoke test after entra-triage next syncs to confirm the migration holds in production.</p>
+
+<hr>
+
+<h2>7. Phase Roadmap</h2>
+
+<h3>Phase 1 — Core infrastructure (complete)</h3>
+
+<p>pip-installable packaging (ROAD-001), <code>init</code> scaffold command (ROAD-002), <code>analyze</code> health check (ROAD-003), mypy type coverage (ROAD-004), PyPI publish workflow (ROAD-008).</p>
+
+<p>Exit: project installable, analyzable, and publishable to PyPI with OIDC.</p>
+
+<h3>Phase 2 — Observability and hardening (complete)</h3>
+
+<p>Structured trace logging (ROAD-006 / ADR-006), PostCompact hook (ROAD-005), <code>watch</code> live monitor (ROAD-007), contributing guide + configuration reference (ROAD-006), session iteration counter fix (ROAD-010).</p>
+
+<p>Exit: tool is observable, crash-safe, and loop-stable across multi-session runs.</p>
+
+<h3>Phase 3 — Adoption (in progress)</h3>
+
+<p>ROAD-009 remaining. End state: a new user installs roadrunner, runs hello-roadrunner, and sees the loop complete without reading the design doc.</p>
+
+<p>Exit: example exists, passes <code>analyze</code>, README under 30 lines.</p>
+
+<h3>Phase 4 — DevOps integration (planned, parallel)</h3>
+
+<p>Not in <code>tasks.yaml</code> — runs as a separate workstream. Covers: DevOps principal agent creation, automated tag-to-PyPI push, remote branch management. Unblocked pending Telegram bot token from Alex.</p>
+
+<hr>
+
+<h2>8. Trust Model and Security Notes</h2>
+
+<ul>
+<li><code>shell=True</code> is used in <code>subprocess.run</code> for validation commands. Pragmatic choice: <code>validation_commands</code> in <code>tasks.yaml</code> are project-authored, not user-supplied at runtime. Risk documented and accepted.</li>
+<li>Task IDs validated against <code>^[A-Z]+-\d+$</code> before use in file paths (ADR-008), preventing path traversal.</li>
+<li>All state writes use <code>os.replace</code> atomically (ADR-004). No partial state observable by a concurrent reader.</li>
+<li><code>fcntl.flock</code> on <code>.roadmap_state.lock</code> serialises concurrent Stop-hook fires (ADR-009).</li>
+</ul>
+
+<hr>
+
+<h2>9. Reference: File Layout</h2>
+
+<pre><code class="lang-text">
+roadrunner-cli/
+  roadrunner.py              2083-line single-module CLI (17 subcommands)
+  hooks/
+    stop_hook.sh             -&gt; cmd_check_stop
+    session_start_hook.sh    -&gt; cmd_session_start
+    precompact_hook.sh       -&gt; cmd_snapshot
+    postcompact_hook.sh      -&gt; cmd_post_compact
+    post_write_hook.sh
+  tasks/
+    tasks.yaml               Source of truth; atomically written; 5 rolling backups
+  .claude/
+    settings.json            Hook registration (absolute paths via $CLAUDE_PROJECT_DIR)
+  logs/
+    CHANGELOG.md             Append-only audit trail
+    trace.jsonl              Structured event log (JSONL, 7-day retention)
+    ROAD-XXX.md              Per-task work logs
+  docs/
+    adr/                     10 ADRs, 001-010
+    configuration.md         Full tunable reference
+    release.md               PyPI Trusted Publishing setup
+    resolution-plan-2026-04-24.md   Approved resolution plan (ROAD-010 source)
+  tests/                     150 tests, 5.25s
+  .github/workflows/
+    ci.yml                   pytest (3.10/3.11/3.12) + ruff + mypy
+    publish.yml              PyPI OIDC publish on v* tag push
+    weekly-smoke.yml         Smoke tests Mon 06:00 UTC
+  DESIGN.md                  Hook contracts and state schema reference
+  CONTRIBUTING.md            Dev setup, test, lint, new-command guide
+  pyproject.toml             pip-installable; entry point roadrunner -&gt; roadrunner:main
+</code></pre>
+
+<hr>
+
+<p><em>End of document.</em></p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>

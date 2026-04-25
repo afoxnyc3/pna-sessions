@@ -548,5 +548,13 @@
       "2026-04-24"
     ],
     "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-25-035124.html",
+    "date": "2026-04-25",
+    "title": "Roadrunner CLI \u2014 Design Document",
+    "agent": "principal_architect",
+    "tags": [],
+    "type": "design"
   }
 ]
