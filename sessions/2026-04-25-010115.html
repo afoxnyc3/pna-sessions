@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entra Triage — Project Brief — P&amp;A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060d1f; --surface: #0d1b35; --surface-2: #111e3d; --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15); --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0; --muted: #94a3b8; --text-muted: #475569;
+      --primary: #3b82f6; --accent: #3b82f6;
+      --code-bg: #0a1628; --tag-bg: #111e3d; --tag-border: rgba(59,130,246,0.15);
+      --link: #93c5fd; --type-color: #22c55e;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 32px 32px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: var(--font-mono); }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: var(--font-mono); margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: var(--font-mono); }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; color: #93c5fd; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-25</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_research</div>
+    <h1>Entra Triage — Project Brief</h1>
+    <div class="tags"><span class="tag">entra-triage</span><span class="tag">microsoft-entra</span><span class="tag">security</span><span class="tag">identity</span><span class="tag">agentic</span><span class="tag">roadrunner</span></div>
+  </div>
+  <article>
+    <h1>Entra Triage — Project Brief</h1>
+
+<h2>Overview</h2>
+
+<p><strong>entra-triage</strong> is a single-tenant Microsoft Entra ID security triage and response platform. It monitors identity activity across a connected Entra tenant, surfaces security posture gaps and anomalies to an analyst, and proposes response actions with human approval gates.</p>
+
+<p>The system ingests telemetry from Microsoft Graph (sign-in events, audit logs, risky users, risky sign-ins, directory changes, application and service-principal inventory), triages events through a rule-based pre-filter followed by LLM agents for ambiguous signals, evaluates security posture against Microsoft best-practice baselines, and maintains a full audit trail of every state change and proposed action.</p>
+
+<p><strong>Scope:</strong> Single-tenant only. V1 is advisory and read-only: agents propose actions, analysts approve, then execute manually in the Azure portal. No auto-execution in v1 — write permissions are gated until v2 (ADR 0006).</p>
+
+<h2>Current Phase and Status</h2>
+
+<p><strong>Phase 2 of 5 — Connector Layer (In Progress)</strong></p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Phase</th>
+<th>Tasks</th>
+<th>Status</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>1 — Reconcile and Foundation</td>
+<td>ENTRA-001 to 003</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>2 — Graph Connectors</td>
+<td>ENTRA-010, 011</td>
+<td>ENTRA-010 done; ENTRA-011 next</td>
+</tr>
+<tr>
+<td>3 — Ingestion and Triage Pipeline</td>
+<td>ENTRA-020 to 040</td>
+<td>Pending</td>
+</tr>
+<tr>
+<td>4 — API and Web UI</td>
+<td>ENTRA-050 to 061</td>
+<td>Pending</td>
+</tr>
+<tr>
+<td>5 — Tests and Local Dev</td>
+<td>ENTRA-070 to 090</td>
+<td>Pending</td>
+</tr>
+</tbody></table></div>
+
+<p><strong>Completed work:</strong></p>
+<ul>
+<li>Entity schema reconciled across 12+ files (removed all multi-tenant tenantId fields, deleted tenant.ts and connector.ts)</li>
+<li>Drizzle ORM layer in packages/shared/src/db/ (schema.ts, db.ts, migrate.ts)</li>
+<li>Production-grade Graph client with @odata.nextLink pagination, 429/503 backoff, and Zod validation</li>
+<li>Six architectural decision records documenting all key trade-offs</li>
+</ul>
+
+<p><strong>Next task:</strong> ENTRA-011 — Mock Graph client with P1/P2 license variants for local development without real credentials.</p>
+
+<p><strong>Roadrunner state:</strong> Iteration 8 lifetime; session reset to enforce strict task dependency order. Active branch: roadrunner/ENTRA-060.</p>
+
+<h2>Tech Stack</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Frontend</td>
+<td>Next.js 14 + TypeScript + Tailwind</td>
+<td>App directory, server components</td>
+</tr>
+<tr>
+<td>API</td>
+<td>tRPC + Express</td>
+<td>End-to-end type safety, no schema drift</td>
+</tr>
+<tr>
+<td>Workers</td>
+<td>TypeScript + BullMQ + Redis</td>
+<td>Durable async job queue with retries</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>PostgreSQL + Drizzle ORM</td>
+<td>Relational integrity, type-safe migrations</td>
+</tr>
+<tr>
+<td>Agents</td>
+<td>Anthropic SDK (direct, no Pi)</td>
+<td>Explicit tool-use; confidence scores required</td>
+</tr>
+<tr>
+<td>Guardrails</td>
+<td>Custom policy engine (packages/policy)</td>
+<td>assertActionPermitted() gate before any write</td>
+</tr>
+<tr>
+<td>Monorepo</td>
+<td>Turborepo + npm workspaces</td>
+<td>Shared type definitions, parallel builds</td>
+</tr>
+<tr>
+<td>Task automation</td>
+<td>Roadrunner (vendored Python)</td>
+<td>Deterministic task loop with per-task validation</td>
+</tr>
+</tbody></table></div>
+
+<h2>Architecture</h2>
+
+<p>Turborepo monorepo with three apps and five packages.</p>
+
+<p><strong>Apps:</strong></p>
+<ul>
+<li><code>apps/web</code> — Next.js 14 dashboard (login, incidents, cases, baseline review, approvals)</li>
+<li><code>apps/api</code> — tRPC + Express API (read routes and action routes with JWT middleware)</li>
+<li><code>apps/workers</code> — BullMQ workers (IngestionWorker, TriageWorker, BaselineWorker)</li>
+</ul>
+
+<p><strong>Packages:</strong></p>
+<ul>
+<li><code>packages/shared</code> — Zod schemas, Drizzle ORM definitions, enums, shared UI</li>
+<li><code>packages/agents</code> — Seven Anthropic SDK agents: BaseAgent, SignInTriageAgent, IdentityRiskAgent, DirectoryChangeAgent, BaselineReviewAgent, ResponsePolicyAgent, ResearchAgent</li>
+<li><code>packages/connectors</code> — Graph API client (real with MSAL auth; mock for P1/P2 dev)</li>
+<li><code>packages/policy</code> — assertActionPermitted() approval matrix with audit trail</li>
+<li><code>packages/ui</code> — Shared React components</li>
+</ul>
+
+<p><strong>Database (PostgreSQL, 10 tables, no tenant_id columns):</strong></p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Table</th>
+<th>Purpose</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>sign_in_events</td>
+<td>Normalized sign-in records, indexed on created_at</td>
+</tr>
+<tr>
+<td>directory_audit_events</td>
+<td>Role changes, app registrations, permission grants</td>
+</tr>
+<tr>
+<td>risk_events</td>
+<td>P2 Identity Protection signals</td>
+</tr>
+<tr>
+<td>cases</td>
+<td>Analyst-created incident groupings</td>
+</tr>
+<tr>
+<td>incidents</td>
+<td>Agent-generated findings with severity and confidence</td>
+</tr>
+<tr>
+<td>baseline_controls</td>
+<td>Security control catalog (versioned)</td>
+</tr>
+<tr>
+<td>baseline_evaluations</td>
+<td>Per-control pass/fail with evidence</td>
+</tr>
+<tr>
+<td>response_actions</td>
+<td>Proposed, approved, or executed actions (JSONB audit trail)</td>
+</tr>
+<tr>
+<td>ingestion_cursors</td>
+<td>Per-stream checkpointing</td>
+</tr>
+<tr>
+<td>audit_log</td>
+<td>Immutable append-only log of all mutations</td>
+</tr>
+</tbody></table></div>
+
+<p><strong>Dependency order (acyclic):</strong> shared → policy → agents → connectors → api → workers → web</p>
+
+<p>Events dedup on content_hash. Incidents dedup on hash(actor_id + category + target_id) within a 24-hour window.</p>
+
+<h2>Key Architectural Decisions</h2>
+
+<p><strong>ADR 0002 — Anthropic SDK direct (no Pi framework):</strong> Full control over tool-use parsing. Confidence score is required on every agent result. No hidden prompt engineering from a framework layer.</p>
+
+<p><strong>ADR 0003 — Rule-based pre-filter (PASS/FLAG/AMBIGUOUS) before LLM:</strong> Approximately 90% of events bypass the LLM entirely, keeping cost and latency low. False negatives are the accepted trade-off; the pre-filter rules are auditable.</p>
+
+<p><strong>ADR 0005 — Single-tenant only:</strong> Simpler schema, no cross-tenant risk. Multi-tenant is a straightforward extension later — just add tenantId back where removed.</p>
+
+<p><strong>ADR 0006 — Read-only Graph permissions in v1:</strong> Smallest blast radius. All approved actions require manual execution in the Azure portal via markExecutedManually procedure. V2 write-permission expansion is gated on evidence: false-positive rate thresholds, operator training, rollback testing. Unlock path: RevokeSessionsAll first, then IdentityRiskyUser.ReadWrite, then User.ReadWrite, then Directory.ReadWrite.</p>
+
+<h2>Blocker: ROAD-010 (Resolved 2026-04-24)</h2>
+
+<p>ROAD-010 was an iteration counter bug in roadrunner-cli: the lifetime counter was used as the per-session runaway guard, so it could hit the session max after only a handful of actual session iterations across multiple Claude invocations, halting progress unexpectedly.</p>
+
+<p><strong>Fix:</strong> Split into two fields: <code>iteration</code> (lifetime audit trail, never resets) and <code>session_iteration</code> (per-session runaway guard, resets on SessionStart hook). The vendored roadrunner.py in entra-triage migrates transparently via setdefault on first load.</p>
+
+<p><strong>Impact on entra-triage:</strong> None blocking. The fix is live and the task loop is unblocked. ENTRA-011 is the next eligible task.</p>
+
+<h2>Success Criteria (V1 Definition of Done)</h2>
+
+<p>From SPEC.md acceptance criteria:</p>
+<ul class="checklist">
+<li><input type="checkbox" disabled> Connect to a single Entra tenant via env-configured Graph credentials</li>
+<li><input type="checkbox" disabled> Validate Graph permissions at startup before ingestion begins</li>
+<li><input type="checkbox" disabled> Ingest audit logs and sign-ins with deduplication and per-stream cursor checkpointing</li>
+<li><input type="checkbox" disabled> Group incidents into analyst-friendly cases</li>
+<li><input type="checkbox" disabled> Produce a baseline report mapping posture gaps to Microsoft best practices with scored findings</li>
+<li><input type="checkbox" disabled> Gate all response actions through the approval matrix (v1: all writes require explicit approval)</li>
+<li><input type="checkbox" disabled> Make every system action, agent action, and human override auditable</li>
+<li><input type="checkbox" disabled> UI usable by a single analyst with exportable PDF reports</li>
+<li><input type="checkbox" disabled> MOCK_GRAPH_API=true enables full local dev without real credentials</li>
+<li><input type="checkbox" disabled> docker-compose + dev-setup.sh produces a working local environment from a clean clone</li>
+</ul>
+
+<p><strong>Target analyst workflow:</strong> Log in, view dashboard (risk posture, ingestion health, recent incidents), explore incidents by severity and category, drill into agent-generated narrative and recommended actions, approve a proposed response action, record manual execution in the Azure portal, view full audit trail.</p>
+
+<h2>Remaining Work Estimate</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Phase</th>
+<th>Key Tasks</th>
+<th>Estimate</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>2 (current)</td>
+<td>ENTRA-011 mock client</td>
+<td>3-4h</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Ingestion worker, agent base + 6 agents, triage worker</td>
+<td>26-36h</td>
+</tr>
+<tr>
+<td>4</td>
+<td>tRPC API routes, Next.js UI</td>
+<td>20-26h</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Unit tests, integration tests, E2E, docker-compose</td>
+<td>10-14h</td>
+</tr>
+</tbody></table></div>
+
+<p>Total remaining: approximately 60-80 hours depending on issue discovery.</p>
+
+<p>Development is driven by Roadrunner with per-task feature branches and gate-validated acceptance criteria. Each task must pass before the next unlocks.</p>
+
+<h2>Open Questions: V1 vs V2 Scope</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Area</th>
+<th>V1</th>
+<th>V2</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Web UI auth</td>
+<td>Env-var operator login</td>
+<td>Entra ID as IdP or SSO</td>
+</tr>
+<tr>
+<td>Report export</td>
+<td>PDF</td>
+<td>Excel added</td>
+</tr>
+<tr>
+<td>Baseline cadence</td>
+<td>On-demand plus daily</td>
+<td>User-configurable schedule</td>
+</tr>
+<tr>
+<td>Approval notifications</td>
+<td>Console/log only</td>
+<td>Email and Slack</td>
+</tr>
+<tr>
+<td>Graph write permissions</td>
+<td>None (read-only)</td>
+<td>Incremental, gated by evidence</td>
+</tr>
+</tbody></table></div>
+
+<p><strong>P1 vs P2 licensing:</strong> P1 tenants lack IdentityRiskEvent.Read.All and IdentityRiskyUser.Read.All. Mitigation: graceful degradation with a licensing banner on the Settings page (ENTRA-061).</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mission Control — Architecture and Current State — P&amp;A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060d1f; --surface: #0d1b35; --surface-2: #111e3d; --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15); --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0; --muted: #94a3b8; --text-muted: #475569;
+      --primary: #3b82f6; --accent: #3b82f6;
+      --code-bg: #0a1628; --tag-bg: #111e3d; --tag-border: rgba(59,130,246,0.15);
+      --link: #93c5fd; --type-color: #22c55e;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 32px 32px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: var(--font-mono); }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: var(--font-mono); margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: var(--font-mono); }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; color: #93c5fd; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-25</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">principal_research</div>
+    <h1>Mission Control — Architecture and Current State</h1>
+    <div class="tags"><span class="tag">pna-sessions</span><span class="tag">mission-control</span><span class="tag">architecture</span><span class="tag">pwa</span><span class="tag">vercel</span><span class="tag">cloudflare</span></div>
+  </div>
+  <article>
+    <h1>Mission Control — Architecture and Current State</h1>
+
+<h2>Overview</h2>
+
+<p><strong>Mission Control</strong> (pna-sessions) is the static archive and operational dashboard for Principal and Agent. It serves three purposes simultaneously:</p>
+
+<ol>
+<li><strong>Public artifact archive</strong> — research outputs, session logs, architecture diagrams, and brainstorms from all agents</li>
+<li><strong>Live operational dashboard</strong> — mission kanban board, full backlog, and cost/performance tracing powered by real claudeclaw.db data</li>
+<li><strong>Skill library browser</strong> — searchable catalog synced from the pna-library repository</li>
+</ol>
+
+<p>Deployed at <code>https://afoxnyc3.github.io/pna-sessions/</code> with Vercel auto-deploy on every push to main. The architecture is intentionally static: HTML files, a JSON manifest registry, and Python scripts that inject data from claudeclaw.db. No build step, no runtime server, no framework.</p>
+
+<h2>Core Architecture</h2>
+
+<p><strong>Static HTML + manifest.json + Vercel auto-deploy</strong></p>
+
+<p>Every surface is a self-contained HTML file. Data flows in through two paths:</p>
+
+<ol>
+<li><strong>Publish time (artifacts):</strong> <code>publish.sh</code> copies an HTML file to the appropriate subfolder, updates manifest.json, commits, and pushes. Vercel picks up the push and deploys in approximately 30 seconds.</li>
+<li><strong>Refresh time (operational data):</strong> <code>refresh.sh</code> runs every 30 minutes via launchd (<code>com.claudeclaw.pna-refresh</code>). Three Python scripts query claudeclaw.db read-only and inject JSON into kanban.html, backlog.html, and tracing.html via regex replacement of <code>window.__DATA__</code> placeholders. If content changed, it auto-commits and pushes.</li>
+</ol>
+
+<p><strong>Repository:</strong> <code>afoxnyc3/pna-sessions</code> (public GitHub)</p>
+<p><strong>Vercel project ID:</strong> <code>prj_C9sSYq9Q520ex30VdDzxsBv5yqlm</code></p>
+<p><strong>Public URL:</strong> <code>https://afoxnyc3.github.io/pna-sessions/</code></p>
+<p><strong>Internal URL:</strong> <code>control.pna.agency</code> (Cloudflare Access protected)</p>
+
+<h2>PWA: app.webmanifest and Service Worker</h2>
+
+<p><strong>app.webmanifest:</strong></p>
+<ul>
+<li>Name: "Mission Control" (short_name: "MissCon")</li>
+<li>Background and theme: <code>#060d1f</code> (dark navy)</li>
+<li>Display mode: standalone</li>
+<li>PWA icons: 192px and 512px (maskable)</li>
+<li>Shortcuts: Sessions, Designs, Research filter views</li>
+<li>Scope: <code>/</code></li>
+<li>Add to Home Screen support with install banner on mobile</li>
+</ul>
+
+<p><strong>sw.js — Service Worker Strategy (cache version: mc-v1):</strong></p>
+
+<p>The service worker uses skipWaiting and clients.claim for instant activation and cleans up old cache versions on install.</p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Resource</th>
+<th>Strategy</th>
+<th>Reason</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>manifest.json</td>
+<td>Network-first</td>
+<td>Always fetch the fresh artifact registry; fall back to cache</td>
+</tr>
+<tr>
+<td>Shell assets (icons, webmanifest, index.html)</td>
+<td>Cache-first</td>
+<td>These change rarely; fast load is the priority</td>
+</tr>
+<tr>
+<td>HTML pages (sessions, designs, kanban, backlog, tracing, library)</td>
+<td>Network-only</td>
+<td>Always fresh from Vercel; avoids serving stale operational data</td>
+</tr>
+</tbody></table></div>
+
+<p>The result: the archive gallery is always current, operational dashboards never show cached-old data, and icons load instantly even offline.</p>
+
+<h2>Auth: Cloudflare Access Zero Trust and OTP</h2>
+
+<p>Cloudflare Access is configured at the proxy level in Cloudflare's dashboard and Vercel's project settings — it is not committed to the repository.</p>
+
+<p>The internal domain (<code>control.pna.agency</code>) sits behind Cloudflare Access with one-time passcode (OTP) authentication. The public GitHub Pages URL (<code>afoxnyc3.github.io/pna-sessions/</code>) has no auth layer and is publicly readable.</p>
+
+<p><strong>Design intent:</strong> Session artifacts are public by design — the archive is a shareable record of P&A research work. Operational surfaces (kanban, backlog, tracing) contain mission data and cost metrics and are served from the Cloudflare Access-protected domain only.</p>
+
+<p>No client-side auth or token validation exists in the static HTML. The protection boundary is entirely at the Cloudflare Access layer.</p>
+
+<h2>Surfaces</h2>
+
+<p><strong>index.html — Artifact Gallery</strong></p>
+<p>Main archive browser. Loads manifest.json at runtime and renders a filterable list. Each artifact shows: type dot (green=session, blue=diagram, amber=brainstorm, purple=design, cyan=research, red=postmortem), date, agent, title, and tags. Filter tabs across all artifact types. Mobile-first with A2HS install banner.</p>
+
+<p><strong>kanban.html — Mission Board</strong></p>
+<p>Live mission kanban for the last 14 days of missions. Four columns: Queued, Running, Completed, Failed. Data injected as <code>window.__KANBAN_DATA__</code> from the mission_tasks table in claudeclaw.db. Each card shows: task ID, title, agent, status, priority, result preview (first 200 chars), and timing. Updated every 30 minutes.</p>
+
+<p><strong>backlog.html — Mission History</strong></p>
+<p>Full mission history table (all non-cancelled tasks). Columns: Priority, Status, Title, Agent, Created, Completed. Shows error traces for failed missions. Same 30-minute refresh cycle as kanban.</p>
+
+<p><strong>tracing.html — Cost and Performance Analytics</strong></p>
+<p>Session-level token usage analytics (last 50 sessions) and mission timing (last 60 missions).</p>
+
+<p>Per-session metrics: turn count, peak context tokens, total output tokens, cost in USD, compaction count, session duration.</p>
+
+<p>Per-mission metrics: duration in seconds, error stacks for post-mortem analysis.</p>
+
+<p>Primary tool for tracking spend and agent performance over time.</p>
+
+<p><strong>library.html — Skill Browser</strong></p>
+<p>Searchable, categorized skill catalog with tabs: Core Skills, Engineering Skills, Domain Expertise. Each card shows skill ID, description, trigger patterns, and source badges. Synced from pna-library (afoxnyc3/pna-library) and managed by principal_librarian.</p>
+
+<p><strong>sessions/, designs/, diagrams/, brainstorms/ — Artifact Folders</strong></p>
+<p>Self-contained HTML files. Every file embeds all CSS and font references so sessions work offline. Naming: <code>YYYY-MM-DD-HHMMSS.html</code>. Agent types represented: principal_*, main, clarke, research_a, research_b.</p>
+
+<h2>Publish Workflow</h2>
+
+<p><strong>Standard artifact publish:</strong></p>
+<pre><code class="lang-bash">
+publish.sh --file /path/to/file.html \
+           --title "Title" \
+           --type session|diagram|brainstorm|design \
+           --agent "agent_id" \
+           --tags "tag1,tag2"
+</code></pre>
+
+<p>Pulls latest main, copies file to the correct subfolder, calls update_manifest.py to upsert the manifest entry, commits, and pushes. Vercel deploys in ~30 seconds.</p>
+
+<p><strong>Session generation from markdown:</strong></p>
+<pre><code class="lang-bash">
+python3 generate_session.py \
+  --title "Title" \
+  --agent "principal_architect" \
+  --body-md path/to/summary.md \
+  --type session \
+  --tags "tag1,tag2"
+</code></pre>
+
+<p>Or pipe markdown via stdin. The script parses YAML frontmatter between <code>---</code> delimiters, converts markdown to HTML (headings, lists, tables, code blocks, inline formatting), builds a self-contained styled HTML page, writes to <code>sessions/YYYY-MM-DD-HHMMSS.html</code>, and updates manifest.json.</p>
+
+<p><strong>Live data refresh (automated):</strong></p>
+<pre><code class="lang-bash">
+refresh.sh  # launchd: com.claudeclaw.pna-refresh, runs every 30 min
+</code></pre>
+
+<p>Calls export_kanban.py, export_backlog.py, export_trace.py sequentially. Each queries claudeclaw.db read-only and regex-replaces the <code>window.__DATA__</code> block in the target HTML. Commits with message "data: auto-refresh YYYY-MM-DD HH:MM" only if content changed.</p>
+
+<h2>Scripts Inventory</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Script</th>
+<th>Purpose</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>publish.sh</td>
+<td>Main publish entry point (copy, manifest update, commit, push)</td>
+</tr>
+<tr>
+<td>generate_session.py</td>
+<td>Markdown with YAML frontmatter to self-contained HTML</td>
+</tr>
+<tr>
+<td>update_manifest.py</td>
+<td>Upsert entry in manifest.json, dedupe by path</td>
+</tr>
+<tr>
+<td>add_to_manifest.py</td>
+<td>Append new entry to manifest.json</td>
+</tr>
+<tr>
+<td>export_kanban.py</td>
+<td>Query mission_tasks, inject into kanban.html</td>
+</tr>
+<tr>
+<td>export_backlog.py</td>
+<td>Query mission_tasks (non-cancelled), inject into backlog.html</td>
+</tr>
+<tr>
+<td>export_trace.py</td>
+<td>Query token_usage and mission_tasks, inject into tracing.html</td>
+</tr>
+<tr>
+<td>refresh.sh</td>
+<td>Orchestrate all three data exports, commit if changed, push</td>
+</tr>
+<tr>
+<td>publish_session.sh</td>
+<td>Wrapper: generate_session.py then publish.sh</td>
+</tr>
+<tr>
+<td>patch_sessions_design.py</td>
+<td>Post-processing for design doc HTML formatting</td>
+</tr>
+</tbody></table></div>
+
+<h2>Vercel Configuration</h2>
+
+<p>vercel.json defines security and caching headers:</p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Header</th>
+<th>Value</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>X-Content-Type-Options</td>
+<td>nosniff</td>
+</tr>
+<tr>
+<td>X-Frame-Options</td>
+<td>DENY</td>
+</tr>
+<tr>
+<td>Cache-Control (general)</td>
+<td>no-store</td>
+</tr>
+<tr>
+<td>Cache-Control (sw.js)</td>
+<td>no-cache</td>
+</tr>
+<tr>
+<td>Cache-Control (icons)</td>
+<td>public, max-age=31536000</td>
+</tr>
+<tr>
+<td>Service-Worker-Allowed</td>
+<td>/ (full scope for sw.js)</td>
+</tr>
+</tbody></table></div>
+
+<h2>Repository and Deployment State</h2>
+
+<p><strong>Artifact count (as of 2026-04-24):</strong> 35+ artifacts indexed in manifest.json. Approximately 17 sessions, 3 diagrams, and the remainder split across research, designs, and postmortems. Latest indexed artifact: main session 2026-04-25 (Mission Control PWA and Cloudflare Access research).</p>
+
+<p><strong>Data file sizes (current embedded JSON):</strong></p>
+<ul>
+<li>kanban.html: 443KB</li>
+<li>backlog.html: 165KB</li>
+<li>tracing.html: 51KB</li>
+<li>library.html: 35KB</li>
+</ul>
+
+<p><strong>Refresh automation:</strong> Confirmed running via launchd. Auto-commits on content change.</p>
+
+<h2>Current Gaps</h2>
+
+<p><strong>Cloudflare Access not in repo:</strong> Configuration lives in Cloudflare dashboard and Vercel project settings. If the project is cloned fresh, the auth layer is absent. There is no infrastructure-as-code for the Cloudflare Access policy.</p>
+
+<p><strong>Local-only data dependency:</strong> The Python data scripts (export_kanban.py, export_backlog.py, export_trace.py) assume claudeclaw.db is accessible locally. There is no remote data path; the refresh loop must run on the machine where claudeclaw.db lives.</p>
+
+<p><strong>No retract or edit workflow:</strong> Published sessions are immutable. There is no mechanism to update or remove a published artifact short of manually deleting the file and updating manifest.json.</p>
+
+<p><strong>Font offline dependency:</strong> Google Fonts CDN is linked (preconnect headers in generated HTML). True offline mode would require inlining the fonts. Sessions work offline for content but degrade typographically without network access.</p>
+
+<p><strong>No real-time push:</strong> Operational dashboards have up to 30 minutes of staleness. There are no webhooks, WebSockets, or push channels. Acceptable given the use case — this is an async ops board, not a monitoring alerting tool.</p>
+
+<h2>Design Principles</h2>
+
+<p><strong>Static-first:</strong> No build pipeline, no Node.js server, no database reads at request time. All complexity lives in the publish and refresh scripts, not in runtime infrastructure. Failure modes are simple and debuggable.</p>
+
+<p><strong>Self-contained artifacts:</strong> Every session HTML file stands alone. No dependency on CDN for content. Sessions can be emailed, archived, or opened from disk.</p>
+
+<p><strong>Data freshness via push:</strong> Operational dashboards are refreshed by a scheduled local job, not by client-side polling. Acceptable staleness: 30 minutes. Keeps the architecture simple and the Vercel usage minimal.</p>
+
+<p><strong>Public archive, protected ops:</strong> Session artifacts are public by design and shareable. Operational metrics (cost, mission status, agent performance) sit behind Cloudflare Access on the internal domain.</p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>

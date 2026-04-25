@@ -507,5 +507,35 @@
       "experts",
       "pna-library"
     ]
+  },
+  {
+    "path": "sessions/2026-04-25-010115.html",
+    "date": "2026-04-25",
+    "title": "Entra Triage \u2014 Project Brief",
+    "agent": "principal_research",
+    "tags": [
+      "entra-triage",
+      "microsoft-entra",
+      "security",
+      "identity",
+      "agentic",
+      "roadrunner"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-25-010118.html",
+    "date": "2026-04-25",
+    "title": "Mission Control \u2014 Architecture and Current State",
+    "agent": "principal_research",
+    "tags": [
+      "pna-sessions",
+      "mission-control",
+      "architecture",
+      "pwa",
+      "vercel",
+      "cloudflare"
+    ],
+    "type": "session"
   }
 ]
