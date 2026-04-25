@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Expert Kit — Design Document — P&amp;A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060d1f; --surface: #0d1b35; --surface-2: #111e3d; --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15); --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0; --muted: #94a3b8; --text-muted: #475569;
+      --primary: #3b82f6; --accent: #3b82f6;
+      --code-bg: #0a1628; --tag-bg: #111e3d; --tag-border: rgba(59,130,246,0.15);
+      --link: #93c5fd; --type-color: #a855f7;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 32px 32px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: var(--font-mono); }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: var(--font-mono); margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: var(--font-mono); }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; color: #93c5fd; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-25</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>design</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>Agent Expert Kit — Design Document</h1>
+    <div class="tags"></div>
+  </div>
+  <article>
+    <h1>Agent Expert Kit — Design Document</h1>
+
+<p><strong>Project</strong>: <code>agent-expert-kit</code></p>
+<p><strong>Location</strong>: <code>~/dev/projects/agent-expert-kit</code></p>
+<p><strong>Status</strong>: Phase 4 complete (144/144 tests passing). Phase 5 scoped, not yet shipped.</p>
+<p><strong>Date</strong>: 2026-04-24</p>
+<p><strong>Agent</strong>: Principal Architect</p>
+
+<hr>
+
+<h2>1. Problem</h2>
+
+<p>Claude agents have no persistent memory of a domain across sessions. Each new conversation re-explains architecture, schemas, and conventions from scratch. This wastes tokens, leaks inconsistency between agents, and produces shallow answers when the agent doesn't know what it doesn't know.</p>
+
+<p>Existing CLAUDE.md files conflate personality with knowledge. There is no durable, versioned, validated layer for domain knowledge that stays in sync with code.</p>
+
+<hr>
+
+<h2>2. Solution</h2>
+
+<p>Scaffold the Disler "agent expert" triad for any domain: a machine-readable mental model, a read-only Q&A interface, and an explicit re-sync workflow. The triad lives at <code>~/.pna/experts/&lt;domain&gt;/</code>, is seeded from live code on first run, and stays valid YAML by construction.</p>
+
+<p>Two skills ship the capability:</p>
+
+<ul>
+<li><strong><code>agent-expert-kit</code></strong> — scaffolder; creates a new triad from a domain slug + scope globs</li>
+<li><strong><code>self-improve-expertise</code></strong> — re-syncer; diffs current expertise against live code and updates in place</li>
+</ul>
+
+<hr>
+
+<h2>3. Architecture</h2>
+
+<h3>3.1 System Context</h3>
+
+<pre><code class="lang-text">
+Agent / Alex
+  │
+  ▼ invoke: domain + scope globs
+  ┌─────────────────────────────────────────────┐
+  │  agent-expert-kit SKILL.md (orchestrator)   │
+  │                                             │
+  │  1. Expand scope (glob)                     │
+  │  2. Seed expertise body (LLM prompt)        │
+  │  3. Validate + trim loop (PyYAML + cap)     │
+  │  4. Render templates ($VAR substitution)    │
+  │  5. Overwrite gate + .bak                   │
+  │  6. Write triad                             │
+  │  7. Register in library.yaml               │
+  └─────────────────────────────────────────────┘
+          │
+          ▼ writes
+  ~/.pna/experts/&lt;domain&gt;/
+  ├── expertise.yaml      ← canonical mental model (≤1000 lines, valid YAML)
+  ├── question.md         ← read-only Q&amp;A slash command
+  └── self-improve.md     ← drift detection + rewrite workflow
+
+          │
+          ▼ consumed by
+  Agents (Clarke's principals, research_a/b, creator-stack)
+  library skill (list experts subcommand)
+</code></pre>
+
+<h3>3.2 Scaffolder Flow (agent-expert-kit)</h3>
+
+<ol>
+<li>Parse inputs: <code>domain</code>, <code>scope</code> (glob list), <code>description</code>, <code>output_root</code>, <code>max_lines</code></li>
+<li>Slug collision check — if domain already registered in <code>library.yaml</code>, halt</li>
+<li>Overwrite gate — if triad exists and <code>overwrite=False</code>, raise; if <code>True</code>, save <code>.bak</code> with timestamp</li>
+<li>Expand scope globs to resolved file list</li>
+<li>Seed <code>expertise.yaml</code> body via inline seeder prompt (LLM reads scope files, produces YAML body)</li>
+<li>Render three templates with <code>$VAR</code> substitution</li>
+<li>Validate + trim loop: <code>yaml.safe_load</code> gate + line-cap enforcement, up to 3 retries</li>
+<li>Write triad to <code>output_root/&lt;domain&gt;/</code></li>
+<li>Register entry in <code>library.yaml</code> under <code>experts:</code> key</li>
+<li>Report: domain, paths, line count, trim attempts, registration status</li>
+</ol>
+
+<h3>3.3 Re-Sync Flow (self-improve-expertise)</h3>
+
+<ol>
+<li>Parse inputs: <code>domain</code> slug, optional <code>--since=&lt;ref&gt;</code>, optional <code>--focus=&lt;section&gt;</code></li>
+<li>Resolve triad — locate three files; halt if missing</li>
+<li>Git diff scoping (if <code>--since</code> provided): identify changed files in scope via <code>git diff --name-only &lt;ref&gt;..HEAD</code>; validate only those files, not full scope</li>
+<li>Read current <code>expertise.yaml</code></li>
+<li>Validate documented claims against codebase</li>
+<li>Identify discrepancies (schema drift, renamed functions, added/removed tables)</li>
+<li>Update <code>expertise.yaml</code> in place to fix them</li>
+<li>Enforce line cap (trim as needed)</li>
+<li>Compile check: <code>yaml.safe_load</code> must pass — till-done gate</li>
+<li>Write <code>.last-sync.md</code> drift report (only after successful compile)</li>
+</ol>
+
+<h3>3.4 Component Map</h3>
+
+<pre><code class="lang-text">
+agent-expert-kit/
+├── pna-library/skills/
+│   ├── agent-expert-kit/
+│   │   ├── SKILL.md              ← orchestrator + seeder prompt + trim prompt
+│   │   ├── templates/
+│   │   │   ├── expertise.yaml.tmpl
+│   │   │   ├── question.md.tmpl
+│   │   │   └── self-improve.md.tmpl
+│   │   └── scripts/
+│   │       ├── scaffold.py       ← ScaffoldError, ScaffoldResult, scaffold()
+│   │       ├── validator.py      ← safe_load_check(), validate_and_trim()
+│   │       └── registrar.py      ← CollisionError, check_slug_collision(), register_expert()
+│   └── self-improve-expertise/
+│       ├── SKILL.md              ← re-sync workflow
+│       └── scripts/
+│           └── syncer.py         ← Triad, SelfImproveVars, infer_repo_root(), get_changed_files()
+└── tests/
+    ├── test_skill.py
+    ├── test_expertise_template.py
+    ├── test_question_template.py
+    ├── test_self_improve_template.py
+    ├── test_seeder_prompt.py
+    ├── test_validator.py
+    ├── test_end_to_end.py
+    ├── test_scaffold_phase2.py
+    ├── test_registrar.py
+    ├── test_self_improve_skill.py
+    └── test_since_flag.py
+</code></pre>
+
+<hr>
+
+<h2>4. Key Components</h2>
+
+<h3>4.1 SKILL.md Files</h3>
+
+<p><strong>agent-expert-kit/SKILL.md</strong> is the orchestrator. It carries:</p>
+<ul>
+<li>YAML frontmatter: <code>name</code>, <code>description</code> (WHEN triggers), <code>argument-hint</code></li>
+<li>Inputs table: <code>domain</code>, <code>scope</code>, <code>description</code>, <code>output_root</code>, <code>max_lines</code></li>
+<li>10-step workflow</li>
+<li>Inline seeder prompt (LLM reads scope files, produces YAML body)</li>
+<li>Trim prompt (for oversized expertise)</li>
+<li>Validator code reference (PyYAML only, no extra deps)</li>
+<li>Guarantees and known limitations</li>
+</ul>
+
+<p><strong>self-improve-expertise/SKILL.md</strong> carries the re-sync workflow:</p>
+<ul>
+<li>Inputs: <code>domain</code> slug, <code>--since=&lt;ref&gt;</code>, <code>--focus=&lt;section&gt;</code></li>
+<li>8-step workflow matching the <code>self-improve.md.tmpl</code> structure</li>
+<li>Reference to <code>syncer.py</code> helpers</li>
+<li><code>.last-sync.md</code> canonical format</li>
+</ul>
+
+<h3>4.2 Templates</h3>
+
+<p><strong>expertise.yaml.tmpl</strong> — canonical mental model structure:</p>
+<ul>
+<li>Top-level keys: <code>overview</code>, <code>core_implementation</code>, one of <code>key_operations</code> or <code>schema_structure</code>, <code>best_practices</code>, <code>known_issues</code></li>
+<li>Seeded conditionally: LLM emits exactly one of the two operation/schema sections</li>
+<li>All non-trivial claims cite a file path from scope</li>
+<li>Validated by <code>yaml.safe_load</code> + line-cap loop before write</li>
+</ul>
+
+<p><strong>question.md.tmpl</strong> — read-only Q&A interface:</p>
+<ul>
+<li>Reads expertise, spot-checks 2-3 claims against codebase, responds with citations</li>
+<li>Permitted tools: <code>Bash</code>, <code>Read</code>, <code>Grep</code>, <code>Glob</code>, <code>TodoWrite</code> (task tracking only)</li>
+<li>Hard constraint: NO file edits. Read-only.</li>
+</ul>
+
+<p><strong>self-improve.md.tmpl</strong> — drift detection + rewrite workflow:</p>
+<ul>
+<li>Embeds <code>SCOPE_GLOB</code> and <code>MAX_LINES</code> as extractable vars (parsed by <code>syncer.parse_self_improve_vars()</code>)</li>
+<li>7-step workflow: git diff, read, validate, identify, update, enforce cap, compile check</li>
+<li>Till-done gate: compile check must pass before <code>.last-sync.md</code> is written</li>
+</ul>
+
+<h3>4.3 Python Modules</h3>
+
+<p><strong>scaffold.py</strong></p>
+<ul>
+<li><code>ScaffoldError</code> — loud failure, surfaces to SKILL.md workflow</li>
+<li><code>ScaffoldResult</code> — outcome dataclass with paths, validation metadata, registration status</li>
+<li><code>scaffold()</code> — main entry; Phase 2 additions: overwrite gate, registrar hook</li>
+<li><code>_render()</code> — <code>$VAR</code> substitution across template strings</li>
+<li><code>_expand_scope()</code> — glob expansion relative to repo root</li>
+</ul>
+
+<p><strong>validator.py</strong></p>
+<ul>
+<li><code>safe_load_check(text)</code> — parse with <code>yaml.safe_load</code>, raise <code>ValidatorError</code> on failure</li>
+<li><code>validate_and_trim(text, max_lines=1000, trim_fn=None, max_retries=3)</code> — full loop</li>
+<li><code>ValidationResult</code> — <code>(text, line_count, trim_attempts)</code> dataclass</li>
+<li>Design constraint: PyYAML only, no new dependencies</li>
+</ul>
+
+<p><strong>registrar.py</strong></p>
+<ul>
+<li><code>CollisionError</code> — domain slug already registered</li>
+<li><code>check_slug_collision(domain, library_yaml_path)</code> — raise if slug exists</li>
+<li><code>register_expert(domain, name, path, library_yaml_path, overwrite, last_sync)</code> — append or update</li>
+<li><code>get_registered_slugs(library_yaml_path)</code> — return set of registered slugs</li>
+<li>Design constraint: surgical string replacement, not full <code>yaml.dump</code> round-trip (preserves non-experts content)</li>
+</ul>
+
+<p><strong>syncer.py</strong></p>
+<ul>
+<li><code>Triad</code> — resolved paths for domain triad (expertise, question, self-improve)</li>
+<li><code>SelfImproveVars</code> — extracted <code>SCOPE_GLOB</code>, <code>MAX_LINES</code> from <code>self-improve.md</code></li>
+<li><code>RepoRootResult</code> — repo root inference outcome (three-step fallback, ADR-0002)</li>
+<li><code>GitDiffResult</code> — changed file list from <code>git diff --name-only</code></li>
+<li><code>LastSyncReport</code> — drift report data model</li>
+<li>Key functions: <code>resolve_triad()</code>, <code>parse_self_improve_vars()</code>, <code>infer_repo_root()</code>, <code>get_changed_files()</code>, <code>write_last_sync_md()</code>, <code>read_last_sync_date()</code></li>
+<li>No LLM invocation; all helpers are pure Python or shell calls</li>
+</ul>
+
+<hr>
+
+<h2>5. Key Decisions</h2>
+
+<h3>ADR-0001: Domain Triad Pattern</h3>
+
+<p><strong>Decision</strong>: Adopt the Disler triad as canonical agent memory. Three files, one function each.</p>
+
+<p><strong>Rationale</strong>: The pattern is proven in Disler's stack. Small, observable, knowable to work. Splitting into three files (canonical, read, write) keeps each function honest and testable independently.</p>
+
+<p><strong>Rejected alternatives</strong>:</p>
+<ul>
+<li>Cramming into CLAUDE.md — conflates persona with knowledge; hard to validate</li>
+<li>Free-form Markdown — no validation, no cap, no consistency guarantee</li>
+<li>Vector stores — retrieval quality dependent, harder to reason about correctness</li>
+</ul>
+
+<p><strong>Key constraints baked in</strong>:</p>
+<ul>
+<li><code>MAX_LINES=1000</code> enforced at write time and re-sync time</li>
+<li><code>yaml.safe_load</code> compile check at end of every write operation</li>
+<li>Every seeded claim must cite a file path from scope (seeder constraint; enforced via prompt, not code)</li>
+<li>Re-sync is explicit, never automatic (v1)</li>
+</ul>
+
+<h3>ADR-0002: <code>--since=&lt;ref&gt;</code> Partial Validation</h3>
+
+<p><strong>Decision</strong>: Add optional <code>--since</code> flag to <code>self-improve-expertise</code>. Scopes validation to git-changed files; always operates on the full <code>expertise.yaml</code>.</p>
+
+<p><strong>Behavior</strong>:</p>
+<ul>
+<li>Step 3: <code>git diff --name-only &lt;ref&gt;..HEAD</code> identifies changed files</li>
+<li>Validate only the changed files; steps 5-7 still update the complete expertise</li>
+<li>Unresolvable ref is a hard error, no silent fallback</li>
+</ul>
+
+<p><strong>Repo root inference (three-step fallback)</strong>:</p>
+<ol>
+<li>Walk non-glob prefix of scope upward until <code>.git</code> found</li>
+<li>If fails: <code>git rev-parse --show-toplevel</code> from first resolved glob match</li>
+<li>If both fail: use <code>cwd</code>, note fallback in drift report</li>
+</ol>
+
+<p><strong>Rationale</strong>: Performance on large scopes without correctness impact. Validating only changed files is safe because the till-done compile gate still runs against full expertise.</p>
+
+<hr>
+
+<h2>6. Library Integration</h2>
+
+<h3>library.yaml <code>experts:</code> Key</h3>
+
+<p>The <code>registrar.py</code> module appends entries to <code>library.yaml</code> under the <code>experts:</code> key:</p>
+
+<pre><code class="lang-yaml">
+experts:
+  - domain: claudeclaw-missions
+    name: ClaudeClaw Missions
+    path: ~/.pna/experts/claudeclaw-missions/expertise.yaml
+    last_sync: 2026-04-20
+  - domain: creator-stack
+    name: Creator Stack
+    path: ~/.pna/experts/creator-stack/expertise.yaml
+    last_sync: 2026-04-22
+</code></pre>
+
+<p>The <code>library list experts</code> subcommand reads this key and renders a table with name, path, and last-sync date.</p>
+
+<h3>Triad Storage Layout</h3>
+
+<pre><code class="lang-text">
+~/.pna/experts/
+├── claudeclaw-missions/
+│   ├── expertise.yaml      (174 lines, well-cited)
+│   ├── question.md
+│   ├── self-improve.md
+│   └── .last-sync.md
+└── creator-stack/
+    ├── expertise.yaml      (21KB, 21 skills + 2 agents)
+    ├── question.md
+    ├── self-improve.md
+    └── .last-sync.md
+</code></pre>
+
+<hr>
+
+<h2>7. Registered Experts</h2>
+
+<h3>claudeclaw-missions</h3>
+
+<p>Seeded from the ClaudeClaw mission CLI and DB schema. Covers:</p>
+<ul>
+<li>Mission lifecycle (create, poll, result, cancel)</li>
+<li>Agent routing (pipeline, delivery, strategy, architect, engineer, librarian)</li>
+<li>DB schema (missions, sessions, hive_mind, audit_log)</li>
+<li>Priority levels and delivery pattern</li>
+</ul>
+
+<p>Expertise: 174 lines. All claims cite specific files in <code>~/dev/claudeclaw/</code>.</p>
+
+<h3>creator-stack</h3>
+
+<p>Seeded from the P&A creator stack. Covers:</p>
+<ul>
+<li>21 skills in active rotation (deep-research, defuddle, file-intel, pptx, etc.)</li>
+<li>2 agents (Clarke, research_a)</li>
+<li>Skill trigger patterns</li>
+<li>Routing conventions</li>
+</ul>
+
+<p>Expertise: ~21KB. Seeded via <code>--seed-body-file</code> with hand-authored initial body.</p>
+
+<hr>
+
+<h2>8. Phase 4 Closeout: research_a/b Wiring</h2>
+
+<p>Both <code>research_a</code> and <code>research_b</code> agents received a Step 0 "Expertise Consultation" block added to their <code>CLAUDE.md</code>:</p>
+
+<pre><code class="lang-text">
+## Step 0: Expertise Consultation
+Before beginning research, check ~/.pna/experts/ for a relevant domain triad.
+If found, read expertise.yaml for domain context before forming your research plan.
+</code></pre>
+
+<p>The shared research rubric gained a sixth dimension:</p>
+
+<pre><code class="lang-text">
+Dimension 6: Expertise Utilization (0-10)
+- Did the agent consult domain expertise before researching?
+- Did expertise inform the research framing?
+</code></pre>
+
+<p>The standard research output schema gained an "Expertise Consulted" section. This enables A/B comparison of research quality with and without expertise consultation in the loop.</p>
+
+<hr>
+
+<h2>9. Phase 5 Scope (Upcoming)</h2>
+
+<h3>T5.1: plan-build-improve Skill</h3>
+
+<p>A meta-skill that chains three agents in sequence:</p>
+
+<pre><code class="lang-text">
+planner agent
+  → generates build plan from spec
+parallel-build agents (N)
+  → each implements one task from plan
+self-improve-expertise
+  → re-syncs domain expertise after build completes
+</code></pre>
+
+<p>Design notes:</p>
+<ul>
+<li>Planner reads <code>SPEC.md</code> and <code>TASKS.md</code> from project directory</li>
+<li>Build agents work on independent tasks (no shared state)</li>
+<li>Re-sync runs once after all builds complete, not per task</li>
+<li>Expertise re-sync uses <code>--since</code> flag pointing to pre-build git ref</li>
+</ul>
+
+<p>This is scoped but not yet specced or implemented. Phase 5 opens after research_a/b A/B results are reviewed.</p>
+
+<hr>
+
+<h2>10. Test Coverage</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>File</th>
+<th>Tasks Covered</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>test_skill.py</code></td>
+<td>T1.1 — SKILL.md frontmatter and entrypoint</td>
+</tr>
+<tr>
+<td><code>test_expertise_template.py</code></td>
+<td>T1.2 — template rendering, <code>$VAR</code> substitution</td>
+</tr>
+<tr>
+<td><code>test_question_template.py</code></td>
+<td>T1.3 — read-only constraint, EXPERTISE_PATH</td>
+</tr>
+<tr>
+<td><code>test_self_improve_template.py</code></td>
+<td>T1.4 — SCOPE_GLOB, MAX_LINES extraction</td>
+</tr>
+<tr>
+<td><code>test_seeder_prompt.py</code></td>
+<td>T1.5 — seeder prompt block existence</td>
+</tr>
+<tr>
+<td><code>test_validator.py</code></td>
+<td>T1.6 — safe_load, line-cap, trim loop exhaustion</td>
+</tr>
+<tr>
+<td><code>test_end_to_end.py</code></td>
+<td>T1.7 — full scaffold against claudeclaw-missions</td>
+</tr>
+<tr>
+<td><code>test_scaffold_phase2.py</code></td>
+<td>T2.2, T2.1a, T2.3 — overwrite gate, registrar, collision</td>
+</tr>
+<tr>
+<td><code>test_registrar.py</code></td>
+<td>T2.1a, T2.3 — append, slug collision, YAML preservation</td>
+</tr>
+<tr>
+<td><code>test_self_improve_skill.py</code></td>
+<td>T3.1 — triad resolution, .last-sync.md, zero-drift path</td>
+</tr>
+<tr>
+<td><code>test_since_flag.py</code></td>
+<td>T3.2 — <code>--since</code> git-diff scoping, repo root inference</td>
+</tr>
+</tbody></table></div>
+
+<p><strong>Total</strong>: 144/144 tests passing across all phases.</p>
+
+<hr>
+
+<h2>11. Guarantees</h2>
+
+<ul>
+<li>Output YAML is valid (<code>yaml.safe_load</code> passes) or skill fails loud</li>
+<li>Output YAML is ≤ <code>max_lines</code> (default 1000) or skill fails after 3 trim passes</li>
+<li>Every seeded claim cites a file path from scope (seeder prompt constraint)</li>
+<li><code>expertise.yaml</code> is only modified when drift is found AND compile check passes (till-done gate)</li>
+<li><code>.last-sync.md</code> is only written after successful compile check</li>
+<li>Bad <code>--since</code> ref is a hard error — no silent fallback to full scan</li>
+<li><code>library.yaml</code> non-expert content is preserved (surgical append, no round-trip dump)</li>
+</ul>
+
+<hr>
+
+<h2>12. Non-Goals (v1)</h2>
+
+<ul>
+<li>Not a doc generator. Output is machine-readable YAML for agent Q&A, not human docs.</li>
+<li>Not a replacement for <code>CLAUDE.md</code>. Personality stays there. This is the knowledge layer.</li>
+<li>Not multi-repo. One domain = one repository.</li>
+<li>Not auto-syncing. Re-sync is explicit, not a file watcher or git hook.</li>
+<li>No daemon, watcher, or cron.</li>
+<li>No web UI. All invocation through Claude Code principals.</li>
+<li>Does not generate YAML from nothing. Expects source files as seeding input.</li>
+</ul>
+
+<hr>
+
+<h2>13. Open Questions / Future Work</h2>
+
+<ul>
+<li><strong>research_a/b A/B results</strong>: Dimension 6 rubric is wired but no comparison data yet. Phase 5 gates on reviewing these results.</li>
+<li><strong>Citation enforcement at scaffold time</strong>: Seeder prompt asks for file citations; validator does not check them. A citation-validator pass (Phase 2+ hardening) would close this gap.</li>
+<li><strong>plan-build-improve</strong>: T5.1 spec not yet written. Architect owns this next.</li>
+<li><strong>Cross-repo domains</strong>: Domain triads scoped to one repo. Multi-repo expertise (e.g., "frontend components" spanning three repos) is unaddressed.</li>
+</ul>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
