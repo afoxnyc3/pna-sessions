@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claudeclaw Platform — Comprehensive Design Document — P&amp;A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060d1f; --surface: #0d1b35; --surface-2: #111e3d; --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15); --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0; --muted: #94a3b8; --text-muted: #475569;
+      --primary: #3b82f6; --accent: #3b82f6;
+      --code-bg: #0a1628; --tag-bg: #111e3d; --tag-border: rgba(59,130,246,0.15);
+      --link: #93c5fd; --type-color: #a855f7;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 32px 32px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: var(--font-mono); }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: var(--font-mono); margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: var(--font-mono); }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; color: #93c5fd; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-25</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>design</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>Claudeclaw Platform — Comprehensive Design Document</h1>
+    <div class="tags"></div>
+  </div>
+  <article>
+    <h1>Claudeclaw Platform — Comprehensive Design Document</h1>
+
+<p><strong>Agent</strong>: principal_architect</p>
+<p><strong>Date</strong>: 2026-04-24</p>
+<p><strong>Status</strong>: Living document — reflects production state as of April 2026</p>
+
+<hr>
+
+<h2>1. Platform Overview</h2>
+
+<p>Claudeclaw is a <strong>multi-agent orchestration platform</strong> that runs on a single Mac via macOS launchd, exposing AI agents over Telegram. It is not a hosted service or cloud product. It is a personal command-and-control system: persistent daemons on one machine, one operator (Alex), one shared SQLite database.</p>
+
+<p>The platform wraps the official <code>@anthropic-ai/claude-agent-sdk</code> (v0.2.x). Each agent spawns the <code>claude</code> CLI as a subprocess. The OAuth token never leaves <code>~/.claude/</code>; ClaudeClaw does not read it.</p>
+
+<h3>Core Characteristics</h3>
+
+<ul>
+<li><strong>Single-machine</strong>: All agents run on the same Mac. Shared database, shared filesystem, shared MCP servers.</li>
+<li><strong>Telegram-native</strong>: Every agent has its own bot. Conversations are the primary interface. Voice notes are transcribed via Groq Whisper. Replies can be voiced back via ElevenLabs or fallback TTS.</li>
+<li><strong>Persistent</strong>: Sessions survive bot restarts via session ID resumption. Memory persists in SQLite with importance-weighted decay. Conversation history is logged per agent.</li>
+<li><strong>Async by design</strong>: Mission tasks and scheduled tasks run in the background. Alex fires a request and gets the result when it is done — the bot notifies him.</li>
+</ul>
+
+<h3>Deployment Topology</h3>
+
+<pre><code class="lang-text">
+Mac (launchd)
+├── com.claudeclaw.main           → Clarke (Chief of Staff)
+├── com.claudeclaw.principal_architect
+├── com.claudeclaw.principal_engineer
+├── com.claudeclaw.principal_pipeline
+├── com.claudeclaw.principal_delivery
+├── com.claudeclaw.principal_strategy
+├── com.claudeclaw.principal_librarian
+├── com.claudeclaw.principal_research
+│   └── com.claudeclaw.research_a / research_b  (sub-agents, if active)
+└── wa-daemon.sh (WhatsApp browser automation, separate process)
+</code></pre>
+
+<p>Each daemon:</p>
+<ul>
+<li>Runs <code>node dist/index.js --agent &lt;id&gt;</code></li>
+<li>Has its own Telegram bot token and chat</li>
+<li>Shares <code>/Users/alex/dev/claudeclaw/store/claudeclaw.db</code></li>
+<li>Logs to <code>logs/&lt;agent-id&gt;.log</code></li>
+<li>Auto-restarts on crash (launchd <code>KeepAlive: true</code>, <code>ThrottleInterval: 30s</code>)</li>
+</ul>
+
+<hr>
+
+<h2>2. Agent Layer</h2>
+
+<h3>2.1 Routing by CLAUDECLAW_AGENT_ID</h3>
+
+<p>The single compiled binary <code>dist/index.js</code> runs all agents. <code>src/index.ts</code> reads the <code>--agent</code> flag (or falls back to <code>CLAUDECLAW_AGENT_ID</code> env var) to determine which identity to load.</p>
+
+<pre><code class="lang-typescript">
+// src/index.ts (simplified)
+const agentId = argv.agent ?? process.env.CLAUDECLAW_AGENT_ID ?? 'main';
+const agentConfig = loadAgentConfig(agentId); // reads ~/.claudeclaw/agents/&lt;id&gt;/agent.yaml
+const botToken = config.getBotToken(agentId);
+</code></pre>
+
+<p>Each agent's <code>agent.yaml</code> specifies:</p>
+
+<pre><code class="lang-yaml">
+id: principal_architect
+name: Principal Architect
+description: Concept to spec to scaffolding
+model: claude-sonnet-4-6
+telegram_token_env: PRINCIPAL_ARCHITECT_BOT_TOKEN
+obsidian_folders:
+  - Architecture/
+  - Ideas/
+</code></pre>
+
+<p>Each agent's <code>CLAUDE.md</code> (at <code>~/.claudeclaw/agents/&lt;id&gt;/CLAUDE.md</code>) is the system prompt injected at the start of every Claude Code session.</p>
+
+<h3>2.2 Agent Roster</h3>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Agent ID</th>
+<th>Role</th>
+<th>Domain</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>main</code></td>
+<td>Clarke — Chief of Staff</td>
+<td>Cross-cutting synthesis, delegation, orchestration</td>
+</tr>
+<tr>
+<td><code>principal_architect</code></td>
+<td>Technical Architect</td>
+<td>Concepts → specs → scaffolded plans</td>
+</tr>
+<tr>
+<td><code>principal_engineer</code></td>
+<td>Implementation Engineer</td>
+<td>Code from specs, tests, commits</td>
+</tr>
+<tr>
+<td><code>principal_pipeline</code></td>
+<td>Pipeline & Outreach</td>
+<td>Lead gen, CRM, outreach sequences</td>
+</tr>
+<tr>
+<td><code>principal_delivery</code></td>
+<td>Client Delivery PM</td>
+<td>Milestones, risks, client comms</td>
+</tr>
+<tr>
+<td><code>principal_strategy</code></td>
+<td>Offer & Product Strategist</td>
+<td>Market validation, pricing, go/no-go</td>
+</tr>
+<tr>
+<td><code>principal_librarian</code></td>
+<td>Skill Librarian</td>
+<td>SKILL.md authoring, skill optimization, library distribution</td>
+</tr>
+<tr>
+<td><code>principal_research</code></td>
+<td>Research</td>
+<td>Deep research, paper synthesis</td>
+</tr>
+</tbody></table></div>
+
+<p>Sub-agents (<code>research_a</code>, <code>research_b</code>) can be spun up dynamically for parallel research missions using <code>agent-create-cli.js</code>.</p>
+
+<h3>2.3 Agent Capabilities: Skills</h3>
+
+<p>All agents inherit the global skill library at <code>~/.claude/skills/</code>. Skills are Markdown prompt files that instruct Claude how to invoke a particular workflow. They are auto-discovered by the Claude Code CLI at session start.</p>
+
+<p>Skills relevant to each principal are listed in the per-principal skill manifests in Clarke's CLAUDE.md and injected into every mission brief as <code>## Available Skills</code>.</p>
+
+<hr>
+
+<h2>3. SDK: runAgent() Event Loop</h2>
+
+<h3>3.1 How Claude Code Sessions Work</h3>
+
+<p><code>src/agent.ts</code> is the core execution engine. It calls <code>query()</code> from <code>@anthropic-ai/claude-agent-sdk</code>, which spawns a <code>claude</code> subprocess and communicates over stdin/stdout via JSON-encoded events.</p>
+
+<pre><code class="lang-typescript">
+// src/agent.ts (simplified)
+const messages: SDKMessage[] = [];
+for await (const event of query({
+  prompt: fullPrompt,
+  sessionId: existingSessionId ?? undefined,
+  abortController,
+  options: {
+    maxTurns: MAX_TURNS,
+    cwd: PROJECT_ROOT,
+    pathsToFiles: relevantFiles,
+    mcpServers: mergedMcpServers,
+  }
+})) {
+  switch (event.type) {
+    case 'system':   // session init, session ID captured here
+    case 'assistant': // text delta or tool use
+    case 'tool_result': // result from a tool call
+    case 'result':   // final usage stats
+  }
+  messages.push(event);
+}
+</code></pre>
+
+<h3>3.2 Session Resumption</h3>
+
+<p>On every agent run, <code>src/db.ts</code> looks up the last <code>session_id</code> for <code>(chat_id, agent_id)</code>. If found, the session is resumed — Claude Code continues the prior context window. If the session has been compacted (context overflow auto-summary), a new session is started and the prior session ID is discarded.</p>
+
+<p>Session IDs are stored in:</p>
+<pre><code class="lang-sql">
+CREATE TABLE sessions (
+  chat_id TEXT NOT NULL,
+  agent_id TEXT NOT NULL DEFAULT 'main',
+  session_id TEXT NOT NULL,
+  created_at INTEGER DEFAULT (strftime('%s','now')),
+  PRIMARY KEY (chat_id, agent_id)
+);
+</code></pre>
+
+<h3>3.3 MCP Server Loading</h3>
+
+<p>MCP servers are merged from two sources at session start:</p>
+
+<ol>
+<li>Project-level: <code>/Users/alex/dev/claudeclaw/.claude/settings.json</code></li>
+<li>User-level: <code>~/.claude/settings.json</code></li>
+</ol>
+
+<p>Both <code>mcpServers</code> objects are shallow-merged, with the project-level config taking precedence.</p>
+
+<h3>3.4 Tool Tracing: agent_events Table</h3>
+
+<p>Every tool invocation is traced in <code>agent_events</code>:</p>
+
+<pre><code class="lang-sql">
+CREATE TABLE agent_events (
+  id TEXT PRIMARY KEY,
+  session_id TEXT,
+  agent_id TEXT,
+  event_type TEXT,      -- 'tool_use', 'tool_result', 'text', 'error'
+  tool_name TEXT,       -- e.g. 'Bash', 'Read', 'WebSearch'
+  tool_use_id TEXT,     -- matches tool_use → tool_result pairs
+  input TEXT,           -- JSON: tool input parameters
+  output TEXT,          -- tool result (truncated at 2000 chars)
+  latency_ms INTEGER,   -- wall-clock time tool_use → tool_result
+  success INTEGER,      -- 1 or 0
+  created_at INTEGER DEFAULT (strftime('%s','now'))
+);
+</code></pre>
+
+<p>Latency is tracked by recording <code>tool_use_id → Date.now()</code> when a <code>tool_use</code> event fires, then computing <code>Date.now() - startTime</code> when the corresponding <code>tool_result</code> arrives.</p>
+
+<h3>3.5 AbortController Timeout</h3>
+
+<p>Every agent run is wrapped in an AbortController. The default timeout is <code>MISSION_TIMEOUT_MINUTES &lt;em&gt; 60 &lt;/em&gt; 1000</code> milliseconds (30 minutes as of April 2026, recently extended from 10 minutes).</p>
+
+<pre><code class="lang-typescript">
+const abortController = new AbortController();
+const timeout = setTimeout(() =&gt; {
+  abortController.abort();
+}, MISSION_TIMEOUT_MINUTES * 60 * 1000);
+</code></pre>
+
+<p>If the timeout fires, the in-flight Claude Code subprocess is killed, the mission task is marked <code>failed</code> with a timeout error, and the session ID is cleared (forcing a fresh session next time).</p>
+
+<hr>
+
+<h2>4. Storage: SQLite Schema</h2>
+
+<p><strong>File</strong>: <code>/Users/alex/dev/claudeclaw/store/claudeclaw.db</code></p>
+<p><strong>Mode</strong>: WAL (Write-Ahead Logging) for concurrent read performance</p>
+<p><strong>Permissions</strong>: 0o600 (owner-only)</p>
+<p><strong>Migrations</strong>: applied on startup via <code>src/db.ts</code> schema version checks</p>
+
+<h3>4.1 Core Tables</h3>
+
+<h4>sessions</h4>
+<p>Tracks Claude Code session IDs for resumption.</p>
+<pre><code class="lang-sql">
+CREATE TABLE sessions (
+  chat_id TEXT NOT NULL,
+  agent_id TEXT NOT NULL DEFAULT 'main',
+  session_id TEXT NOT NULL,
+  created_at INTEGER DEFAULT (strftime('%s','now')),
+  PRIMARY KEY (chat_id, agent_id)
+);
+</code></pre>
+
+<h4>mission_tasks</h4>
+<p>Async one-shot tasks created via <code>mission-cli.js</code> or the dashboard.</p>
+<pre><code class="lang-sql">
+CREATE TABLE mission_tasks (
+  id TEXT PRIMARY KEY,              -- 8-char hex
+  title TEXT,
+  prompt TEXT NOT NULL,
+  assigned_agent TEXT,              -- null = unassigned, routes via Gemini auto-assign
+  status TEXT DEFAULT 'queued',     -- queued | running | completed | failed | cancelled
+  result TEXT,
+  error TEXT,
+  priority INTEGER DEFAULT 5,       -- 0 (low) to 10 (high)
+  created_at INTEGER,
+  started_at INTEGER,
+  completed_at INTEGER
+);
+</code></pre>
+
+<h4>token_usage</h4>
+<p>Per-turn token accounting and cost tracking.</p>
+<pre><code class="lang-sql">
+CREATE TABLE token_usage (
+  id TEXT PRIMARY KEY,
+  session_id TEXT,
+  agent_id TEXT,
+  chat_id TEXT,
+  input_tokens INTEGER DEFAULT 0,
+  output_tokens INTEGER DEFAULT 0,
+  cache_read INTEGER DEFAULT 0,
+  cache_write INTEGER DEFAULT 0,
+  context_tokens INTEGER DEFAULT 0,
+  cost_usd REAL DEFAULT 0,
+  did_compact INTEGER DEFAULT 0,    -- 1 if context compaction happened this turn
+  created_at INTEGER
+);
+</code></pre>
+
+<h4>agent_events</h4>
+<p>Tool-call tracing (see Section 3.4).</p>
+
+<h4>memories</h4>
+<p>Structured memories with importance weighting and vector embeddings.</p>
+<pre><code class="lang-sql">
+CREATE TABLE memories (
+  id TEXT PRIMARY KEY,
+  chat_id TEXT,
+  agent_id TEXT DEFAULT 'main',
+  content TEXT NOT NULL,
+  summary TEXT,
+  entities TEXT,                    -- JSON array
+  topics TEXT,                      -- JSON array
+  importance REAL DEFAULT 0.5,      -- 0.0–1.0, decays over time
+  embedding TEXT,                   -- JSON float array (OpenAI embeddings)
+  sector TEXT,                      -- semantic category
+  pinned INTEGER DEFAULT 0,         -- 1 = no decay
+  superseded INTEGER DEFAULT 0,     -- 1 = contradicted by newer memory
+  created_at INTEGER,
+  accessed_at INTEGER
+);
+CREATE VIRTUAL TABLE memories_fts USING fts5(content, summary, entities, topics);
+</code></pre>
+
+<h4>hive_mind</h4>
+<p>Cross-agent activity log. All agents write here; all agents can read it.</p>
+<pre><code class="lang-sql">
+CREATE TABLE hive_mind (
+  id TEXT PRIMARY KEY,
+  agent_id TEXT,
+  chat_id TEXT,
+  action TEXT,                      -- e.g. 'spec_shipped', 'task_completed'
+  summary TEXT,
+  artifacts TEXT,                   -- file paths or URLs
+  created_at INTEGER
+);
+</code></pre>
+
+<h4>conversation_log</h4>
+<p>Full turn history per agent, used for memory retrieval and session context.</p>
+<pre><code class="lang-sql">
+CREATE TABLE conversation_log (
+  id TEXT PRIMARY KEY,
+  session_id TEXT,
+  agent_id TEXT,
+  chat_id TEXT,
+  role TEXT,                        -- 'user' | 'assistant'
+  content TEXT,
+  created_at INTEGER
+);
+</code></pre>
+
+<h4>scheduled_tasks</h4>
+<p>Cron-based recurring tasks (see Section 5.2).</p>
+<pre><code class="lang-sql">
+CREATE TABLE scheduled_tasks (
+  id TEXT PRIMARY KEY,
+  prompt TEXT NOT NULL,
+  schedule TEXT NOT NULL,           -- cron expression
+  next_run INTEGER,
+  last_run INTEGER,
+  last_result TEXT,
+  status TEXT DEFAULT 'active',     -- active | paused | running
+  agent_id TEXT,
+  created_at INTEGER
+);
+</code></pre>
+
+<h3>4.2 Encryption</h3>
+
+<p>WhatsApp and Slack message bodies are encrypted at rest using AES-256-GCM before storage. The encryption key is in <code>.env</code> as <code>DB_ENCRYPTION_KEY</code> (auto-generated on first run if absent). 3-day auto-purge removes expired records.</p>
+
+<hr>
+
+<h2>5. Mission Queue</h2>
+
+<h3>5.1 Lifecycle</h3>
+
+<p>A mission task progresses through these states:</p>
+
+<pre><code class="lang-text">
+queued → running → completed
+              ↘ failed
+              ↘ cancelled (from queued only)
+</code></pre>
+
+<h3>5.2 claimNextMissionTask</h3>
+
+<p>The scheduler polls for due missions every 60 seconds. Claiming is an atomic SQLite transaction to prevent double-assignment across concurrent processes:</p>
+
+<pre><code class="lang-typescript">
+// src/db.ts (simplified)
+claimNextMissionTask(agentId: string): MissionTask | null {
+  return db.transaction(() =&gt; {
+    const task = db.prepare(`
+      SELECT * FROM mission_tasks
+      WHERE assigned_agent = ? AND status = 'queued'
+      ORDER BY priority DESC, created_at ASC
+      LIMIT 1
+    `).get(agentId);
+    if (!task) return null;
+    db.prepare(`
+      UPDATE mission_tasks SET status = 'running', started_at = ? WHERE id = ?
+    `).run(Date.now() / 1000, task.id);
+    return task;
+  })();
+}
+</code></pre>
+
+<h3>5.3 completeMissionTask</h3>
+
+<p>On completion (success or failure), the result is written back:</p>
+
+<pre><code class="lang-typescript">
+completeMissionTask(id: string, result: string): void
+failMissionTask(id: string, error: string): void
+</code></pre>
+
+<p>The principal's Telegram bot also DMs Alex the full output in its own chat. Clarke's job is to receive the result via polling, synthesise it, and reply in Clarke's own chat.</p>
+
+<h3>5.4 Polling Pattern</h3>
+
+<p>Clarke polls after creating a mission:</p>
+
+<pre><code class="lang-bash">
+MID=$(node dist/mission-cli.js create --agent principal_strategy --title "..." "prompt" | grep -oE "[0-9a-f]{8}")
+for i in $(seq 1 20); do
+  RESULT=$(node dist/mission-cli.js result "$MID" 2&gt;&amp;1)
+  echo "$RESULT" | grep -q "status: completed" &amp;&amp; break
+  echo "$RESULT" | grep -q "status: failed" &amp;&amp; break
+  sleep 30
+done
+</code></pre>
+
+<p>Maximum polling window: 10 minutes (20 × 30s). Task timeout: <strong>30 minutes</strong> (changed from 10 minutes in April 2026). This means a task can be running but not-yet-completed when Clarke stops polling. The scheduler continues to track it; Clarke should re-check with <code>mission-cli.js result &lt;id&gt;</code> if needed.</p>
+
+<h3>5.5 Auto-Assignment</h3>
+
+<p>If a mission is created without <code>--agent</code>, Gemini Flash classifies the prompt against the agent roster and assigns to the best match. The dashboard exposes unassigned tasks in a kanban view for manual override.</p>
+
+<hr>
+
+<h2>6. Scheduler</h2>
+
+<h3>6.1 runDueMissionTasks Loop</h3>
+
+<p><code>src/scheduler.ts</code> runs two loops on the same 60-second tick:</p>
+
+<ol>
+<li><strong>Scheduled tasks</strong>: cron-based recurring prompts</li>
+<li><strong>Mission tasks</strong>: one-shot async tasks (queued by <code>mission-cli.js</code> or dashboard)</li>
+</ol>
+
+<p>Both loops share the same <code>runAgent()</code> execution path. The only difference is state management: scheduled tasks update <code>next_run</code> and stay <code>active</code>; mission tasks transition to <code>completed</code> or <code>failed</code> and are not retried.</p>
+
+<h3>6.2 Scheduled Task Execution</h3>
+
+<pre><code class="lang-text">
+tick (every 60s)
+  ↓
+SELECT * FROM scheduled_tasks WHERE status='active' AND next_run &lt;= now()
+  ↓
+For each due task:
+  ├── UPDATE next_run = next cron occurrence (BEFORE running, to prevent double-fire)
+  ├── UPDATE status = 'running'
+  ├── Enqueue in per-chat message queue
+  ├── runAgent(agentId, chatId, prompt, freshSession=true)
+  ├── Store result in last_result
+  └── UPDATE status = 'active'
+</code></pre>
+
+<p>Critical detail: <code>next_run</code> is advanced <strong>before</strong> execution begins. If the agent crashes or times out, the task will still fire again at the next scheduled time rather than being stuck in <code>running</code>.</p>
+
+<h3>6.3 Timeout Enforcement</h3>
+
+<p>The scheduler wraps every task execution in an AbortController with <code>MISSION_TIMEOUT_MINUTES &lt;em&gt; 60 &lt;/em&gt; 1000</code> ms (30 minutes). On timeout, the subprocess is killed, the task result is set to an error string, and the session ID is cleared.</p>
+
+<hr>
+
+<h2>7. Memory System</h2>
+
+<h3>7.1 Five-Layer Context Injection</h3>
+
+<p>Before every agent run, <code>src/memory.ts</code> builds a <code>[Memory context]</code> block injected at the start of the prompt:</p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Layer</th>
+<th>Source</th>
+<th>Trigger</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Semantic recall</td>
+<td>Vector cosine search (embedding similarity > 0.3)</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>Recent high-salience</td>
+<td><code>importance &gt;= 0.5</code>, ordered by <code>accessed_at</code></td>
+<td>Always</td>
+</tr>
+<tr>
+<td>Consolidation insights</td>
+<td><code>consolidations</code> table, pattern clusters</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>Hive Mind</td>
+<td>Other agents' recent <code>hive_mind</code> entries</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>Conversation recall</td>
+<td><code>conversation_log</code>, last N turns</td>
+<td>Phrases like "remember when"</td>
+</tr>
+</tbody></table></div>
+
+<h3>7.2 Memory Extraction (Gemini Flash)</h3>
+
+<p>After every completed turn, <code>src/memory-ingest.ts</code> sends the assistant's response to Gemini Flash with a structured extraction prompt:</p>
+
+<pre><code class="lang-text">
+Extract:
+- summary (1–2 sentences)
+- entities (names, companies, tools — JSON array)
+- topics (domains, themes — JSON array)
+- importance (0.0–1.0)
+  0.9–1.0: irreversible decisions, commitments, architectural choices
+  0.7–0.8: significant preferences, project milestones
+  0.5–0.6: useful context, recurring topics
+  &lt; 0.5: skip (not saved)
+</code></pre>
+
+<p>Only memories with <code>importance &gt;= 0.5</code> are persisted. Embeddings are generated via the OpenAI Embeddings API and stored as JSON float arrays in the <code>embedding</code> column.</p>
+
+<h3>7.3 Importance Decay</h3>
+
+<p>Decay runs daily via a scheduled task in the main process:</p>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Importance Range</th>
+<th>Daily Decay</th>
+<th>Half-life</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>0.8–1.0</td>
+<td>1%</td>
+<td>~69 days</td>
+</tr>
+<tr>
+<td>0.5–0.7</td>
+<td>2%</td>
+<td>~35 days</td>
+</tr>
+<tr>
+<td>Pinned</td>
+<td>0%</td>
+<td>Permanent</td>
+</tr>
+</tbody></table></div>
+
+<p>Memories that decay below 0.1 are soft-deleted (marked <code>superseded = 1</code>). Contradicted memories are also marked superseded by the consolidation pass.</p>
+
+<h3>7.4 Consolidation (Pattern Detection)</h3>
+
+<p><code>src/memory-consolidate.ts</code> runs every 30 minutes in the main process only (to prevent race conditions). It:</p>
+
+<ol>
+<li>Groups recent memories by topic cluster</li>
+<li>Uses Gemini to identify patterns, contradictions, and thematic clusters</li>
+<li>Writes <code>consolidations</code> records (compressed insights)</li>
+<li>Marks superseded memories where contradictions are found</li>
+</ol>
+
+<hr>
+
+<h2>8. launchd Integration</h2>
+
+<h3>8.1 Plist Structure</h3>
+
+<p>Each agent has a plist at <code>~/Library/LaunchAgents/com.claudeclaw.&lt;id&gt;.plist</code>:</p>
+
+<pre><code class="lang-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "..."&gt;
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+  &lt;key&gt;Label&lt;/key&gt;
+  &lt;string&gt;com.claudeclaw.principal_architect&lt;/string&gt;
+  &lt;key&gt;ProgramArguments&lt;/key&gt;
+  &lt;array&gt;
+    &lt;string&gt;/path/to/node&lt;/string&gt;
+    &lt;string&gt;/Users/alex/dev/claudeclaw/dist/index.js&lt;/string&gt;
+    &lt;string&gt;--agent&lt;/string&gt;
+    &lt;string&gt;principal_architect&lt;/string&gt;
+  &lt;/array&gt;
+  &lt;key&gt;EnvironmentVariables&lt;/key&gt;
+  &lt;dict&gt;
+    &lt;key&gt;CLAUDECLAW_AGENT_ID&lt;/key&gt;
+    &lt;string&gt;principal_architect&lt;/string&gt;
+    &lt;!-- bot token and other vars loaded from .env at runtime --&gt;
+  &lt;/dict&gt;
+  &lt;key&gt;RunAtLoad&lt;/key&gt;&lt;true/&gt;
+  &lt;key&gt;KeepAlive&lt;/key&gt;&lt;true/&gt;
+  &lt;key&gt;ThrottleInterval&lt;/key&gt;&lt;integer&gt;30&lt;/integer&gt;
+  &lt;key&gt;StandardOutPath&lt;/key&gt;
+  &lt;string&gt;/Users/alex/dev/claudeclaw/logs/principal_architect.log&lt;/string&gt;
+  &lt;key&gt;StandardErrorPath&lt;/key&gt;
+  &lt;string&gt;/Users/alex/dev/claudeclaw/logs/principal_architect.log&lt;/string&gt;
+  &lt;key&gt;WorkingDirectory&lt;/key&gt;
+  &lt;string&gt;/Users/alex/dev/claudeclaw&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+</code></pre>
+
+<h3>8.2 Service Management</h3>
+
+<pre><code class="lang-bash">
+# Load (enable + start)
+launchctl load ~/Library/LaunchAgents/com.claudeclaw.&lt;id&gt;.plist
+
+# Restart after config or code change
+launchctl kickstart -k gui/$(id -u)/com.claudeclaw.&lt;id&gt;
+
+# Unload (stop + disable)
+launchctl unload ~/Library/LaunchAgents/com.claudeclaw.&lt;id&gt;.plist
+
+# Status
+launchctl list | grep claudeclaw
+
+# Logs
+tail -f /Users/alex/dev/claudeclaw/logs/&lt;id&gt;.log
+</code></pre>
+
+<p><code>install-launchd.sh</code> renders plist templates (replacing <code>__NODE__</code> and <code>__PROJECT_DIR__</code> tokens) and calls <code>launchctl load</code> for each configured agent.</p>
+
+<h3>8.3 CLAUDECLAW_AGENT_ID Routing</h3>
+
+<p>The env var <code>CLAUDECLAW_AGENT_ID</code> is the agent identity signal. It is set in the plist <code>EnvironmentVariables</code> block and read by <code>src/index.ts</code> to load the correct agent config, bot token, and CLAUDE.md.</p>
+
+<p>This is what allows the same compiled binary to serve eight different agents.</p>
+
+<hr>
+
+<h2>9. Dashboard</h2>
+
+<p><code>src/dashboard.ts</code> runs a Hono HTTP server on port 3141 (configurable via <code>DASHBOARD_PORT</code>). It is only started by the main process (Clarke), not by principals.</p>
+
+<h3>9.1 Panels</h3>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Panel</th>
+<th>Content</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Agents</td>
+<td>Status (online/offline), per-agent cost, recent conversation preview</td>
+</tr>
+<tr>
+<td>Hive Mind</td>
+<td>Live cross-agent activity feed (SSE)</td>
+</tr>
+<tr>
+<td>Tasks</td>
+<td>Unassigned mission queue, kanban by status</td>
+</tr>
+<tr>
+<td>Memory Landscape</td>
+<td>Importance distribution histogram, fading/pinned memories</td>
+</tr>
+<tr>
+<td>System Health</td>
+<td>Context window gauge, connection status, memory pressure</td>
+</tr>
+<tr>
+<td>Tokens & Cost</td>
+<td>30-day timeline, cache hit rate, per-agent breakdown</td>
+</tr>
+<tr>
+<td>Scheduled Tasks</td>
+<td>Cron schedule, next run, last result, pause/resume controls</td>
+</tr>
+</tbody></table></div>
+
+<h3>9.2 Auth</h3>
+
+<p>The dashboard is token-gated. The token is a query parameter on the first load and stored in a session cookie. Without the token, all routes return 401.</p>
+
+<h3>9.3 Live Chat Overlay</h3>
+
+<p>A floating overlay allows live messaging to any agent from the dashboard via SSE. Useful for desktop use without switching Telegram chats.</p>
+
+<hr>
+
+<h2>10. Multi-Agent Communication</h2>
+
+<h3>10.1 Direct Delegation (Inline)</h3>
+
+<p>In any conversation, directing a message with <code>@&lt;agentId&gt;:</code> syntax triggers inline delegation via <code>src/orchestrator.ts</code>:</p>
+
+<pre><code class="lang-text">
+@principal_architect: spec out a caching layer for the pipeline enrichment API
+</code></pre>
+
+<p>The orchestrator:</p>
+<ol>
+<li>Loads the target agent's CLAUDE.md and memory context</li>
+<li>Constructs a full prompt (system + memory + user message)</li>
+<li>Runs <code>runAgent()</code> in-process (not as a subprocess)</li>
+<li>Returns the result inline to the calling conversation</li>
+<li>Logs the delegation to <code>inter_agent_tasks</code> and <code>hive_mind</code></li>
+</ol>
+
+<p>Inline delegation timeout: 5 minutes (separate from mission timeout).</p>
+
+<h3>10.2 Mission Tasks (Async)</h3>
+
+<p>For work that takes longer than a few minutes, Clarke creates a mission task via <code>mission-cli.js</code>. The principal picks it up on the next scheduler tick, runs it, and DMs Alex in its own Telegram chat.</p>
+
+<p>Clarke also polls for the result and synthesises it back into the main chat.</p>
+
+<h3>10.3 Hive Mind (Passive Awareness)</h3>
+
+<p>All agents write significant actions to <code>hive_mind</code>. The memory context injection layer surfaces recent hive mind entries to every agent, so Clarke knows what Architect last shipped without being explicitly told.</p>
+
+<hr>
+
+<h2>11. Voice Pipeline</h2>
+
+<h3>11.1 Speech-to-Text</h3>
+
+<p>Voice notes sent to any Telegram bot are downloaded as <code>.ogg</code> files and transcribed via the Groq Whisper API. The transcript is prepended with <code>[Voice transcribed]: </code> and handled as normal text.</p>
+
+<p>Fallback if Groq is unavailable: macOS <code>whisper</code> CLI (if installed locally).</p>
+
+<h3>11.2 Text-to-Speech</h3>
+
+<p>Voice responses use a cascade:</p>
+
+<ol>
+<li><strong>ElevenLabs</strong> (best quality, voice cloning) — if <code>ELEVENLABS_API_KEY</code> and <code>ELEVENLABS_VOICE_ID</code> are set</li>
+<li><strong>Gradium AI</strong> (free tier, 45k credits/month) — if <code>GRADIUM_API_KEY</code> is set</li>
+<li><strong>macOS <code>say</code> + ffmpeg</strong> (offline, no API required) — always available as final fallback</li>
+</ol>
+
+<p>Voice mode is toggled per-chat via <code>/voice</code> command. When enabled, the agent's text response is also synthesized and sent as a voice note.</p>
+
+<hr>
+
+<h2>12. WhatsApp and Slack Integration</h2>
+
+<h3>12.1 WhatsApp</h3>
+
+<p>Uses <code>whatsapp-web.js</code> (browser automation via Chromium DevTools Protocol). A separate <code>wa-daemon.sh</code> process manages the browser session at port 4242 (HTTP API) and 9222 (CDP).</p>
+
+<p>Alex authenticates by scanning a QR code on first launch. The session is persisted in <code>store/waweb/</code>. Messages older than 3 days are auto-purged. Message bodies are encrypted at rest (AES-256-GCM).</p>
+
+<p>WhatsApp mode is entered via <code>/wa</code> command in Clarke's chat. Alex can list conversations, read threads, and reply from within Telegram.</p>
+
+<h3>12.2 Slack</h3>
+
+<p>Uses the <code>@slack/web-api</code> client with a user OAuth token (<code>xoxp-</code>). Supports:</p>
+<ul>
+<li>List conversations (sorted by unread)</li>
+<li>Read messages with pagination</li>
+<li>Send threaded replies</li>
+</ul>
+
+<p>Slack mode is entered via <code>/slack</code>. Messages are encrypted at rest with 3-day retention.</p>
+
+<hr>
+
+<h2>13. Security Model</h2>
+
+<h3>13.1 Auth Layers (outer to inner)</h3>
+
+<ol>
+<li><strong>Telegram chat ID restriction</strong>: only <code>ALLOWED_CHAT_ID</code> can interact. All other senders are silently ignored.</li>
+<li><strong>Private chat only</strong>: group messages are rejected.</li>
+<li><strong>PIN lock</strong>: bot starts locked after deploy or idle timeout. SHA-256 salted hash stored in <code>.env</code>. Idle auto-lock: <code>IDLE_LOCK_MINUTES</code> (default 30).</li>
+<li><strong>Emergency kill phrase</strong>: if <code>EMERGENCY_KILL_PHRASE</code> is spoken, all agent processes immediately exit.</li>
+<li><strong>Destructive confirmation</strong>: commands that match patterns (<code>rm -rf</code>, <code>git push --force</code>, <code>DROP TABLE</code>) require explicit confirmation before execution.</li>
+</ol>
+
+<h3>13.2 Audit Log</h3>
+
+<pre><code class="lang-sql">
+CREATE TABLE audit_log (
+  id TEXT PRIMARY KEY,
+  action TEXT,       -- e.g. 'pin_unlock', 'destructive_cmd', 'session_start'
+  detail TEXT,
+  agent_id TEXT,
+  chat_id TEXT,
+  created_at INTEGER
+);
+</code></pre>
+
+<p>Query:</p>
+<pre><code class="lang-bash">
+sqlite3 store/claudeclaw.db "
+  SELECT datetime(created_at,'unixepoch'), action, detail
+  FROM audit_log ORDER BY created_at DESC LIMIT 20;"
+</code></pre>
+
+<hr>
+
+<h2>14. Known Gaps</h2>
+
+<h3>14.1 ~/.claudeclaw is Not Git-Versioned</h3>
+
+<p>Agent config, CLAUDE.md files, and <code>agent.yaml</code> files live in <code>~/.claudeclaw/agents/</code>. This directory is not under version control. If the Mac is lost or rebuilt, all principal system prompts must be reconstructed manually.</p>
+
+<p><strong>Mitigation options</strong>:</p>
+<ul>
+<li>Symlink <code>~/.claudeclaw</code> into the repo and gitignore only the secrets (<code>.env</code> files)</li>
+<li>Back up via Time Machine (implicit, not explicit)</li>
+<li>Add a <code>scripts/export-agents.sh</code> that commits agent configs to a private repo</li>
+</ul>
+
+<h3>14.2 principal_devops Not Yet Scaffolded</h3>
+
+<p>The DevOps principal (GitHub repo creation, CI/CD wiring, Vercel/Fly deploys) is referenced in the architecture but does not exist. Currently:</p>
+<ul>
+<li>Architect produces plans and inits local git repos</li>
+<li>Engineer implements and commits on feature branches</li>
+<li><strong>No agent pushes to GitHub or deploys to any infra</strong></li>
+</ul>
+
+<p>This is a conscious deferral, not an oversight. When Alex confirms the scope, architect will scaffold it and engineer will implement.</p>
+
+<h3>14.3 research_a / research_b Sub-Agents</h3>
+
+<p>These exist as launchd plists (or can be created via <code>agent-create-cli.js</code>) for parallel research missions but are not routinely active. There is no formal "fan-out and gather" API; Clarke manually creates two mission tasks and synthesises when both complete.</p>
+
+<h3>14.4 No Distributed Tracing</h3>
+
+<p>All agents share one SQLite database on one machine. There is no distributed trace ID linking a Clarke message → mission task → principal run → hive mind entry. Debugging a cross-agent chain requires manual correlation via <code>created_at</code> timestamps and <code>session_id</code> values.</p>
+
+<h3>14.5 Inline Delegation Timeout vs Mission Timeout</h3>
+
+<p>Inline delegation (<code>@agent:</code> syntax) has a 5-minute timeout. Mission tasks have a 30-minute timeout (as of April 2026). Tasks that routinely take 10–30 minutes should use mission tasks, not inline delegation. This distinction is not enforced by the system — it is a convention documented in CLAUDE.md.</p>
+
+<h3>14.6 Session Collision Risk</h3>
+
+<p>The per-chat message queue (<code>src/message-queue.ts</code>) serialises messages within a single process. However, if two launchd processes for the same agent ID were somehow started (e.g., misconfigured plist), they would both attempt to resume the same session ID. The <code>KeepAlive</code> + PID lock in <code>src/index.ts</code> mitigates this, but is not bulletproof across a hard kill + rapid restart.</p>
+
+<hr>
+
+<h2>15. Key Data Flows</h2>
+
+<h3>15.1 Incoming Telegram Message (Normal Turn)</h3>
+
+<pre><code class="lang-text">
+Telegram polling (grammy)
+  → handleMessage()
+    → [Auth: allowed chat ID check]
+    → [PIN lock check]
+    → [Kill phrase check]
+    → [Delegation detection: @agent: syntax?]
+      YES → orchestrator.delegateToAgent()
+             → load target CLAUDE.md + memory context
+             → runAgent(targetAgentId, ...)
+             → log inter_agent_tasks + hive_mind
+             → return result to caller
+      NO  → enqueue in per-chat FIFO message queue
+              → runAgent(mainAgentId, chatId, prompt)
+                → build memory context (5 layers)
+                → query() [Claude Code subprocess]
+                  → [tool use loop]
+                    → log each tool: agent_events (latency, success)
+                  → stream text delta → Telegram (progressive update)
+                → capture: tokens, cost, context_tokens, did_compact
+                → log: token_usage, conversation_log
+                → extract memories: Gemini Flash
+                  → embed: OpenAI embeddings
+                  → save memories (if importance &gt;= 0.5)
+              → format + send final response
+</code></pre>
+
+<h3>15.2 Mission Task Lifecycle</h3>
+
+<pre><code class="lang-text">
+mission-cli.js create --agent principal_strategy "prompt"
+  → INSERT mission_tasks (status: queued)
+  → print task ID
+
+scheduler tick (every 60s)
+  → claimNextMissionTask('principal_strategy')  [atomic transaction]
+  → runAgent(agentId, systemChatId, prompt, freshSession)
+    → [same execution flow as normal turn]
+  → completeMissionTask(id, result)
+  → principal_strategy Telegram bot DMs Alex
+
+Clarke polls (or Alex checks later)
+  → mission-cli.js result &lt;id&gt;
+  → synthesises + replies in Clarke's chat
+</code></pre>
+
+<h3>15.3 Scheduled Task Execution</h3>
+
+<pre><code class="lang-text">
+scheduler tick (every 60s)
+  → SELECT due scheduled_tasks
+  → for each:
+      UPDATE next_run = next_cron_occurrence  [atomic, before run]
+      UPDATE status = 'running'
+      enqueue → runAgent(agentId, chatId, prompt, freshSession=true)
+      store result → last_result
+      UPDATE status = 'active'
+</code></pre>
+
+<hr>
+
+<h2>16. Technology Stack</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Runtime</td>
+<td>Node.js 20+</td>
+<td>TypeScript compiled via <code>tsc</code></td>
+</tr>
+<tr>
+<td>AI SDK</td>
+<td><code>@anthropic-ai/claude-agent-sdk</code> v0.2.x</td>
+<td>Official; spawns <code>claude</code> CLI subprocess</td>
+</tr>
+<tr>
+<td>Models</td>
+<td>Claude Sonnet 4.6 (default), Haiku, Opus</td>
+<td>Per-agent configurable</td>
+</tr>
+<tr>
+<td>Memory extraction</td>
+<td>Gemini Flash (<code>@google/genai</code>)</td>
+<td>Lightweight, cheap per-turn</td>
+</tr>
+<tr>
+<td>Memory embeddings</td>
+<td>OpenAI Embeddings API</td>
+<td><code>text-embedding-3-small</code></td>
+</tr>
+<tr>
+<td>Database</td>
+<td>SQLite (WAL mode, <code>better-sqlite3</code>)</td>
+<td>Single file, zero infra</td>
+</tr>
+<tr>
+<td>Telegram</td>
+<td>grammy v1.x</td>
+<td>Long polling (no webhook)</td>
+</tr>
+<tr>
+<td>Web dashboard</td>
+<td>Hono</td>
+<td>Minimal, fast, SSE support</td>
+</tr>
+<tr>
+<td>Logging</td>
+<td>pino + pino-pretty</td>
+<td>Structured JSON, rotated by launchd</td>
+</tr>
+<tr>
+<td>Scheduling</td>
+<td>cron-parser</td>
+<td>In-process, no external cron daemon</td>
+</tr>
+<tr>
+<td>Process mgmt</td>
+<td>launchd</td>
+<td>macOS native, one plist per agent</td>
+</tr>
+<tr>
+<td>WhatsApp</td>
+<td>whatsapp-web.js</td>
+<td>Browser automation, no official API</td>
+</tr>
+<tr>
+<td>Slack</td>
+<td>@slack/web-api</td>
+<td>User OAuth token</td>
+</tr>
+<tr>
+<td>STT</td>
+<td>Groq Whisper API</td>
+<td>Fast, accurate</td>
+</tr>
+<tr>
+<td>TTS</td>
+<td>ElevenLabs → Gradium → macOS say</td>
+<td>Cascade by quality/availability</td>
+</tr>
+<tr>
+<td>Testing</td>
+<td>Vitest</td>
+<td>Unit + integration</td>
+</tr>
+<tr>
+<td>Package mgmt</td>
+<td>npm</td>
+<td><code>pnpm</code> preferred for new projects</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>17. Operational Runbook (Quick Reference)</h2>
+
+<pre><code class="lang-bash">
+# Build after code changes
+cd ~/dev/claudeclaw &amp;&amp; npm run build
+
+# Restart a single agent
+launchctl kickstart -k gui/$(id -u)/com.claudeclaw.principal_architect
+
+# Restart all agents
+for svc in $(launchctl list | grep claudeclaw | awk '{print $3}'); do
+  launchctl kickstart -k gui/$(id -u)/$svc
+done
+
+# Check agent status
+launchctl list | grep claudeclaw
+
+# View live logs
+tail -f ~/dev/claudeclaw/logs/main.log
+tail -f ~/dev/claudeclaw/logs/principal_architect.log
+
+# Mission queue snapshot
+node ~/dev/claudeclaw/dist/mission-cli.js list
+
+# Check a specific mission result
+node ~/dev/claudeclaw/dist/mission-cli.js result &lt;8-char-id&gt;
+
+# Memory check (Clarke)
+sqlite3 ~/dev/claudeclaw/store/claudeclaw.db \
+  "SELECT importance, substr(content,1,100) FROM memories \
+   WHERE agent_id='main' ORDER BY importance DESC LIMIT 10;"
+
+# Audit log
+sqlite3 ~/dev/claudeclaw/store/claudeclaw.db \
+  "SELECT datetime(created_at,'unixepoch'), action, detail \
+   FROM audit_log ORDER BY created_at DESC LIMIT 20;"
+
+# Token usage today
+sqlite3 ~/dev/claudeclaw/store/claudeclaw.db \
+  "SELECT agent_id, SUM(input_tokens+output_tokens) tokens, SUM(cost_usd) cost \
+   FROM token_usage WHERE date(created_at,'unixepoch')=date('now') \
+   GROUP BY agent_id ORDER BY cost DESC;"
+</code></pre>
+
+<hr>
+
+<p><em>Document generated by principal_architect — 2026-04-24</em></p>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
