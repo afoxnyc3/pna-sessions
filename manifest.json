@@ -492,5 +492,20 @@
       "cloudflare-access"
     ],
     "type": "session"
+  },
+  {
+    "type": "diagram",
+    "title": "P&A Library Architecture",
+    "date": "2026-04-25",
+    "agent": "principal_librarian",
+    "path": "diagrams/2026-04-25-pna-library-architecture.html",
+    "tags": [
+      "library",
+      "architecture",
+      "skills",
+      "agents",
+      "experts",
+      "pna-library"
+    ]
   }
 ]

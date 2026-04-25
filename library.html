@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library — Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060d1f;
+  --surface: #0d1b35;
+  --surface-2: #111e3d;
+  --surface-3: #0a1628;
+  --border: rgba(59,130,246,0.15);
+  --border-strong: rgba(59,130,246,0.35);
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-muted: #475569;
+  --primary: #3b82f6;
+  --primary-dim: rgba(59,130,246,0.12);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34,211,238,0.1);
+  --cyan-border: rgba(34,211,238,0.3);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.1);
+  --amber-border: rgba(245,158,11,0.3);
+  --green: #10b981;
+  --green-dim: rgba(16,185,129,0.1);
+  --green-border: rgba(16,185,129,0.3);
+  --purple: #a855f7;
+  --purple-dim: rgba(168,85,247,0.1);
+  --purple-border: rgba(168,85,247,0.3);
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'Fira Code', 'Courier New', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* NAV */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6,13,31,0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 32px;
+  height: 52px;
+}
+.nav-back {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.nav-back:hover { color: var(--text); }
+.nav-sep { width: 1px; height: 16px; background: var(--border-strong); }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.nav-link:hover { color: var(--text); background: var(--primary-dim); }
+.nav-link.active { color: var(--primary); background: var(--primary-dim); }
+
+/* PAGE HEADER */
+.page-header {
+  padding: 36px 32px 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.page-header h1 {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.header-subtitle {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+.count-chip {
+  background: var(--primary-dim);
+  border: 1px solid var(--border-strong);
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+
+/* TOOLBAR */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 32px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 12px 8px 34px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus { border-color: var(--border-strong); }
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 5px 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text); border-color: var(--border-strong); }
+.tab-btn.active {
+  color: var(--primary);
+  border-color: var(--border-strong);
+  background: var(--primary-dim);
+}
+
+/* CONTENT AREA */
+.content {
+  padding: 0 32px 64px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* CATEGORY SECTION */
+.cat-section {
+  margin-bottom: 36px;
+}
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.cat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cat-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+.cat-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+}
+
+/* SKILL CARD */
+.skill-card {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+.skill-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 10px 10px 0 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.skill-card:hover { border-color: var(--border-strong); background: var(--surface-2); }
+.skill-card:hover::before { opacity: 1; }
+
+.skill-name {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--text);
+  margin-bottom: 6px;
+  letter-spacing: -0.2px;
+}
+.skill-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.skill-source {
+  margin-top: 10px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.source-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+/* AGENT CARD */
+.agent-card {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+.agent-card:hover { border-color: var(--border-strong); }
+.agent-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--primary-dim);
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.agent-info { flex: 1; }
+.agent-name {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.agent-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* EXPERT CARD */
+.expert-card {
+  background: var(--surface-3);
+  border: 1px solid var(--amber-border);
+  border-radius: 10px;
+  padding: 16px;
+  transition: border-color 0.15s;
+}
+.expert-card:hover { border-color: var(--amber); }
+.expert-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--amber);
+  margin-bottom: 4px;
+}
+.expert-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* EMPTY */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.empty-state svg { opacity: 0.3; margin-bottom: 12px; }
+
+/* STATS BAR */
+.stats-bar {
+  display: flex;
+  gap: 24px;
+  padding: 16px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+.stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.stat-num {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: -0.5px;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.stat-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  align-self: center;
+}
+
+/* HIDDEN */
+.hidden { display: none !important; }
+
+@media (max-width: 640px) {
+  .nav { padding: 0 16px; gap: 12px; }
+  .nav-links { gap: 2px; }
+  .nav-link { font-size: 11px; padding: 4px 8px; }
+  .page-header { padding: 24px 16px 0; }
+  .toolbar { padding: 0 16px 16px; }
+  .content { padding: 0 16px 48px; }
+  .stats-bar { padding: 12px 16px; gap: 16px; }
+  .cat-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-back" href="index.html">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Mission Control
+  </a>
+  <div class="nav-sep"></div>
+  <div class="nav-links">
+    <a class="nav-link" href="kanban.html">Kanban</a>
+    <a class="nav-link" href="backlog.html">Backlog</a>
+    <a class="nav-link" href="tracing.html">Tracing</a>
+    <a class="nav-link active" href="library.html">Library</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <h1>Skill Library</h1>
+  <div class="header-meta">
+    <span class="header-subtitle">pna_library</span>
+    <span class="count-chip" id="total-chip">— skills</span>
+  </div>
+</div>
+
+<div class="stats-bar" id="stats-bar">
+  <div class="stat-item">
+    <span class="stat-num" id="stat-skills">0</span>
+    <span class="stat-label">Skills</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-item">
+    <span class="stat-num" id="stat-agents">0</span>
+    <span class="stat-label">Agents</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-item">
+    <span class="stat-num" id="stat-experts">0</span>
+    <span class="stat-label">Experts</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-item">
+    <span class="stat-num" id="stat-cats">0</span>
+    <span class="stat-label">Categories</span>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <svg class="search-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input class="search-input" id="search-input" type="text" placeholder="Search skills…" autocomplete="off">
+  </div>
+  <div class="tab-bar" id="tab-bar">
+    <button class="tab-btn active" data-tab="all">All</button>
+    <button class="tab-btn" data-tab="skills">Skills</button>
+    <button class="tab-btn" data-tab="agents">Agents</button>
+    <button class="tab-btn" data-tab="experts">Experts</button>
+  </div>
+</div>
+
+<div class="content" id="content">
+  <div class="empty-state">Loading…</div>
+</div>
+
+<script>
+const DATA = {
+  skills: [
+    // Research & Analysis
+    { name: "deep-research", desc: "Thorough source-heavy research brief with citations. Triggers on \"deep research\", \"investigate\", \"research brief\".", category: "Research & Analysis", source: "feynman" },
+    { name: "source-comparison", desc: "Grounded comparison matrix across tools, papers, frameworks, or approaches.", category: "Research & Analysis", source: "feynman" },
+    { name: "literature-review", desc: "Comprehensive academic literature review with synthesis and consensus mapping.", category: "Research & Analysis", source: "feynman" },
+    { name: "novelty-check", desc: "Verify whether a research idea or approach is genuinely novel against recent literature.", category: "Research & Analysis", source: "aris" },
+    { name: "peer-review", desc: "Simulate tough peer review of any research artifact — paper, draft, proposal, report.", category: "Research & Analysis", source: "feynman" },
+    { name: "idea-refine", desc: "Refine ideas through structured divergent and convergent thinking.", category: "Research & Analysis", source: "external" },
+    { name: "eli5", desc: "Explain research papers or technical concepts in plain English with concrete analogies.", category: "Research & Analysis", source: "feynman" },
+    { name: "alpha-research", desc: "Search, read, and query academic research papers via the alpha CLI.", category: "Research & Analysis", source: "feynman" },
+    { name: "research-wiki", desc: "Persistent research knowledge base. Karpathy LLM Wiki pattern — compile once, keep current.", category: "Research & Analysis", source: "aris" },
+    { name: "research-refine", desc: "Turn a vague research direction into a concrete, problem-anchored implementation-ready plan.", category: "Research & Analysis", source: "aris" },
+    // Web & Content
+    { name: "media-extract", desc: "Universal media extraction and analysis — YouTube, web articles, local video/audio/PDF, pasted transcripts.", category: "Web & Content", source: "external" },
+    { name: "defuddle", desc: "Extract clean markdown from web pages using the Defuddle CLI, removing clutter.", category: "Web & Content", source: "local" },
+    { name: "jobs", desc: "Inspect active background research — running processes, scheduled tasks, pending missions.", category: "Web & Content", source: "feynman" },
+    { name: "watch", desc: "Set up a recurring research watch on a topic, company, or paper area.", category: "Web & Content", source: "feynman" },
+    // Document & File
+    { name: "pdf", desc: "Read, extract, merge, or process PDF files.", category: "Document & File", source: "anthropic" },
+    { name: "docx", desc: "Create, read, edit, or manipulate Word documents (.docx files).", category: "Document & File", source: "anthropic" },
+    { name: "xlsx", desc: "Open, read, edit, or fix spreadsheet files.", category: "Document & File", source: "anthropic" },
+    { name: "pptx", desc: "Create, read, or edit PowerPoint presentation files.", category: "Document & File", source: "anthropic" },
+    // Engineering & Code
+    { name: "spec-driven-development", desc: "Write a spec before coding starts. Use when requirements are unclear or unstated.", category: "Engineering & Code", source: "external" },
+    { name: "planning-and-task-breakdown", desc: "Break a spec into atomic, implementable tasks. Use before writing any code.", category: "Engineering & Code", source: "external" },
+    { name: "api-and-interface-design", desc: "Guides stable API and interface design. Use when designing REST endpoints or module boundaries.", category: "Engineering & Code", source: "external" },
+    { name: "documentation-and-adrs", desc: "Write ADRs and project docs. Use when making architectural decisions or shipping features.", category: "Engineering & Code", source: "external" },
+    { name: "verification-before-completion", desc: "Evidence before assertions. Run before any completion claim, commit, or PR.", category: "Engineering & Code", source: "local" },
+    { name: "systematic-debugging", desc: "Root-cause before fixes. Use when encountering any bug or unexpected behavior.", category: "Engineering & Code", source: "local" },
+    { name: "requesting-code-review", desc: "Dispatch a code reviewer subagent. Use after completing a task or major feature.", category: "Engineering & Code", source: "local" },
+    { name: "receiving-code-review", desc: "Receive and evaluate code review feedback with technical rigor.", category: "Engineering & Code", source: "local" },
+    { name: "finishing-a-development-branch", desc: "Guide completion of development work — verify tests, merge options, cleanup.", category: "Engineering & Code", source: "local" },
+    { name: "mcp-builder", desc: "Scaffold and build MCP (Model Context Protocol) servers. Use when building new MCP integrations.", category: "Engineering & Code", source: "anthropic" },
+    { name: "claude-api", desc: "Build, debug, and optimize Claude API / Anthropic SDK apps with prompt caching.", category: "Engineering & Code", source: "anthropic" },
+    { name: "webapp-testing", desc: "Test local web applications using Playwright. Verify frontend functionality and debug UI.", category: "Engineering & Code", source: "anthropic" },
+    // Gemini & Google AI
+    { name: "gemini-api-dev", desc: "Build apps with Gemini models — multimodal, function calling, structured outputs.", category: "Gemini & Google AI", source: "local" },
+    { name: "gemini-interactions-api", desc: "Call the Gemini API for text generation, chat, streaming, and function calling.", category: "Gemini & Google AI", source: "local" },
+    { name: "gemini-live-api-dev", desc: "Build real-time bidirectional streaming apps with the Gemini Live API.", category: "Gemini & Google AI", source: "local" },
+    { name: "vertex-ai-api-dev", desc: "Use Gemini on Google Cloud Vertex AI. Enterprise environments, Gen AI SDK.", category: "Gemini & Google AI", source: "local" },
+    // Multi-Agent & Orchestration
+    { name: "dispatching-parallel-agents", desc: "Dispatch independent tasks to parallel agents with isolated context windows.", category: "Multi-Agent & Orchestration", source: "local" },
+    { name: "subagent-driven-development", desc: "Execute implementation plans by dispatching fresh subagents per task with two-stage review.", category: "Multi-Agent & Orchestration", source: "local" },
+    { name: "brainstorming", desc: "Explore intent and requirements before any implementation. HARD GATE before building.", category: "Multi-Agent & Orchestration", source: "local" },
+    { name: "writing-plans", desc: "Write comprehensive implementation plans before touching code.", category: "Multi-Agent & Orchestration", source: "local" },
+    // Skill Dev & Optimization
+    { name: "writing-skills", desc: "TDD for skill creation — RED-GREEN-REFACTOR cycle using pressure scenarios and subagent testing.", category: "Skill Dev & Optimization", source: "local" },
+    { name: "skill-creator", desc: "Create new skills, modify and improve existing skills, and measure skill performance.", category: "Skill Dev & Optimization", source: "anthropic" },
+    { name: "skill-optimizer", desc: "Karpathy autoresearch loop for autonomously improving Claude Code skill files.", category: "Skill Dev & Optimization", source: "local" },
+    { name: "meta-optimize", desc: "Analyze skill invocation logs and propose improvements to skills and workflow sequences.", category: "Skill Dev & Optimization", source: "aris" },
+    { name: "autoresearch", desc: "Autonomous experiment loop — try ideas, measure results, keep what works, repeat.", category: "Skill Dev & Optimization", source: "local" },
+    // Session & Memory
+    { name: "agent-session-summary", desc: "Structured end-of-session handoff. Saves to deepagents/sessions/. Use /wrap.", category: "Session & Memory", source: "local" },
+    { name: "session-log", desc: "Write a durable session log capturing completed work, findings, open questions, next steps.", category: "Session & Memory", source: "feynman" },
+    { name: "session-search", desc: "Search past session transcripts and logs to recover prior work and decisions.", category: "Session & Memory", source: "feynman" },
+    // Obsidian & Vault
+    { name: "obsidian-cli", desc: "Interact with Obsidian vaults — read, create, search, manage notes and tasks.", category: "Obsidian & Vault", source: "local" },
+    { name: "obsidian-markdown", desc: "Create and edit Obsidian Flavored Markdown with wikilinks, callouts, and properties.", category: "Obsidian & Vault", source: "local" },
+    { name: "obsidian-bases", desc: "Create and edit Obsidian Bases (.base files) — database-like views of notes.", category: "Obsidian & Vault", source: "local" },
+    // Paper & Academic
+    { name: "paper-writing", desc: "Turn research findings into a polished paper-style draft with sections and citations.", category: "Paper & Academic", source: "feynman" },
+    { name: "paper-code-audit", desc: "Compare a paper's claims against its public codebase. Identify mismatches and gaps.", category: "Paper & Academic", source: "feynman" },
+    { name: "replication", desc: "Plan or execute a replication of a paper's results, claims, or benchmarks.", category: "Paper & Academic", source: "feynman" },
+    { name: "idea-discovery", desc: "Full idea discovery pipeline — survey field, generate ideas, check novelty, refine.", category: "Paper & Academic", source: "aris" },
+    { name: "auto-review-loop", desc: "Autonomous multi-round review and improvement loop until quality threshold is met.", category: "Paper & Academic", source: "aris" },
+    // Client & Business
+    { name: "cerberus", desc: "Deep client research and architecture validation for Principal & Agent engagements.", category: "Client & Business", source: "local" },
+    { name: "doc-coauthoring", desc: "Structured workflow for co-authoring documentation, proposals, and technical specs.", category: "Client & Business", source: "anthropic" },
+    // Creator & Content
+    { name: "write", desc: "Generalized writing skill for any platform and format — newsletters, YouTube scripts, guides, sales pages, social posts.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "voice", desc: "Apply an authentic writing voice to produced content. Personality layer invoked by other writing skills.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "research-creator", desc: "Topic and competitor research for any content type. Identifies content gaps before writing.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "title", desc: "Generate optimized titles, headlines, and subject lines for any content type.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "hook", desc: "Create retention-optimized opening hooks — video intros, newsletter leads, social post openers.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "extract-ideas", desc: "Mine source material for repurposable content angles and ideas.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "thumbnail", desc: "Design high-CTR YouTube thumbnails and cover images. Title-aware, concept-first.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "social-graphic", desc: "Create social media graphics, newsletter headers, blog feature images, OG images, profile banners.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "design-system", desc: "Create, update, or refresh a visual design system or art style guide.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "brand-guidelines", desc: "Define, codify, or update brand identity and connect it to visual design systems.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "nanobanana", desc: "AI image generation and editing using Google Gemini models. Requires GEMINI_API_KEY.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "plan-newsletter", desc: "Plan a complete newsletter issue — research, draft, subject line, opening hook, and social posts.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "optimize-newsletter", desc: "Optimize a newsletter draft or write a full issue from an outline. Polish, improve, rewrite.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "newsletter-visuals", desc: "Audit a newsletter draft for visual opportunities and generate on-brand visual assets.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "newsletter-to-video", desc: "Repurpose a newsletter issue into a YouTube video outline.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "plan-video", desc: "Complete YouTube video plan — title options, thumbnail concepts, hooks, content outline.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "repurpose-video", desc: "Repurpose a completed YouTube video into newsletter issues, social posts, and other formats.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "community-post", desc: "Create YouTube community posts that drive views and audience engagement.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "ideate-notes", desc: "Generate Substack Note ideas by scanning published YouTube videos, newsletters, and Notes.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "write-note", desc: "Create high-engagement Substack Notes. Single short posts or promotion of a newsletter issue.", category: "Creator & Content", source: "ai-launchpad" },
+    { name: "youtube-data", desc: "Retrieve YouTube data via the YouTube Data API — video search, channel details, transcripts, comments, trends.", category: "Creator & Content", source: "ai-launchpad" },
+  ],
+  agents: [
+    { name: "principal-engineer", desc: "Implementation engineer. Takes Architect specs, writes code, runs tests, commits.", initials: "PE" },
+    { name: "principal-architect", desc: "Technical architect. Concept to spec, task breakdown, ADRs, project scaffolding.", initials: "PA" },
+    { name: "principal-strategy", desc: "Offer and product strategist. Market validation, competitor analysis, pricing, go/no-go.", initials: "PS" },
+    { name: "principal-pipeline", desc: "Pipeline and outreach specialist. Lead gen, outreach drafts, CRM hygiene.", initials: "PP" },
+    { name: "principal-delivery", desc: "Client delivery PM. Milestones, timelines, risks, client comms, handoffs.", initials: "PD" },
+    { name: "thumbnail-reviewer", desc: "Expert YouTube thumbnail reviewer. Critiques concepts against proven CTR design requirements.", initials: "TR" },
+    { name: "youtube-researcher", desc: "YouTube research specialist. Uses the YouTube Data API to analyze channels, videos, comments, transcripts.", initials: "YR" },
+  ],
+  experts: [
+    { name: "Claudeclaw Missions", domain: "claudeclaw-missions", lastSync: "2026-04-21" },
+    { name: "Creator Stack", domain: "creator-stack", lastSync: "2026-04-23" },
+  ]
+};
+
+const CATEGORY_COLORS = {
+  "Research & Analysis": "#3b82f6",
+  "Web & Content":       "#22d3ee",
+  "Document & File":     "#a855f7",
+  "Engineering & Code":  "#10b981",
+  "Gemini & Google AI":  "#f59e0b",
+  "Multi-Agent & Orchestration": "#06b6d4",
+  "Skill Dev & Optimization":    "#8b5cf6",
+  "Session & Memory":    "#ec4899",
+  "Obsidian & Vault":    "#84cc16",
+  "Paper & Academic":    "#f97316",
+  "Client & Business":   "#ef4444",
+  "Creator & Content":   "#d946ef",
+};
+
+const SOURCE_STYLES = {
+  "local":       { label: "LOCAL",       color: "#3b82f6", bg: "rgba(59,130,246,0.1)" },
+  "feynman":     { label: "FEYNMAN",     color: "#22d3ee", bg: "rgba(34,211,238,0.1)" },
+  "aris":        { label: "ARIS",        color: "#a855f7", bg: "rgba(168,85,247,0.1)" },
+  "anthropic":   { label: "ANTHROPIC",   color: "#10b981", bg: "rgba(16,185,129,0.1)" },
+  "ai-launchpad":{ label: "AI LAUNCHPAD",color: "#d946ef", bg: "rgba(217,70,239,0.1)" },
+  "external":    { label: "EXTERNAL",    color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
+};
+
+let activeTab = 'all';
+let searchQuery = '';
+
+function getCategories() {
+  const cats = {};
+  DATA.skills.forEach(s => {
+    if (!cats[s.category]) cats[s.category] = [];
+    cats[s.category].push(s);
+  });
+  return cats;
+}
+
+function renderSourceBadge(source) {
+  const s = SOURCE_STYLES[source] || SOURCE_STYLES.external;
+  return `<span class="source-badge" style="color:${s.color};background:${s.bg};border-color:${s.color}40">${s.label}</span>`;
+}
+
+function renderSkillCard(skill) {
+  const color = CATEGORY_COLORS[skill.category] || '#3b82f6';
+  return `
+    <div class="skill-card" style="--card-color:${color}">
+      <style>.skill-card[style*="${color}"]::before{background:${color};}</style>
+      <div class="skill-name">${skill.name}</div>
+      <div class="skill-desc">${skill.desc}</div>
+      <div class="skill-source">${renderSourceBadge(skill.source)}</div>
+    </div>
+  `;
+}
+
+function renderAgentCard(agent) {
+  return `
+    <div class="agent-card">
+      <div class="agent-avatar">${agent.initials}</div>
+      <div class="agent-info">
+        <div class="agent-name">${agent.name}</div>
+        <div class="agent-desc">${agent.desc}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderExpertCard(expert) {
+  return `
+    <div class="expert-card">
+      <div class="expert-name">${expert.name}</div>
+      <div class="expert-meta">
+        <span>domain: ${expert.domain}</span>
+        <span>synced: ${expert.lastSync}</span>
+      </div>
+    </div>
+  `;
+}
+
+function filterSkills(skills) {
+  if (!searchQuery) return skills;
+  const q = searchQuery.toLowerCase();
+  return skills.filter(s => s.name.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q) || s.category.toLowerCase().includes(q));
+}
+
+function render() {
+  const content = document.getElementById('content');
+  const cats = getCategories();
+
+  if (activeTab === 'all' || activeTab === 'skills') {
+    const catEntries = Object.entries(cats);
+    let html = '';
+    let anyMatch = false;
+
+    catEntries.forEach(([catName, skills]) => {
+      const filtered = filterSkills(skills);
+      if (filtered.length === 0) return;
+      anyMatch = true;
+      const color = CATEGORY_COLORS[catName] || '#3b82f6';
+      html += `
+        <div class="cat-section">
+          <div class="cat-header">
+            <div class="cat-dot" style="background:${color}"></div>
+            <span class="cat-name">${catName}</span>
+            <span class="cat-count">${filtered.length}</span>
+          </div>
+          <div class="cat-grid">${filtered.map(renderSkillCard).join('')}</div>
+        </div>
+      `;
+    });
+
+    if (activeTab === 'all') {
+      // Append agents section
+      const filteredAgents = searchQuery
+        ? DATA.agents.filter(a => a.name.includes(searchQuery.toLowerCase()) || a.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+        : DATA.agents;
+      if (filteredAgents.length > 0) {
+        anyMatch = true;
+        html += `
+          <div class="cat-section">
+            <div class="cat-header">
+              <div class="cat-dot" style="background:#3b82f6"></div>
+              <span class="cat-name">Agents</span>
+              <span class="cat-count">${filteredAgents.length}</span>
+            </div>
+            <div class="cat-grid">${filteredAgents.map(renderAgentCard).join('')}</div>
+          </div>
+        `;
+      }
+
+      // Experts
+      const filteredExperts = searchQuery
+        ? DATA.experts.filter(e => e.name.toLowerCase().includes(searchQuery.toLowerCase()) || e.domain.includes(searchQuery.toLowerCase()))
+        : DATA.experts;
+      if (filteredExperts.length > 0) {
+        anyMatch = true;
+        html += `
+          <div class="cat-section">
+            <div class="cat-header">
+              <div class="cat-dot" style="background:#f59e0b"></div>
+              <span class="cat-name">Experts</span>
+              <span class="cat-count">${filteredExperts.length}</span>
+            </div>
+            <div class="cat-grid">${filteredExperts.map(renderExpertCard).join('')}</div>
+          </div>
+        `;
+      }
+    }
+
+    if (!anyMatch) {
+      html = `<div class="empty-state">
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" display="block" margin="0 auto 12px"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+        No results for "<strong>${searchQuery}</strong>"
+      </div>`;
+    }
+
+    content.innerHTML = html;
+
+  } else if (activeTab === 'agents') {
+    const filtered = searchQuery
+      ? DATA.agents.filter(a => a.name.includes(searchQuery) || a.desc.toLowerCase().includes(searchQuery))
+      : DATA.agents;
+    if (filtered.length === 0) {
+      content.innerHTML = `<div class="empty-state">No agents match "<strong>${searchQuery}</strong>"</div>`;
+    } else {
+      content.innerHTML = `
+        <div class="cat-section">
+          <div class="cat-grid">${filtered.map(renderAgentCard).join('')}</div>
+        </div>
+      `;
+    }
+
+  } else if (activeTab === 'experts') {
+    const filtered = searchQuery
+      ? DATA.experts.filter(e => e.name.toLowerCase().includes(searchQuery) || e.domain.includes(searchQuery))
+      : DATA.experts;
+    if (filtered.length === 0) {
+      content.innerHTML = `<div class="empty-state">No experts match "<strong>${searchQuery}</strong>"</div>`;
+    } else {
+      content.innerHTML = `
+        <div class="cat-section">
+          <div class="cat-grid">${filtered.map(renderExpertCard).join('')}</div>
+        </div>
+      `;
+    }
+  }
+}
+
+function updateStats() {
+  const cats = getCategories();
+  document.getElementById('stat-skills').textContent = DATA.skills.length;
+  document.getElementById('stat-agents').textContent = DATA.agents.length;
+  document.getElementById('stat-experts').textContent = DATA.experts.length;
+  document.getElementById('stat-cats').textContent = Object.keys(cats).length;
+  document.getElementById('total-chip').textContent = `${DATA.skills.length} skills`;
+}
+
+// Tab switching
+document.getElementById('tab-bar').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeTab = btn.dataset.tab;
+  render();
+});
+
+// Search
+let searchTimer;
+document.getElementById('search-input').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    searchQuery = e.target.value.trim().toLowerCase();
+    render();
+  }, 150);
+});
+
+// Init
+updateStats();
+render();
+</script>
+</body>
+</html>

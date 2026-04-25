@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P&A Library Architecture — Mission Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    ul, ol { list-style: none; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --bg:            #060d1f;
+      --surface:       #0d1b35;
+      --surface-2:     #111e3d;
+      --surface-3:     #0a1628;
+      --border:        rgba(59,130,246,0.15);
+      --border-strong: rgba(59,130,246,0.35);
+      --text:          #e2e8f0;
+      --text-dim:      #94a3b8;
+      --text-muted:    #475569;
+      --primary:       #3b82f6;
+      --primary-dim:   rgba(59,130,246,0.12);
+      --cyan:          #22d3ee;
+      --cyan-dim:      rgba(34,211,238,0.10);
+      --amber:         #f59e0b;
+      --amber-dim:     rgba(245,158,11,0.10);
+      --green:         #10b981;
+      --green-dim:     rgba(16,185,129,0.10);
+      --purple:        #a855f7;
+      --purple-dim:    rgba(168,85,247,0.10);
+      --rose:          #f43f5e;
+      --rose-dim:      rgba(244,63,94,0.10);
+      --magenta:       #d946ef;
+      --magenta-dim:   rgba(217,70,239,0.10);
+      --font-body:     'DM Sans', system-ui, sans-serif;
+      --font-mono:     'Fira Code', 'Courier New', monospace;
+      --radius:        6px;
+      --radius-lg:     10px;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px);
+      background-size: 32px 32px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    .site-nav {
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      background: rgba(6,13,31,0.85);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-back {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+    }
+    .nav-back:hover { color: var(--primary); }
+    .nav-divider { width: 1px; height: 14px; background: var(--border); }
+    .nav-title {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+    }
+    .nav-badge {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      padding: 0.18rem 0.55rem;
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 3px;
+      color: var(--primary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      border-top: 3px solid var(--primary);
+      padding: 3rem 2rem 2.5rem;
+      max-width: 1280px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .site-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 2rem; right: 2rem;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    }
+    .header-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--primary);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.65rem;
+    }
+    .site-title {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.025em;
+      margin-bottom: 0.55rem;
+    }
+    .site-subtitle {
+      font-size: 1rem;
+      color: var(--text-dim);
+      max-width: 680px;
+      line-height: 1.55;
+    }
+    .header-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1.75rem;
+      flex-wrap: wrap;
+    }
+    .stat-chip {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.5rem 0.9rem;
+    }
+    .stat-n {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 600;
+      line-height: 1;
+    }
+    .stat-l {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* ── CONTAINER ── */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 3rem 2rem 4rem;
+    }
+
+    /* ── SECTION LABELS ── */
+    .section { margin-bottom: 3.5rem; }
+    .sec-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--primary);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+    .sec-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+    .sec-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── FLOW DIAGRAM ── */
+    .flow-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      overflow-x: auto;
+    }
+
+    .flow-diagram {
+      display: grid;
+      grid-template-columns: 220px 40px 280px 40px 200px 40px 220px;
+      grid-template-rows: auto;
+      gap: 0;
+      min-width: 1100px;
+      align-items: center;
+    }
+
+    /* column labels */
+    .col-label-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 220px 40px 280px 40px 200px 40px 220px;
+      margin-bottom: 0.75rem;
+    }
+    .col-label {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .col-label:nth-child(even) { /* arrow cols */ opacity: 0; }
+
+    /* flow arrow connector */
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      padding: 0 4px;
+      position: relative;
+    }
+    .flow-arrow::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), var(--primary), var(--border));
+    }
+    .arrow-head {
+      position: relative;
+      z-index: 1;
+      background: var(--surface);
+      padding: 0 3px;
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
+
+    /* ── SOURCE ORIGINS COL ── */
+    .sources-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .source-node {
+      padding: 0.45rem 0.75rem;
+      border-radius: var(--radius);
+      border: 1px solid;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: default;
+      transition: opacity 0.15s;
+    }
+    .source-node:hover { opacity: 0.8; }
+    .source-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    .src-local     { color: #3b82f6; background: rgba(59,130,246,0.1);  border-color: rgba(59,130,246,0.3); }
+    .src-feynman   { color: #22d3ee; background: rgba(34,211,238,0.1);  border-color: rgba(34,211,238,0.3); }
+    .src-aris      { color: #a855f7; background: rgba(168,85,247,0.1);  border-color: rgba(168,85,247,0.3); }
+    .src-anthropic { color: #10b981; background: rgba(16,185,129,0.1);  border-color: rgba(16,185,129,0.3); }
+    .src-external  { color: #f59e0b; background: rgba(245,158,11,0.1);  border-color: rgba(245,158,11,0.3); }
+    .src-ailaunch  { color: #d946ef; background: rgba(217,70,239,0.1);  border-color: rgba(217,70,239,0.3); }
+
+    .sd-local     { background: #3b82f6; }
+    .sd-feynman   { background: #22d3ee; }
+    .sd-aris      { background: #a855f7; }
+    .sd-anthropic { background: #10b981; }
+    .sd-external  { background: #f59e0b; }
+    .sd-ailaunch  { background: #d946ef; }
+
+    /* ── LIBRARY.YAML CENTER ── */
+    .yaml-center {
+      background: var(--surface-2);
+      border: 2px solid var(--amber);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .yaml-header {
+      background: var(--amber-dim);
+      border-bottom: 1px solid rgba(245,158,11,0.3);
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .yaml-icon {
+      font-size: 0.75rem;
+      color: var(--amber);
+    }
+    .yaml-filename {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--amber);
+    }
+    .yaml-tag {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      padding: 0.1rem 0.4rem;
+      background: rgba(245,158,11,0.15);
+      border: 1px solid rgba(245,158,11,0.4);
+      border-radius: 3px;
+      color: var(--amber);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .yaml-body { padding: 0.75rem 1rem; }
+    .yaml-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .yaml-row:last-child { border-bottom: none; }
+    .yaml-key {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+    }
+    .yaml-val {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.12rem 0.45rem;
+      border-radius: 3px;
+    }
+    .yv-skills   { color: #3b82f6; background: rgba(59,130,246,0.12); }
+    .yv-agents   { color: #22d3ee; background: rgba(34,211,238,0.12); }
+    .yv-experts  { color: #a855f7; background: rgba(168,85,247,0.12); }
+    .yv-prompts  { color: #10b981; background: rgba(16,185,129,0.12); }
+
+    /* ── LIBRARY SKILL ── */
+    .lib-skill {
+      background: var(--surface-2);
+      border: 2px solid var(--primary);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      text-align: center;
+    }
+    .lib-skill-header {
+      background: var(--primary-dim);
+      border-bottom: 1px solid var(--border-strong);
+      padding: 0.6rem 1rem;
+    }
+    .lib-skill-name {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .lib-skill-body {
+      padding: 0.65rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .lib-op {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      padding: 0.22rem 0.5rem;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+    }
+
+    /* ── DESTINATIONS COL ── */
+    .destinations-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .dest-node {
+      padding: 0.45rem 0.75rem;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      border-left: 2px solid var(--primary);
+    }
+    .dest-path {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--cyan);
+    }
+    .dest-desc {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    /* ── CONSUMERS COL ── */
+    .consumers-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .consumer-card {
+      padding: 0.45rem 0.75rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      border-left: 2px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .consumer-name {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+    .consumer-skills {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    /* border colors for principals */
+    .cc-main      { border-left-color: #3b82f6; }
+    .cc-pipeline  { border-left-color: #22d3ee; }
+    .cc-delivery  { border-left-color: #10b981; }
+    .cc-strategy  { border-left-color: #a855f7; }
+    .cc-architect { border-left-color: #f59e0b; }
+    .cc-engineer  { border-left-color: #f97316; }
+    .cc-librarian { border-left-color: #d946ef; }
+
+    .cn-main      { color: #3b82f6; }
+    .cn-pipeline  { color: #22d3ee; }
+    .cn-delivery  { color: #10b981; }
+    .cn-strategy  { color: #a855f7; }
+    .cn-architect { color: #f59e0b; }
+    .cn-engineer  { color: #f97316; }
+    .cn-librarian { color: #d946ef; }
+
+    /* ── NODE TYPE GRID ── */
+    .node-type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+    }
+    @media (max-width: 900px) { .node-type-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .node-type-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .node-type-card:hover { border-color: var(--border-strong); }
+
+    .ntc-header {
+      padding: 0.85rem 1rem 0.7rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .ntc-icon-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.45rem;
+    }
+    .ntc-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .ntc-type {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .ntc-count {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .ntc-label { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem; }
+
+    .ntc-body { padding: 0.75rem 1rem; }
+    .ntc-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      margin-bottom: 0.3rem;
+      font-family: var(--font-mono);
+    }
+    .ntc-item::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .ntc-more {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      margin-top: 0.45rem;
+      font-family: var(--font-mono);
+    }
+
+    /* type colors */
+    .t-skills   { color: #3b82f6; }
+    .t-agents   { color: #22d3ee; }
+    .t-experts  { color: #a855f7; }
+    .t-prompts  { color: #10b981; }
+    .bd-skills  { background: #3b82f6; }
+    .bd-agents  { background: #22d3ee; }
+    .bd-experts { background: #a855f7; }
+    .bd-prompts { background: #10b981; }
+
+    /* ── SOURCE ORIGIN BREAKDOWN ── */
+    .source-breakdown {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 900px) { .source-breakdown { grid-template-columns: repeat(3,1fr); } }
+
+    .source-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      transition: border-color 0.15s;
+    }
+    .source-card:hover { border-color: var(--border-strong); }
+    .sc-header {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 0.65rem;
+    }
+    .sc-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .sc-name {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .sc-count {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+    .sc-label { font-size: 0.65rem; color: var(--text-muted); }
+    .sc-origin { font-size: 0.62rem; color: var(--text-muted); margin-top: 0.5rem; font-family: var(--font-mono); }
+
+    /* ── INSTALL FLOW ── */
+    .install-flow {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 2rem;
+    }
+    .if-steps {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+    }
+    .if-step {
+      flex: 1;
+      min-width: 160px;
+      position: relative;
+    }
+    .if-step-inner {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      margin: 0 1px;
+    }
+    .if-step-num {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.3rem;
+    }
+    .if-step-title {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+    .if-step-code {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--cyan);
+      background: var(--surface-3);
+      padding: 0.15rem 0.35rem;
+      border-radius: 3px;
+    }
+    .if-arrow {
+      flex-shrink: 0;
+      color: var(--primary);
+      font-size: 1rem;
+      padding: 0 0.25rem;
+    }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    .footer-label {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="site-nav">
+  <a class="nav-back" href="../index.html">← MISSION CONTROL</a>
+  <div class="nav-divider"></div>
+  <span class="nav-title">diagrams / pna-library-architecture</span>
+  <span class="nav-badge">diagram</span>
+</nav>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-eyebrow">principal_librarian · 2026-04-25</div>
+  <h1 class="site-title">P&amp;A Library Architecture</h1>
+  <p class="site-subtitle">
+    How the P&amp;A Skill Library works: from source origins through library.yaml to the library skill sync layer and into the claudeclaw agent fleet.
+  </p>
+  <div class="header-stats">
+    <div class="stat-chip">
+      <span class="stat-n" style="color:var(--primary)">77</span>
+      <span class="stat-l">skills</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-n" style="color:var(--cyan)">7</span>
+      <span class="stat-l">agents</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-n" style="color:var(--purple)">2</span>
+      <span class="stat-l">experts</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-n" style="color:var(--green)">1</span>
+      <span class="stat-l">prompt</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-n" style="color:var(--amber)">6</span>
+      <span class="stat-l">source origins</span>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ── SECTION 1: FLOW DIAGRAM ── -->
+  <section class="section">
+    <div class="sec-label">Architecture</div>
+    <div class="sec-title">Data Flow</div>
+    <p class="sec-desc">End-to-end flow: source origins → library.yaml → library skill → destinations → consumers.</p>
+
+    <div class="flow-wrap">
+      <div class="col-label-row">
+        <div class="col-label">Source Origins</div>
+        <div class="col-label"></div>
+        <div class="col-label">library.yaml</div>
+        <div class="col-label"></div>
+        <div class="col-label">library skill</div>
+        <div class="col-label"></div>
+        <div class="col-label">Consumers</div>
+      </div>
+
+      <div class="flow-diagram">
+
+        <!-- Col 1: Source Origins -->
+        <div class="sources-col">
+          <div class="source-node src-local">
+            <span class="source-dot sd-local"></span>local
+          </div>
+          <div class="source-node src-feynman">
+            <span class="source-dot sd-feynman"></span>feynman
+          </div>
+          <div class="source-node src-aris">
+            <span class="source-dot sd-aris"></span>aris
+          </div>
+          <div class="source-node src-anthropic">
+            <span class="source-dot sd-anthropic"></span>anthropic
+          </div>
+          <div class="source-node src-external">
+            <span class="source-dot sd-external"></span>external
+          </div>
+          <div class="source-node src-ailaunch">
+            <span class="source-dot sd-ailaunch"></span>ai-launchpad
+          </div>
+        </div>
+
+        <!-- Arrow 1 -->
+        <div class="flow-arrow">
+          <span class="arrow-head">→</span>
+        </div>
+
+        <!-- Col 2: library.yaml -->
+        <div class="yaml-center">
+          <div class="yaml-header">
+            <span class="yaml-icon">📄</span>
+            <span class="yaml-filename">library.yaml</span>
+            <span class="yaml-tag">source of truth</span>
+          </div>
+          <div class="yaml-body">
+            <div class="yaml-row">
+              <span class="yaml-key">skills:</span>
+              <span class="yaml-val yv-skills">77</span>
+            </div>
+            <div class="yaml-row">
+              <span class="yaml-key">agents:</span>
+              <span class="yaml-val yv-agents">7</span>
+            </div>
+            <div class="yaml-row">
+              <span class="yaml-key">experts:</span>
+              <span class="yaml-val yv-experts">2</span>
+            </div>
+            <div class="yaml-row">
+              <span class="yaml-key">prompts:</span>
+              <span class="yaml-val yv-prompts">1</span>
+            </div>
+            <div class="yaml-row" style="border-bottom:none;padding-top:0.5rem">
+              <span class="yaml-key" style="font-size:0.58rem;color:var(--text-muted)">repo: afoxnyc3/pna-library</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arrow 2 -->
+        <div class="flow-arrow">
+          <span class="arrow-head">→</span>
+        </div>
+
+        <!-- Col 3: library skill -->
+        <div class="lib-skill">
+          <div class="lib-skill-header">
+            <div class="lib-skill-name">library skill</div>
+          </div>
+          <div class="lib-skill-body">
+            <div class="lib-op">install</div>
+            <div class="lib-op">sync</div>
+            <div class="lib-op">push</div>
+            <div class="lib-op">list / search</div>
+            <div class="lib-op" style="margin-top:0.2rem;color:var(--cyan);border-color:rgba(34,211,238,0.2)">symlink → ~/.claude/skills/</div>
+            <div class="lib-op" style="color:var(--cyan);border-color:rgba(34,211,238,0.2)">symlink → ~/.claudeclaw/agents/</div>
+            <div class="lib-op" style="color:var(--purple);border-color:rgba(168,85,247,0.2)">sync → ~/.pna/experts/</div>
+          </div>
+        </div>
+
+        <!-- Arrow 3 -->
+        <div class="flow-arrow">
+          <span class="arrow-head">→</span>
+        </div>
+
+        <!-- Col 4: Consumers -->
+        <div class="consumers-col">
+          <div class="consumer-card cc-main">
+            <span class="consumer-name cn-main">Clarke (main)</span>
+            <span class="consumer-skills">all global skills · cross-agent</span>
+          </div>
+          <div class="consumer-card cc-pipeline">
+            <span class="consumer-name cn-pipeline">principal_pipeline</span>
+            <span class="consumer-skills">defuddle · deep-research · obsidian-cli</span>
+          </div>
+          <div class="consumer-card cc-delivery">
+            <span class="consumer-name cn-delivery">principal_delivery</span>
+            <span class="consumer-skills">obsidian-cli · file-intel · tldr</span>
+          </div>
+          <div class="consumer-card cc-strategy">
+            <span class="consumer-name cn-strategy">principal_strategy</span>
+            <span class="consumer-skills">deep-research · idea-refine · feynman</span>
+          </div>
+          <div class="consumer-card cc-architect">
+            <span class="consumer-name cn-architect">principal_architect</span>
+            <span class="consumer-skills">spec-driven · planning · api-design</span>
+          </div>
+          <div class="consumer-card cc-engineer">
+            <span class="consumer-name cn-engineer">principal_engineer</span>
+            <span class="consumer-skills">tdd · code-review · debugging</span>
+          </div>
+          <div class="consumer-card cc-librarian">
+            <span class="consumer-name cn-librarian">principal_librarian</span>
+            <span class="consumer-skills">skill-optimizer · meta-optimize · library</span>
+          </div>
+        </div>
+
+      </div><!-- /flow-diagram -->
+    </div><!-- /flow-wrap -->
+  </section>
+
+  <!-- ── SECTION 2: NODE TYPES ── -->
+  <section class="section">
+    <div class="sec-label">Node Types</div>
+    <div class="sec-title">Four Entry Types in library.yaml</div>
+    <p class="sec-desc">Every entry in library.yaml is one of four types. Each type syncs to a different destination path.</p>
+
+    <div class="node-type-grid">
+
+      <!-- Skills -->
+      <div class="node-type-card">
+        <div class="ntc-header">
+          <div class="ntc-icon-row">
+            <span class="ntc-dot bd-skills"></span>
+            <span class="ntc-type t-skills">Skills</span>
+          </div>
+          <div class="ntc-count t-skills">77</div>
+          <div class="ntc-label">Claude Code skill files (SKILL.md)</div>
+        </div>
+        <div class="ntc-body">
+          <div class="ntc-item">dest: ~/.claude/skills/</div>
+          <div class="ntc-item">Research &amp; Analysis — 10</div>
+          <div class="ntc-item">Engineering &amp; Code — 12</div>
+          <div class="ntc-item">Creator &amp; Content — 21</div>
+          <div class="ntc-item">Multi-Agent &amp; Orchestration — 4</div>
+          <div class="ntc-item">Gemini &amp; Google AI — 4</div>
+          <div class="ntc-item">Skill Dev &amp; Optimization — 5</div>
+          <div class="ntc-more">+5 more categories</div>
+        </div>
+      </div>
+
+      <!-- Agents -->
+      <div class="node-type-card">
+        <div class="ntc-header">
+          <div class="ntc-icon-row">
+            <span class="ntc-dot bd-agents"></span>
+            <span class="ntc-type t-agents">Agents</span>
+          </div>
+          <div class="ntc-count t-agents">7</div>
+          <div class="ntc-label">claudeclaw principal CLAUDE.md files</div>
+        </div>
+        <div class="ntc-body">
+          <div class="ntc-item">dest: ~/.claudeclaw/agents/</div>
+          <div class="ntc-item">principal-engineer</div>
+          <div class="ntc-item">principal-architect</div>
+          <div class="ntc-item">principal-strategy</div>
+          <div class="ntc-item">principal-pipeline</div>
+          <div class="ntc-item">principal-delivery</div>
+          <div class="ntc-item">thumbnail-reviewer</div>
+          <div class="ntc-item">youtube-researcher</div>
+        </div>
+      </div>
+
+      <!-- Experts -->
+      <div class="node-type-card">
+        <div class="ntc-header">
+          <div class="ntc-icon-row">
+            <span class="ntc-dot bd-experts"></span>
+            <span class="ntc-type t-experts">Experts</span>
+          </div>
+          <div class="ntc-count t-experts">2</div>
+          <div class="ntc-label">Knowledge bundles (Claude.ai Projects)</div>
+        </div>
+        <div class="ntc-body">
+          <div class="ntc-item">dest: ~/.pna/experts/</div>
+          <div class="ntc-item">claudeclaw-missions</div>
+          <div class="ntc-item" style="padding-left:0.8rem;font-size:0.6rem;color:var(--text-muted)">synced: 2026-04-21</div>
+          <div class="ntc-item">creator-stack</div>
+          <div class="ntc-item" style="padding-left:0.8rem;font-size:0.6rem;color:var(--text-muted)">synced: 2026-04-23</div>
+        </div>
+      </div>
+
+      <!-- Prompts -->
+      <div class="node-type-card">
+        <div class="ntc-header">
+          <div class="ntc-icon-row">
+            <span class="ntc-dot bd-prompts"></span>
+            <span class="ntc-type t-prompts">Prompts</span>
+          </div>
+          <div class="ntc-count t-prompts">1</div>
+          <div class="ntc-label">Claude Code slash commands</div>
+        </div>
+        <div class="ntc-body">
+          <div class="ntc-item">dest: ~/.claude/commands/</div>
+          <div class="ntc-item">wrap</div>
+          <div class="ntc-item" style="padding-left:0.8rem;font-size:0.6rem;color:var(--text-muted)">requires: agent-session-summary</div>
+          <div class="ntc-item" style="margin-top:0.5rem;font-size:0.6rem;color:var(--text-muted)">End-of-session handoff + publish</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SECTION 3: SOURCE ORIGINS ── -->
+  <section class="section">
+    <div class="sec-label">Source Origins</div>
+    <div class="sec-title">Six Skill Provenance Types</div>
+    <p class="sec-desc">Every skill in library.yaml has a source path that reveals its origin. Skills are loaded from wherever they live — local, remote agent projects, or external repos.</p>
+
+    <div class="source-breakdown">
+      <div class="source-card">
+        <div class="sc-header">
+          <span class="sc-dot" style="background:#3b82f6"></span>
+          <span class="sc-name" style="color:#3b82f6">local</span>
+        </div>
+        <div class="sc-count" style="color:#3b82f6">~/.claude/skills/</div>
+        <div class="sc-label">Locally managed, already symlinked</div>
+        <div class="sc-origin">verification-before-completion, systematic-debugging, obsidian-cli, brainstorming…</div>
+      </div>
+
+      <div class="source-card">
+        <div class="sc-header">
+          <span class="sc-dot" style="background:#22d3ee"></span>
+          <span class="sc-name" style="color:#22d3ee">feynman</span>
+        </div>
+        <div class="sc-count" style="color:#22d3ee">~/dev/projects/rnd/</div>
+        <div class="sc-label">feynman researcher agent skills</div>
+        <div class="sc-origin">deep-research, peer-review, paper-writing, session-log, eli5, jobs, watch…</div>
+      </div>
+
+      <div class="source-card">
+        <div class="sc-header">
+          <span class="sc-dot" style="background:#a855f7"></span>
+          <span class="sc-name" style="color:#a855f7">aris</span>
+        </div>
+        <div class="sc-count" style="color:#a855f7">~/dev/projects/rnd/</div>
+        <div class="sc-label">aris research agent skills</div>
+        <div class="sc-origin">novelty-check, research-wiki, research-refine, idea-discovery, auto-review-loop, meta-optimize…</div>
+      </div>
+
+      <div class="source-card">
+        <div class="sc-header">
+          <span class="sc-dot" style="background:#10b981"></span>
+          <span class="sc-name" style="color:#10b981">anthropic</span>
+        </div>
+        <div class="sc-count" style="color:#10b981">~/dev/projects/rnd/</div>
+        <div class="sc-label">Official Anthropic skill patterns</div>
+        <div class="sc-origin">pdf, docx, xlsx, pptx, mcp-builder, claude-api, webapp-testing, doc-coauthoring…</div>
+      </div>
+
+      <div class="source-card">
+        <div class="sc-header">
+          <span class="sc-dot" style="background:#f59e0b"></span>
+          <span class="sc-name" style="color:#f59e0b">external</span>
+        </div>
+        <div class="sc-count" style="color:#f59e0b">~/dev/external/</div>
+        <div class="sc-label">Third-party repos (agent-skills)</div>
+        <div class="sc-origin">idea-refine, spec-driven-development, planning-and-task-breakdown, api-and-interface-design, media-extract…</div>
+      </div>
+
+      <div class="source-card">
+        <div class="sc-header">
+          <span class="sc-dot" style="background:#d946ef"></span>
+          <span class="sc-name" style="color:#d946ef">ai-launchpad</span>
+        </div>
+        <div class="sc-count" style="color:#d946ef">~/dev/external/</div>
+        <div class="sc-label">AI Launchpad creator-stack</div>
+        <div class="sc-origin">write, voice, thumbnail, plan-newsletter, plan-video, nanobanana, youtube-data… (21 skills)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION 4: INSTALL FLOW ── -->
+  <section class="section">
+    <div class="sec-label">Sync Workflow</div>
+    <div class="sec-title">How Skills Land on an Agent</div>
+    <p class="sec-desc">The library skill orchestrates the full install and sync cycle from library.yaml declaration to active symlink.</p>
+
+    <div class="install-flow">
+      <div class="if-steps">
+
+        <div class="if-step">
+          <div class="if-step-inner">
+            <div class="if-step-num">Step 1</div>
+            <div class="if-step-title">Declare in library.yaml</div>
+            <div class="if-step-code">name: + source: + description:</div>
+          </div>
+        </div>
+        <div class="if-arrow">→</div>
+
+        <div class="if-step">
+          <div class="if-step-inner">
+            <div class="if-step-num">Step 2</div>
+            <div class="if-step-title">Push to pna-library</div>
+            <div class="if-step-code">library push</div>
+          </div>
+        </div>
+        <div class="if-arrow">→</div>
+
+        <div class="if-step">
+          <div class="if-step-inner">
+            <div class="if-step-num">Step 3</div>
+            <div class="if-step-title">Install on target agent</div>
+            <div class="if-step-code">library install &lt;name&gt;</div>
+          </div>
+        </div>
+        <div class="if-arrow">→</div>
+
+        <div class="if-step">
+          <div class="if-step-inner">
+            <div class="if-step-num">Step 4</div>
+            <div class="if-step-title">Symlink resolves</div>
+            <div class="if-step-code">~/.claude/skills/name/</div>
+          </div>
+        </div>
+        <div class="if-arrow">→</div>
+
+        <div class="if-step">
+          <div class="if-step-inner">
+            <div class="if-step-num">Step 5</div>
+            <div class="if-step-title">Claude Code loads</div>
+            <div class="if-step-code">system-reminder injects skill</div>
+          </div>
+        </div>
+        <div class="if-arrow">→</div>
+
+        <div class="if-step">
+          <div class="if-step-inner">
+            <div class="if-step-num">Step 6</div>
+            <div class="if-step-title">Librarian optimizes</div>
+            <div class="if-step-code">skill-optimizer loop</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION 5: PRINCIPAL SKILL MANIFESTS ── -->
+  <section class="section">
+    <div class="sec-label">Consumer Manifests</div>
+    <div class="sec-title">Which Agents Load Which Skills</div>
+    <p class="sec-desc">Each principal carries a curated subset of the library. Smaller, sharper manifests keep routing accurate.</p>
+
+    <div class="flow-wrap" style="padding:1.25rem">
+      <table style="width:100%;border-collapse:collapse;font-size:0.72rem">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:0.5rem 0.75rem;font-family:var(--font-mono);font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:400">Agent</th>
+            <th style="text-align:left;padding:0.5rem 0.75rem;font-family:var(--font-mono);font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:400">Domain</th>
+            <th style="text-align:left;padding:0.5rem 0.75rem;font-family:var(--font-mono);font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:400">Key Skills</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:0.55rem 0.75rem"><span style="font-family:var(--font-mono);color:#3b82f6;font-size:0.7rem">Clarke (main)</span></td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-dim)">Chief of Staff</td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-muted);font-family:var(--font-mono);font-size:0.62rem">All global skills · obsidian-cli · dispatching-parallel-agents</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:0.55rem 0.75rem"><span style="font-family:var(--font-mono);color:#22d3ee;font-size:0.7rem">principal_pipeline</span></td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-dim)">Lead gen · Outreach</td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-muted);font-family:var(--font-mono);font-size:0.62rem">defuddle · deep-research · file-intel · obsidian-cli · obsidian-markdown · tldr</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:0.55rem 0.75rem"><span style="font-family:var(--font-mono);color:#10b981;font-size:0.7rem">principal_delivery</span></td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-dim)">Client PM · Milestones</td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-muted);font-family:var(--font-mono);font-size:0.62rem">obsidian-cli · obsidian-markdown · file-intel · defuddle · documentation-and-adrs · tldr</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:0.55rem 0.75rem"><span style="font-family:var(--font-mono);color:#a855f7;font-size:0.7rem">principal_strategy</span></td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-dim)">Offer validation · Market</td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-muted);font-family:var(--font-mono);font-size:0.62rem">deep-research · defuddle · idea-refine · feynman-bridge · obsidian-cli · source-comparison</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:0.55rem 0.75rem"><span style="font-family:var(--font-mono);color:#f59e0b;font-size:0.7rem">principal_architect</span></td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-dim)">Specs · ADRs · Scaffolding</td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-muted);font-family:var(--font-mono);font-size:0.62rem">spec-driven-development · planning-and-task-breakdown · api-and-interface-design · json-canvas · idea-refine</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:0.55rem 0.75rem"><span style="font-family:var(--font-mono);color:#f97316;font-size:0.7rem">principal_engineer</span></td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-dim)">Implementation · Tests · Commits</td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-muted);font-family:var(--font-mono);font-size:0.62rem">tdd · code-review-and-quality · debugging-and-error-recovery · incremental-implementation · audit-typescript</td>
+          </tr>
+          <tr>
+            <td style="padding:0.55rem 0.75rem"><span style="font-family:var(--font-mono);color:#d946ef;font-size:0.7rem">principal_librarian</span></td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-dim)">Skill authorship · Grooming</td>
+            <td style="padding:0.55rem 0.75rem;color:var(--text-muted);font-family:var(--font-mono);font-size:0.62rem">library · skill-creator · writing-skills · skill-optimizer · meta-optimize · verification-before-completion</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer style="border-top:1px solid var(--border);padding:1.25rem 2rem;text-align:center">
+  <span style="font-family:var(--font-mono);font-size:0.62rem;color:var(--text-muted)">
+    Principal &amp; Agent · principal_librarian · 2026-04-25
+  </span>
+</footer>
+
+</body>
+</html>
