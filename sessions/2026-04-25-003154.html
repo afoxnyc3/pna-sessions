@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>main session — 2026-04-24 — P&amp;A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060d1f; --surface: #0d1b35; --surface-2: #111e3d; --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15); --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0; --muted: #94a3b8; --text-muted: #475569;
+      --primary: #3b82f6; --accent: #3b82f6;
+      --code-bg: #0a1628; --tag-bg: #111e3d; --tag-border: rgba(59,130,246,0.15);
+      --link: #93c5fd; --type-color: #22c55e;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 32px 32px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: var(--font-mono); }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: var(--font-mono); margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: var(--font-mono); }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; color: #93c5fd; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-25</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>session</div>
+    <div class="agent-label">main</div>
+    <h1>main session — 2026-04-24</h1>
+    <div class="tags"><span class="tag">main</span><span class="tag">2026-04-24</span><span class="tag">mission-control</span><span class="tag">pwa</span><span class="tag">cloudflare-access</span></div>
+  </div>
+  <article>
+    <h1>Session Summary — main (Clarke) — 2026-04-24</h1>
+
+<p><strong>Agent:</strong> Clarke (main)</p>
+<p><strong>Date:</strong> 2026-04-24</p>
+<p><strong>Session duration:</strong> ~4 hours</p>
+<p><strong>Project(s):</strong> pna-sessions / mission-control, chelsea-piers-itops</p>
+
+<hr>
+
+<h2>Completed</h2>
+
+<ul class="checklist">
+<li><input type="checkbox" disabled checked> Mission Control rebrand — renamed pna-sessions to "Mission Control", updated index.html header, footer, branding (<code>pna-sessions/index.html</code>)</li>
+<li><input type="checkbox" disabled checked> PWA implementation — <code>app.webmanifest</code>, <code>sw.js</code> service worker (cache-first shell, network-first manifest), 192/512px blueprint-aesthetic PNG icons, A2HS install banner (<code>pna-sessions/</code>)</li>
+<li><input type="checkbox" disabled checked> Mobile CSS — scrollable filter bar, responsive artifact rows, sticky frosted header, safe-area padding</li>
+<li><input type="checkbox" disabled checked> vercel.json — correct MIME types for webmanifest, <code>Service-Worker-Allowed</code> header, icon cache headers</li>
+<li><input type="checkbox" disabled checked> Committed + pushed — <code>62a7f77</code> on <code>pna-sessions</code> main → auto-deployed to Vercel</li>
+<li><input type="checkbox" disabled checked> Custom domain — <code>control.pna.agency</code> verified and live on Vercel (mission-control project)</li>
+<li><input type="checkbox" disabled checked> Cloudflare Access — Zero Trust self-hosted application created for <code>control.pna.agency</code>, <code>alex-only</code> Allow policy with OTP auth; confirmed active via curl (302 → CF login gate)</li>
+</ul>
+
+<hr>
+
+<h2>In Progress / Blocked</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Task</th>
+<th>Status</th>
+<th>Blocker / Next action</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>manifest.json not loading after CF Access auth</td>
+<td>known issue</td>
+<td>JS fetch gets redirected by CF Access before CF_Authorization cookie is fully set on first load; resolves after completing OTP login flow</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Key Decisions</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Decision</th>
+<th>Rationale</th>
+<th>Affects</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Use <code>control.pna.agency</code> subdomain</td>
+<td>Shorter than <code>mission-control.pna.agency</code>, no new domain purchase, already on CF</td>
+<td>Mission Control URL</td>
+</tr>
+<tr>
+<td>One-time PIN auth (not Google OAuth)</td>
+<td>Zero config, no Google Cloud OAuth app needed, fast setup</td>
+<td>CF Access login method</td>
+</tr>
+<tr>
+<td><code>app.webmanifest</code> (not <code>manifest.json</code>) for PWA</td>
+<td><code>manifest.json</code> is already used as the artifact registry; naming conflict avoidance</td>
+<td>PWA install, service worker</td>
+</tr>
+<tr>
+<td>Cloudflare Access (not Vercel password protection)</td>
+<td>CF Access sits at DNS proxy layer, free, Google/GitHub OAuth or OTP, no code changes</td>
+<td>Auth layer</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2>Files Changed / Created</h2>
+
+<pre><code class="lang-text">
+pna-sessions/index.html                   modified  (Mission Control rebrand + PWA meta + mobile CSS)
+pna-sessions/app.webmanifest              created   (PWA web app manifest)
+pna-sessions/sw.js                        created   (service worker)
+pna-sessions/icons/icon-192.png           created   (PWA icon)
+pna-sessions/icons/icon-512.png           created   (PWA icon)
+pna-sessions/vercel.json                  modified  (MIME types, SW headers, icon cache)
+</code></pre>
+
+<hr>
+
+<h2>Next Steps / Handoffs</h2>
+
+<ul>
+<li><strong>Alex:</strong> Complete CF Access OTP login flow once in a fresh browser (non-CF-admin session) to confirm full auth gate experience</li>
+<li><strong>Alex:</strong> Add to home screen on iPhone Safari via Share → Add to Home Screen to confirm PWA install</li>
+<li><strong>Alex:</strong> Google Workspace + website setup for <code>pna.agency</code> (on task list)</li>
+<li><strong>Alex:</strong> Chelsea Piers — still blocked on CP providing M365 app registration, Mimecast/Meraki/NinjaOne API keys, Zoho OAuth app</li>
+</ul>
+
+<hr>
+
+<h2>Open Questions</h2>
+
+<ul>
+<li>None blocking</li>
+</ul>
+
+<hr>
+
+<h2>Notes</h2>
+
+<ul>
+<li>CF Access auto-authenticates users who are currently logged into the Cloudflare dashboard in the same browser — this is expected behavior, not a bypass</li>
+<li><code>pna-sessions.vercel.app</code> remains accessible without auth (Vercel default domain not covered by CF Access policy); only <code>control.pna.agency</code> is gated</li>
+<li>Session started as a continuation from previous context (compacted); prior work covered chelsea-piers-itops Phases 1-3, design doc, and Mission Control architecture discussion</li>
+</ul>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>

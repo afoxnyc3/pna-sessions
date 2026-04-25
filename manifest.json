@@ -1,482 +1,496 @@
 [
-    {
-        "type": "diagram",
-        "title": "Clarke Context Architecture \u2014 Current State vs. Proposed",
-        "date": "2026-04-19",
-        "agent": "principal_engineer",
-        "path": "diagrams/clarke-context-architecture.html",
-        "tags": [
-            "memory",
-            "architecture",
-            "context-management"
-        ]
-    },
-    {
-        "type": "session",
-        "title": "Session Status 2026-04-19",
-        "date": "2026-04-19",
-        "agent": "main",
-        "path": "sessions/2026-04-19-session-status-2026-04-19.html",
-        "tags": [
-            "session-summary",
-            "status",
-            "pna-sessions"
-        ]
-    },
-    {
-        "path": "sessions/2026-04-19-191200.html",
-        "date": "2026-04-19",
-        "title": "principal_architect session \u2014 2026-04-19 (backfill)",
-        "agent": "principal_architect",
-        "tags": [
-            "principal_architect",
-            "2026-04-19",
-            "backfill"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-19-214016.html",
-        "date": "2026-04-19",
-        "title": "main session \u2014 2026-04-19",
-        "agent": "main",
-        "tags": [
-            "main",
-            "clarke",
-            "2026-04-19",
-            "research-agents",
-            "sandbox-agent",
-            "wrap-fix"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-20-032746.html",
-        "date": "2026-04-20",
-        "title": "clarke session \u2014 2026-04-19",
-        "agent": "clarke",
-        "tags": [
-            "clarke",
-            "2026-04-19"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-20-032953.html",
-        "date": "2026-04-20",
-        "title": "principal_architect session \u2014 2026-04-19 evening \u2014 The Library operational",
-        "agent": "principal_architect",
-        "tags": [
-            "principal_architect",
-            "2026-04-19",
-            "library",
-            "bootstrap"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-20-033016.html",
-        "date": "2026-04-20",
-        "title": "principal_engineer session \u2014 2026-04-19",
-        "agent": "principal_engineer",
-        "tags": [
-            "principal_engineer",
-            "2026-04-19",
-            "research-cluster"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-20-033046.html",
-        "date": "2026-04-20",
-        "title": "principal_research session \u2014 2026-04-19",
-        "agent": "principal_research",
-        "tags": [
-            "principal_research",
-            "2026-04-19"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-20-124232.html",
-        "date": "2026-04-20",
-        "title": "Extract skills from video/audio \u2014 research_b",
-        "agent": "research_b",
-        "tags": [
-            "research",
-            "research_b",
-            "video-to-skill",
-            "2026-04-20"
-        ],
-        "type": "research"
-    },
-    {
-        "path": "sessions/2026-04-20-124236.html",
-        "date": "2026-04-20",
-        "title": "Extract skills from video/audio \u2014 research_a",
-        "agent": "research_a",
-        "tags": [
-            "research",
-            "research_a",
-            "video-to-skill",
-            "2026-04-20"
-        ],
-        "type": "research"
-    },
-    {
-        "path": "sessions/2026-04-20-124244.html",
-        "date": "2026-04-20",
-        "title": "SWOT Analysis: Extract skills from video/audio (research_a vs research_b)",
-        "agent": "clarke",
-        "tags": [
-            "research",
-            "comparative",
-            "swot",
-            "video-to-skill",
-            "2026-04-20"
-        ],
-        "type": "research"
-    },
-    {
-        "path": "sessions/2026-04-20-142930.html",
-        "date": "2026-04-20",
-        "title": "Post-mortem: Research Agent Tool Failures \u2014 First A/B Run",
-        "agent": "clarke",
-        "tags": [
-            "postmortem",
-            "research-cluster",
-            "exa",
-            "feynman",
-            "launchd",
-            "incident"
-        ],
-        "type": "postmortem"
-    },
-    {
-        "path": "sessions/2026-04-20-155132.html",
-        "date": "2026-04-20",
-        "title": "Research: Video/audio to SKILL.md extraction pipeline (research_b retry)",
-        "agent": "research_b",
-        "tags": [
-            "research",
-            "skills",
-            "video",
-            "transcription",
-            "whisper",
-            "exa",
-            "feynman",
-            "retry"
-        ],
-        "type": "research"
-    },
-    {
-        "path": "sessions/2026-04-20-165004.html",
-        "date": "2026-04-20",
-        "title": "Video/audio \u2192 SKILL.md workflow \u2014 research_a (retry-2, live tools)",
-        "agent": "research_a",
-        "tags": [
-            "research",
-            "research_a",
-            "2026-04-20",
-            "retry-2"
-        ],
-        "type": "research"
-    },
-    {
-        "path": "sessions/2026-04-20-165005.html",
-        "date": "2026-04-20",
-        "title": "Video/audio \u2192 SKILL.md workflow \u2014 research_b (retry-2, live tools)",
-        "agent": "research_b",
-        "tags": [
-            "research",
-            "research_b",
-            "2026-04-20",
-            "retry-2"
-        ],
-        "type": "research"
-    },
-    {
-        "path": "sessions/2026-04-20-165157.html",
-        "date": "2026-04-20",
-        "title": "Comparative Analysis: Video/audio to SKILL.md workflow \u2014 A/B retry-2",
-        "agent": "clarke",
-        "tags": [
-            "research",
-            "comparative",
-            "swot",
-            "2026-04-20",
-            "retry-2"
-        ],
-        "type": "research"
-    },
-    {
-        "path": "sessions/2026-04-20-225217.html",
-        "date": "2026-04-20",
-        "title": "NetSuite MCP OAuth fix \u2014 research_a",
-        "agent": "research_a",
-        "tags": [
-            "research",
-            "research_a",
-            "netsuite",
-            "mcp",
-            "oauth",
-            "2026-04-20"
-        ],
-        "type": "research"
-    },
-    {
-        "path": "sessions/2026-04-20-225218.html",
-        "date": "2026-04-20",
-        "title": "NetSuite MCP OAuth fix \u2014 research_b",
-        "agent": "research_b",
-        "tags": [
-            "research",
-            "research_b",
-            "netsuite",
-            "mcp",
-            "oauth",
-            "2026-04-20"
-        ],
-        "type": "research"
-    },
-    {
-        "path": "sessions/2026-04-20-225403.html",
-        "date": "2026-04-20",
-        "title": "NetSuite MCP OAuth \u2014 Comparative Analysis + Fix",
-        "agent": "clarke",
-        "tags": [
-            "research",
-            "comparative",
-            "netsuite",
-            "mcp",
-            "oauth",
-            "2026-04-20"
-        ],
-        "type": "research"
-    },
-    {
-        "type": "diagram",
-        "title": "Research Cluster Architecture",
-        "date": "2026-04-20",
-        "agent": "main",
-        "path": "diagrams/2026-04-20-research-cluster-architecture.html",
-        "tags": [
-            "research",
-            "architecture",
-            "a-b-test",
-            "agents"
-        ]
-    },
-    {
-        "path": "sessions/2026-04-21-013749.html",
-        "date": "2026-04-21",
-        "title": "principal_architect session \u2014 2026-04-20",
-        "agent": "principal_architect",
-        "tags": [
-            "principal_architect",
-            "2026-04-20"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-22-021249.html",
-        "date": "2026-04-22",
-        "title": "principal_architect session \u2014 2026-04-21",
-        "agent": "principal_architect",
-        "tags": [
-            "principal_architect",
-            "2026-04-21",
-            "agent-expert-kit",
-            "librarian-spinup"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-22-101534.html",
-        "date": "2026-04-22",
-        "title": "principal_librarian session \u2014 2026-04-22",
-        "agent": "principal_librarian",
-        "tags": [
-            "principal_librarian",
-            "2026-04-22",
-            "library",
-            "grooming",
-            "gemini-cluster"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-22-101542.html",
-        "date": "2026-04-22",
-        "title": "clarke session \u2014 2026-04-22",
-        "agent": "main",
-        "tags": [
-            "clarke",
-            "2026-04-22",
-            "chelsea-piers-itops",
-            "pna-library",
-            "architecture"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-22-101630.html",
-        "date": "2026-04-22",
-        "title": "principal_engineer session \u2014 2026-04-22",
-        "agent": "principal_engineer",
-        "tags": [
-            "principal_engineer",
-            "2026-04-22",
-            "agent-expert-kit",
-            "phase-2-readiness"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-22-101639.html",
-        "date": "2026-04-22",
-        "title": "principal_architect session \u2014 2026-04-22",
-        "agent": "principal_architect",
-        "tags": [
-            "principal_architect",
-            "2026-04-22"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-22-101754.html",
-        "date": "2026-04-22",
-        "title": "principal_librarian session \u2014 2026-04-22 (full)",
-        "agent": "principal_librarian",
-        "tags": [
-            "principal_librarian",
-            "2026-04-22",
-            "library",
-            "grooming",
-            "gemini-cluster",
-            "principal-plugin"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-22-101819.html",
-        "date": "2026-04-22",
-        "title": "principal_research session \u2014 2026-04-22",
-        "agent": "principal_research",
-        "tags": [
-            "principal_research",
-            "2026-04-22"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-22-101826.html",
-        "date": "2026-04-22",
-        "title": "principal_delivery session \u2014 2026-04-22",
-        "agent": "principal_delivery",
-        "tags": [
-            "principal_delivery",
-            "2026-04-22",
-            "delivery",
-            "session-summary"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-22-101919.html",
-        "date": "2026-04-22",
-        "title": "principal_strategy session \u2014 2026-04-19",
-        "agent": "principal_strategy",
-        "tags": [
-            "principal_strategy",
-            "2026-04-19",
-            "strategy",
-            "synthesis"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-23-193541.html",
-        "date": "2026-04-23",
-        "title": "main session \u2014 2026-04-23",
-        "agent": "main",
-        "tags": [
-            "main",
-            "2026-04-23",
-            "entra-triage",
-            "pna-project-template"
-        ],
-        "type": "session"
-    },
-    {
-        "path": "sessions/2026-04-23-193551.html",
-        "date": "2026-04-23",
-        "title": "principal_engineer session \u2014 2026-04-23",
-        "agent": "principal_engineer",
-        "tags": [
-            "principal_engineer",
-            "2026-04-23",
-            "agent-expert-kit",
-            "phase-2",
-            "pna-library"
-        ],
-        "type": "session"
-    },
-    {
-        "type": "session",
-        "title": "P&A Skill Library",
-        "date": "2026-04-24",
-        "agent": "principal_librarian",
-        "path": "sessions/2026-04-24-pa-skill-library.html",
-        "tags": [
-            "library",
-            "catalog",
-            "skills",
-            "2026-04-24"
-        ]
-    },
-    {
-        "type": "session",
-        "title": "AEC Data & RAG Pattern Survey (merged best-of-3)",
-        "date": "2026-04-24",
-        "agent": "principal_research",
-        "path": "sessions/2026-04-24-aec-data--rag-pattern-survey-merged-best-of-3.html",
-        "tags": [
-            "aec",
-            "bim",
-            "rag",
-            "research",
-            "best-of-n",
-            "merged"
-        ]
-    },
-    {
-        "type": "design",
-        "title": "Mission 2 Spector Discovery Architecture Probe",
-        "date": "2026-04-24",
-        "agent": "principal_research",
-        "path": "designs/2026-04-24-mission-2-spector-discovery-architecture-probe.html",
-        "tags": [
-            "aec",
-            "spector",
-            "discovery",
-            "mission-brief",
-            "design"
-        ]
-    },
-    {
-        "type": "design",
-        "title": "chelsea-piers-itops \u2014 Design Document",
-        "date": "2026-04-24",
-        "agent": "main",
-        "path": "designs/2026-04-24-chelsea-piers-itops-design.html",
-        "tags": [
-            "chelsea-piers",
-            "it-ops",
-            "claude-cowork",
-            "plugin",
-            "mcp",
-            "design"
-        ]
-    }
+  {
+    "type": "diagram",
+    "title": "Clarke Context Architecture \u2014 Current State vs. Proposed",
+    "date": "2026-04-19",
+    "agent": "principal_engineer",
+    "path": "diagrams/clarke-context-architecture.html",
+    "tags": [
+      "memory",
+      "architecture",
+      "context-management"
+    ]
+  },
+  {
+    "type": "session",
+    "title": "Session Status 2026-04-19",
+    "date": "2026-04-19",
+    "agent": "main",
+    "path": "sessions/2026-04-19-session-status-2026-04-19.html",
+    "tags": [
+      "session-summary",
+      "status",
+      "pna-sessions"
+    ]
+  },
+  {
+    "path": "sessions/2026-04-19-191200.html",
+    "date": "2026-04-19",
+    "title": "principal_architect session \u2014 2026-04-19 (backfill)",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-19",
+      "backfill"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-19-214016.html",
+    "date": "2026-04-19",
+    "title": "main session \u2014 2026-04-19",
+    "agent": "main",
+    "tags": [
+      "main",
+      "clarke",
+      "2026-04-19",
+      "research-agents",
+      "sandbox-agent",
+      "wrap-fix"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-20-032746.html",
+    "date": "2026-04-20",
+    "title": "clarke session \u2014 2026-04-19",
+    "agent": "clarke",
+    "tags": [
+      "clarke",
+      "2026-04-19"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-20-032953.html",
+    "date": "2026-04-20",
+    "title": "principal_architect session \u2014 2026-04-19 evening \u2014 The Library operational",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-19",
+      "library",
+      "bootstrap"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-20-033016.html",
+    "date": "2026-04-20",
+    "title": "principal_engineer session \u2014 2026-04-19",
+    "agent": "principal_engineer",
+    "tags": [
+      "principal_engineer",
+      "2026-04-19",
+      "research-cluster"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-20-033046.html",
+    "date": "2026-04-20",
+    "title": "principal_research session \u2014 2026-04-19",
+    "agent": "principal_research",
+    "tags": [
+      "principal_research",
+      "2026-04-19"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-20-124232.html",
+    "date": "2026-04-20",
+    "title": "Extract skills from video/audio \u2014 research_b",
+    "agent": "research_b",
+    "tags": [
+      "research",
+      "research_b",
+      "video-to-skill",
+      "2026-04-20"
+    ],
+    "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-124236.html",
+    "date": "2026-04-20",
+    "title": "Extract skills from video/audio \u2014 research_a",
+    "agent": "research_a",
+    "tags": [
+      "research",
+      "research_a",
+      "video-to-skill",
+      "2026-04-20"
+    ],
+    "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-124244.html",
+    "date": "2026-04-20",
+    "title": "SWOT Analysis: Extract skills from video/audio (research_a vs research_b)",
+    "agent": "clarke",
+    "tags": [
+      "research",
+      "comparative",
+      "swot",
+      "video-to-skill",
+      "2026-04-20"
+    ],
+    "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-142930.html",
+    "date": "2026-04-20",
+    "title": "Post-mortem: Research Agent Tool Failures \u2014 First A/B Run",
+    "agent": "clarke",
+    "tags": [
+      "postmortem",
+      "research-cluster",
+      "exa",
+      "feynman",
+      "launchd",
+      "incident"
+    ],
+    "type": "postmortem"
+  },
+  {
+    "path": "sessions/2026-04-20-155132.html",
+    "date": "2026-04-20",
+    "title": "Research: Video/audio to SKILL.md extraction pipeline (research_b retry)",
+    "agent": "research_b",
+    "tags": [
+      "research",
+      "skills",
+      "video",
+      "transcription",
+      "whisper",
+      "exa",
+      "feynman",
+      "retry"
+    ],
+    "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-165004.html",
+    "date": "2026-04-20",
+    "title": "Video/audio \u2192 SKILL.md workflow \u2014 research_a (retry-2, live tools)",
+    "agent": "research_a",
+    "tags": [
+      "research",
+      "research_a",
+      "2026-04-20",
+      "retry-2"
+    ],
+    "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-165005.html",
+    "date": "2026-04-20",
+    "title": "Video/audio \u2192 SKILL.md workflow \u2014 research_b (retry-2, live tools)",
+    "agent": "research_b",
+    "tags": [
+      "research",
+      "research_b",
+      "2026-04-20",
+      "retry-2"
+    ],
+    "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-165157.html",
+    "date": "2026-04-20",
+    "title": "Comparative Analysis: Video/audio to SKILL.md workflow \u2014 A/B retry-2",
+    "agent": "clarke",
+    "tags": [
+      "research",
+      "comparative",
+      "swot",
+      "2026-04-20",
+      "retry-2"
+    ],
+    "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-225217.html",
+    "date": "2026-04-20",
+    "title": "NetSuite MCP OAuth fix \u2014 research_a",
+    "agent": "research_a",
+    "tags": [
+      "research",
+      "research_a",
+      "netsuite",
+      "mcp",
+      "oauth",
+      "2026-04-20"
+    ],
+    "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-225218.html",
+    "date": "2026-04-20",
+    "title": "NetSuite MCP OAuth fix \u2014 research_b",
+    "agent": "research_b",
+    "tags": [
+      "research",
+      "research_b",
+      "netsuite",
+      "mcp",
+      "oauth",
+      "2026-04-20"
+    ],
+    "type": "research"
+  },
+  {
+    "path": "sessions/2026-04-20-225403.html",
+    "date": "2026-04-20",
+    "title": "NetSuite MCP OAuth \u2014 Comparative Analysis + Fix",
+    "agent": "clarke",
+    "tags": [
+      "research",
+      "comparative",
+      "netsuite",
+      "mcp",
+      "oauth",
+      "2026-04-20"
+    ],
+    "type": "research"
+  },
+  {
+    "type": "diagram",
+    "title": "Research Cluster Architecture",
+    "date": "2026-04-20",
+    "agent": "main",
+    "path": "diagrams/2026-04-20-research-cluster-architecture.html",
+    "tags": [
+      "research",
+      "architecture",
+      "a-b-test",
+      "agents"
+    ]
+  },
+  {
+    "path": "sessions/2026-04-21-013749.html",
+    "date": "2026-04-21",
+    "title": "principal_architect session \u2014 2026-04-20",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-20"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-021249.html",
+    "date": "2026-04-22",
+    "title": "principal_architect session \u2014 2026-04-21",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-21",
+      "agent-expert-kit",
+      "librarian-spinup"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101534.html",
+    "date": "2026-04-22",
+    "title": "principal_librarian session \u2014 2026-04-22",
+    "agent": "principal_librarian",
+    "tags": [
+      "principal_librarian",
+      "2026-04-22",
+      "library",
+      "grooming",
+      "gemini-cluster"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101542.html",
+    "date": "2026-04-22",
+    "title": "clarke session \u2014 2026-04-22",
+    "agent": "main",
+    "tags": [
+      "clarke",
+      "2026-04-22",
+      "chelsea-piers-itops",
+      "pna-library",
+      "architecture"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101630.html",
+    "date": "2026-04-22",
+    "title": "principal_engineer session \u2014 2026-04-22",
+    "agent": "principal_engineer",
+    "tags": [
+      "principal_engineer",
+      "2026-04-22",
+      "agent-expert-kit",
+      "phase-2-readiness"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101639.html",
+    "date": "2026-04-22",
+    "title": "principal_architect session \u2014 2026-04-22",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-22"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101754.html",
+    "date": "2026-04-22",
+    "title": "principal_librarian session \u2014 2026-04-22 (full)",
+    "agent": "principal_librarian",
+    "tags": [
+      "principal_librarian",
+      "2026-04-22",
+      "library",
+      "grooming",
+      "gemini-cluster",
+      "principal-plugin"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101819.html",
+    "date": "2026-04-22",
+    "title": "principal_research session \u2014 2026-04-22",
+    "agent": "principal_research",
+    "tags": [
+      "principal_research",
+      "2026-04-22"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101826.html",
+    "date": "2026-04-22",
+    "title": "principal_delivery session \u2014 2026-04-22",
+    "agent": "principal_delivery",
+    "tags": [
+      "principal_delivery",
+      "2026-04-22",
+      "delivery",
+      "session-summary"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-22-101919.html",
+    "date": "2026-04-22",
+    "title": "principal_strategy session \u2014 2026-04-19",
+    "agent": "principal_strategy",
+    "tags": [
+      "principal_strategy",
+      "2026-04-19",
+      "strategy",
+      "synthesis"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-23-193541.html",
+    "date": "2026-04-23",
+    "title": "main session \u2014 2026-04-23",
+    "agent": "main",
+    "tags": [
+      "main",
+      "2026-04-23",
+      "entra-triage",
+      "pna-project-template"
+    ],
+    "type": "session"
+  },
+  {
+    "path": "sessions/2026-04-23-193551.html",
+    "date": "2026-04-23",
+    "title": "principal_engineer session \u2014 2026-04-23",
+    "agent": "principal_engineer",
+    "tags": [
+      "principal_engineer",
+      "2026-04-23",
+      "agent-expert-kit",
+      "phase-2",
+      "pna-library"
+    ],
+    "type": "session"
+  },
+  {
+    "type": "session",
+    "title": "P&A Skill Library",
+    "date": "2026-04-24",
+    "agent": "principal_librarian",
+    "path": "sessions/2026-04-24-pa-skill-library.html",
+    "tags": [
+      "library",
+      "catalog",
+      "skills",
+      "2026-04-24"
+    ]
+  },
+  {
+    "type": "session",
+    "title": "AEC Data & RAG Pattern Survey (merged best-of-3)",
+    "date": "2026-04-24",
+    "agent": "principal_research",
+    "path": "sessions/2026-04-24-aec-data--rag-pattern-survey-merged-best-of-3.html",
+    "tags": [
+      "aec",
+      "bim",
+      "rag",
+      "research",
+      "best-of-n",
+      "merged"
+    ]
+  },
+  {
+    "type": "design",
+    "title": "Mission 2 Spector Discovery Architecture Probe",
+    "date": "2026-04-24",
+    "agent": "principal_research",
+    "path": "designs/2026-04-24-mission-2-spector-discovery-architecture-probe.html",
+    "tags": [
+      "aec",
+      "spector",
+      "discovery",
+      "mission-brief",
+      "design"
+    ]
+  },
+  {
+    "type": "design",
+    "title": "chelsea-piers-itops \u2014 Design Document",
+    "date": "2026-04-24",
+    "agent": "main",
+    "path": "designs/2026-04-24-chelsea-piers-itops-design.html",
+    "tags": [
+      "chelsea-piers",
+      "it-ops",
+      "claude-cowork",
+      "plugin",
+      "mcp",
+      "design"
+    ]
+  },
+  {
+    "path": "sessions/2026-04-25-003154.html",
+    "date": "2026-04-25",
+    "title": "main session \u2014 2026-04-24",
+    "agent": "main",
+    "tags": [
+      "main",
+      "2026-04-24",
+      "mission-control",
+      "pwa",
+      "cloudflare-access"
+    ],
+    "type": "session"
+  }
 ]
