@@ -556,5 +556,16 @@
     "agent": "principal_architect",
     "tags": [],
     "type": "design"
+  },
+  {
+    "path": "sessions/2026-04-25-035200.html",
+    "date": "2026-04-25",
+    "title": "principal_architect session \u2014 2026-04-24",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "2026-04-24"
+    ],
+    "type": "session"
   }
 ]
