@@ -598,20 +598,6 @@
     ]
   },
   {
-    "type": "design",
-    "title": "Roadrunner CLI \u2014 Design Pack v1.0",
-    "date": "2026-04-26",
-    "agent": "principal_engineer",
-    "path": "designs/2026-04-26-roadrunner-cli--design-pack-v10.html",
-    "tags": [
-      "roadrunner",
-      "adr",
-      "architecture",
-      "cli",
-      "v1.0"
-    ]
-  },
-  {
     "path": "sessions/2026-04-26-181715.html",
     "date": "2026-04-26",
     "title": "task-board \u2014 unified backlog + kanban spec",
@@ -637,15 +623,5 @@
       "mermaid"
     ],
     "type": "diagram"
-  },
-  {
-    "type": "design",
-    "title": "RR Debug Pack",
-    "date": "2026-04-26",
-    "agent": "principal_engineer",
-    "path": "designs/2026-04-26-rr-debug-pack.html",
-    "tags": [
-      "debug"
-    ]
   }
 ]
