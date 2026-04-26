@@ -624,5 +624,18 @@
       "kanban"
     ],
     "type": "design"
+  },
+  {
+    "path": "sessions/2026-04-26-181720.html",
+    "date": "2026-04-26",
+    "title": "task-board \u2014 architecture + diagrams",
+    "agent": "principal_architect",
+    "tags": [
+      "principal_architect",
+      "task-board",
+      "architecture",
+      "mermaid"
+    ],
+    "type": "diagram"
   }
 ]

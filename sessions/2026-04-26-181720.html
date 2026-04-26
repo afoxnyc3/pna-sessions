@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>task-board — architecture + diagrams — P&amp;A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060d1f; --surface: #0d1b35; --surface-2: #111e3d; --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15); --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0; --muted: #94a3b8; --text-muted: #475569;
+      --primary: #3b82f6; --accent: #3b82f6;
+      --code-bg: #0a1628; --tag-bg: #111e3d; --tag-border: rgba(59,130,246,0.15);
+      --link: #93c5fd; --type-color: #3b82f6;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 32px 32px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: var(--font-mono); }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: var(--font-mono); margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: var(--font-mono); }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; color: #93c5fd; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-26</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>diagram</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>task-board — architecture + diagrams</h1>
+    <div class="tags"><span class="tag">principal_architect</span><span class="tag">task-board</span><span class="tag">architecture</span><span class="tag">mermaid</span></div>
+  </div>
+  <article>
+    <h1>Architecture — task-board</h1>
+
+<h2>System Context</h2>
+
+<pre><code class="lang-mermaid">
+graph TB
+    Alex[Alex / Telegram] --&gt; Clarke[Clarke CoS]
+    Alex --&gt; MC[Mission Control HTML]
+    Clarke --&gt; TaskCLI[task-cli.js]
+    Principals[Principal agents] --&gt; TaskCLI
+    MC --&gt; DashAPI[dashboard.ts /api/tasks]
+    TaskCLI --&gt; DB[(claudeclaw.db&lt;br/&gt;tasks + task_events)]
+    DashAPI --&gt; DB
+    MissionCLI[mission-cli.js] --&gt; DB
+    Scheduler[scheduler.ts&lt;br/&gt;mission lifecycle] --&gt; DB
+    Publish[publish_session.sh] --&gt; DashAPI
+    DB --&gt; ExistingMissions[mission_tasks&lt;br/&gt;+ task_id FK]
+    DB --&gt; ExistingHive[hive_mind&lt;br/&gt;untouched]
+</code></pre>
+
+<h2>Data Model</h2>
+
+<pre><code class="lang-mermaid">
+erDiagram
+    tasks ||--o{ task_events : "has many"
+    tasks ||--o{ mission_tasks : "spawns 0..N"
+    task_events }o--|| tasks : "belongs to"
+    mission_tasks }o--o| tasks : "optionally linked"
+
+    tasks {
+        TEXT id PK
+        TEXT title
+        TEXT body
+        TEXT status
+        TEXT created_by
+        TEXT assigned_agent
+        INTEGER priority
+        INTEGER created_at
+        INTEGER updated_at
+        INTEGER closed_at
+    }
+
+    task_events {
+        INTEGER id PK
+        TEXT task_id FK
+        TEXT event_type
+        TEXT actor
+        TEXT payload
+        INTEGER created_at
+    }
+
+    mission_tasks {
+        TEXT id PK
+        TEXT task_id FK_nullable
+        TEXT title
+        TEXT status
+        TEXT assigned_agent
+    }
+</code></pre>
+
+<h2>Status State Machine</h2>
+
+<pre><code class="lang-mermaid">
+stateDiagram-v2
+    [*] --&gt; captured : task-cli add
+    captured --&gt; todo : activate
+    captured --&gt; done : drop
+    todo --&gt; in_progress : claim (agent or CLI)
+    in_progress --&gt; review : mission_completed (auto) or move
+    in_progress --&gt; blocked : move with reason
+    blocked --&gt; in_progress : unblock
+    review --&gt; done : approve
+    review --&gt; in_progress : kicked back
+    done --&gt; in_progress : reopen (writes event)
+    done --&gt; [*]
+</code></pre>
+
+<h2>Task Lifecycle Sequence</h2>
+
+<pre><code class="lang-mermaid">
+sequenceDiagram
+    participant Alex
+    participant MC as Mission Control
+    participant DB
+    participant Clarke
+    participant Engineer as principal_engineer
+    participant Sessions as pna-sessions
+
+    Alex-&gt;&gt;MC: Submit backlog item via form
+    MC-&gt;&gt;DB: POST /api/tasks {status: captured}
+    DB--&gt;&gt;MC: task_id
+    Alex-&gt;&gt;Clarke: "pick up T-abc and ship it"
+    Clarke-&gt;&gt;DB: task-cli move T-abc todo
+    Clarke-&gt;&gt;DB: mission-cli create --task-id T-abc --agent principal_engineer
+    DB-&gt;&gt;Engineer: mission queued
+    Engineer-&gt;&gt;DB: task-cli claim T-abc (status: in_progress)
+    Engineer-&gt;&gt;DB: task-cli comment T-abc "starting on schema"
+    Engineer-&gt;&gt;Sessions: publish_session.sh --task-id T-abc design.md
+    Sessions-&gt;&gt;DB: POST /api/tasks/T-abc/links {url: ...}
+    Engineer-&gt;&gt;DB: mission completes (auto-moves task to review)
+    Clarke-&gt;&gt;DB: task-cli move T-abc done
+</code></pre>
+
+<h2>File / Module Layout</h2>
+
+<pre><code class="lang-text">
+~/dev/claudeclaw/
+├── src/
+│   ├── tasks.ts                    # NEW: tasks domain (CRUD, transitions, events)
+│   ├── tasks.test.ts               # NEW: unit tests
+│   ├── task-cli.ts                 # NEW: CLI wrapper around tasks.ts
+│   ├── task-cli.test.ts            # NEW: CLI tests
+│   ├── migrations.ts               # MODIFIED: register migration 00NN_tasks
+│   ├── migrations/
+│   │   └── 00NN_tasks_and_events.sql  # NEW: DDL
+│   ├── dashboard.ts                # MODIFIED: /api/tasks routes
+│   ├── dashboard-html.ts           # MODIFIED: Backlog + Kanban sections
+│   ├── scheduler.ts                # MODIFIED: on mission completion, update linked task
+│   └── mission-cli.ts              # MODIFIED: --task-id flag
+├── package.json                    # MODIFIED: dist/task-cli.js binary
+└── tests/                          # vitest
+
+~/dev/projects/pna-sessions/
+└── scripts/
+    └── publish_session.sh          # MODIFIED: --task-id flag, POST back to claudeclaw
+
+~/.claudeclaw/agents/
+├── principal_pipeline/CLAUDE.md    # MODIFIED: + Task discipline section
+├── principal_delivery/CLAUDE.md    # MODIFIED
+├── principal_strategy/CLAUDE.md    # MODIFIED
+├── principal_architect/CLAUDE.md   # MODIFIED
+├── principal_engineer/CLAUDE.md    # MODIFIED
+├── principal_librarian/CLAUDE.md   # MODIFIED
+└── (Clarke prompt in main config)  # MODIFIED
+</code></pre>
+
+<h2>DDL (canonical)</h2>
+
+<pre><code class="lang-sql">
+-- Migration: 00NN_tasks_and_events.sql
+
+CREATE TABLE IF NOT EXISTS tasks (
+  id              TEXT PRIMARY KEY,
+  title           TEXT NOT NULL,
+  body            TEXT NOT NULL DEFAULT '',
+  status          TEXT NOT NULL DEFAULT 'captured'
+                    CHECK (status IN ('captured','todo','in_progress','review','blocked','done')),
+  created_by      TEXT NOT NULL,
+  assigned_agent  TEXT,
+  priority        INTEGER NOT NULL DEFAULT 5,
+  created_at      INTEGER NOT NULL,
+  updated_at      INTEGER NOT NULL,
+  closed_at       INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status, priority DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tasks_agent ON tasks(assigned_agent, status);
+
+CREATE TABLE IF NOT EXISTS task_events (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id     TEXT NOT NULL,
+  event_type  TEXT NOT NULL
+                CHECK (event_type IN
+                  ('created','status_change','claim','comment','artifact','mission_linked','mission_completed','reopened')),
+  actor       TEXT NOT NULL,
+  payload     TEXT NOT NULL DEFAULT '{}',
+  created_at  INTEGER NOT NULL,
+  FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_events_task ON task_events(task_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_task_events_type ON task_events(event_type, created_at DESC);
+
+ALTER TABLE mission_tasks ADD COLUMN task_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_mission_task ON mission_tasks(task_id, status);
+</code></pre>
+
+<h2>API Surface</h2>
+
+<h3>task-cli subcommands</h3>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Command</th>
+<th>Effect</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>add --title T [--body B] [--created-by X] [--priority N]</code></td>
+<td>Insert task, status=captured, write <code>created</code> event</td>
+</tr>
+<tr>
+<td>`list [--status backlog\</td>
+<td>kanban\</td>
+<td><status>] [--agent X] [--json]`</td>
+<td>Read tasks, optionally filtered</td>
+</tr>
+<tr>
+<td><code>show &lt;id&gt;</code></td>
+<td>Print task + event timeline + linked missions</td>
+</tr>
+<tr>
+<td><code>move &lt;id&gt; &lt;status&gt; [--reason R]</code></td>
+<td>Update status, write <code>status_change</code> event</td>
+</tr>
+<tr>
+<td><code>claim &lt;id&gt; --agent X</code></td>
+<td>Set assigned_agent, status→in_progress, write <code>claim</code> event</td>
+</tr>
+<tr>
+<td><code>comment &lt;id&gt; "&lt;text&gt;"</code></td>
+<td>Append <code>comment</code> event</td>
+</tr>
+<tr>
+<td><code>link &lt;id&gt; --artifact &lt;url&gt;</code></td>
+<td>Append <code>artifact</code> event with the URL/path</td>
+</tr>
+<tr>
+<td><code>assign &lt;id&gt; --agent X</code></td>
+<td>Set assigned_agent without status change</td>
+</tr>
+<tr>
+<td><code>reopen &lt;id&gt; [--reason R]</code></td>
+<td>If status=done, set status→in_progress, write <code>reopened</code> event</td>
+</tr>
+</tbody></table></div>
+
+<h3>HTTP API (added to dashboard.ts)</h3>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Method</th>
+<th>Path</th>
+<th>Body</th>
+<th>Returns</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/tasks?status=&amp;agent=&amp;limit=&amp;offset=</code></td>
+<td>—</td>
+<td><code>{ tasks: [...] }</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/tasks/:id</code></td>
+<td>—</td>
+<td><code>{ task, events, missions }</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/tasks</code></td>
+<td><code>{ title, body?, created_by?, priority? }</code></td>
+<td><code>{ id }</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/tasks/:id/move</code></td>
+<td><code>{ status, reason? }</code></td>
+<td><code>{ ok }</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/tasks/:id/claim</code></td>
+<td><code>{ agent }</code></td>
+<td><code>{ ok }</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/tasks/:id/comment</code></td>
+<td><code>{ text }</code></td>
+<td><code>{ ok }</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/tasks/:id/links</code></td>
+<td><code>{ url, kind? }</code></td>
+<td><code>{ ok }</code></td>
+</tr>
+</tbody></table></div>
+
+<p>All write endpoints inherit the dashboard's existing PIN-gated handler middleware.</p>
+
+<h2>Mission Completion Hook</h2>
+
+<p>Pseudocode patch in <code>scheduler.ts</code> where missions transition to <code>completed</code>:</p>
+
+<pre><code class="lang-ts">
+function onMissionCompleted(missionId: string) {
+  const m = db.prepare('SELECT task_id FROM mission_tasks WHERE id = ?').get(missionId);
+  if (!m?.task_id) return;
+  const t = db.prepare('SELECT status FROM tasks WHERE id = ?').get(m.task_id);
+  if (t?.status === 'in_progress') {
+    db.prepare('UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?')
+      .run('review', now(), m.task_id);
+    insertTaskEvent(m.task_id, 'mission_completed', 'system', { mission_id: missionId });
+  } else {
+    insertTaskEvent(m.task_id, 'mission_completed', 'system',
+      { mission_id: missionId, no_move: true, current_status: t?.status });
+  }
+}
+
+// closed_at is set whenever a task transitions to 'done'.
+// The status_change handler is the single owner:
+function moveStatus(taskId: string, next: Status, actor: string, reason?: string) {
+  const now = Date.now();
+  const closedAt = next === 'done' ? now : null;
+  db.prepare(`
+    UPDATE tasks
+    SET status = ?, updated_at = ?, closed_at = COALESCE(?, closed_at)
+    WHERE id = ?
+  `).run(next, now, closedAt, taskId);
+  // If reopening, clear closed_at:
+  if (next !== 'done') {
+    db.prepare('UPDATE tasks SET closed_at = NULL WHERE id = ? AND status != ?')
+      .run(taskId, 'done');
+  }
+  insertTaskEvent(taskId, 'status_change', actor, { to: next, reason });
+}
+</code></pre>
+
+<h2>Mission Control HTML — sections to add</h2>
+
+<pre><code class="lang-mermaid">
+graph LR
+    Nav[Top nav: Missions / Backlog / Kanban / Library / Logs]
+    Backlog[Backlog section&lt;br/&gt;Inline form + paginated list&lt;br/&gt;columns: title, by, age, Activate]
+    Kanban[Kanban section&lt;br/&gt;5 lanes as flex columns&lt;br/&gt;cards with title, agent, age, mission count, move buttons]
+    Filters[Filters: agent dropdown, search input]
+    Nav --&gt; Backlog
+    Nav --&gt; Kanban
+    Filters --&gt; Kanban
+</code></pre>
+
+<h2>Agent CLAUDE.md amendment block (canonical, copy verbatim)</h2>
+
+<pre><code class="lang-markdown">
+## Task Discipline
+
+Every meaningful unit of work has a `tasks` row. Before starting, claim it.
+
+1. **Find or create**: if Clarke or Alex did not give you a task id, create one yourself with
+   `node /Users/alex/dev/claudeclaw/dist/task-cli.js add --title "&lt;short&gt;" --created-by $CLAUDECLAW_AGENT_ID "&lt;one-line description&gt;"`.
+2. **Claim**: `task-cli claim &lt;id&gt; --agent $CLAUDECLAW_AGENT_ID`.
+3. **Narrate**: at every meaningful checkpoint, run `task-cli comment &lt;id&gt; "&lt;what just happened&gt;"`. Aim for 2 to 5 comments per non-trivial task.
+4. **Link artifacts**: every design doc, ADR, diagram, retro, or pna-sessions URL is linked back with `task-cli link &lt;id&gt; --artifact &lt;url-or-path&gt;`. The publish script accepts `--task-id` and does this for you.
+5. **Close out**: when work is shippable, move to `review` (or let mission completion auto-move it). Clarke approves to `done`.
+
+If you skip the ritual, the work is invisible to the rest of the team and to Mission Control. That is the point.
+</code></pre>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
