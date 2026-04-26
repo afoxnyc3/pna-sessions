@@ -12,18 +12,20 @@ cd "$REPO"
 
 echo "$LOG_PREFIX Starting refresh"
 
-# Run all three export scripts (each injects data into its HTML in-place)
+# Run all four export scripts (each injects data into its HTML in-place,
+# except sync_library which writes library_data.json consumed by library.html).
 python3 scripts/export_backlog.py || echo "$LOG_PREFIX WARNING: export_backlog.py failed"
 python3 scripts/export_kanban.py  || echo "$LOG_PREFIX WARNING: export_kanban.py failed"
 python3 scripts/export_trace.py   || echo "$LOG_PREFIX WARNING: export_trace.py failed"
+python3 scripts/sync_library.py   || echo "$LOG_PREFIX WARNING: sync_library.py failed"
 
 # Only commit and push if something actually changed
-if git diff --quiet backlog.html kanban.html tracing.html; then
+if git diff --quiet backlog.html kanban.html tracing.html library_data.json; then
   echo "$LOG_PREFIX No changes — skipping push"
   exit 0
 fi
 
-git add backlog.html kanban.html tracing.html
+git add backlog.html kanban.html tracing.html library_data.json
 git commit -m "data: auto-refresh $(date '+%Y-%m-%d %H:%M')"
 
 # Auth via gh token

@@ -498,126 +498,39 @@ body {
 </div>
 
 <script>
-const DATA = {
-  skills: [
-    // Research & Analysis
-    { name: "deep-research", desc: "Thorough source-heavy research brief with citations. Triggers on \"deep research\", \"investigate\", \"research brief\".", category: "Research & Analysis", source: "feynman" },
-    { name: "source-comparison", desc: "Grounded comparison matrix across tools, papers, frameworks, or approaches.", category: "Research & Analysis", source: "feynman" },
-    { name: "literature-review", desc: "Comprehensive academic literature review with synthesis and consensus mapping.", category: "Research & Analysis", source: "feynman" },
-    { name: "novelty-check", desc: "Verify whether a research idea or approach is genuinely novel against recent literature.", category: "Research & Analysis", source: "aris" },
-    { name: "peer-review", desc: "Simulate tough peer review of any research artifact — paper, draft, proposal, report.", category: "Research & Analysis", source: "feynman" },
-    { name: "idea-refine", desc: "Refine ideas through structured divergent and convergent thinking.", category: "Research & Analysis", source: "external" },
-    { name: "eli5", desc: "Explain research papers or technical concepts in plain English with concrete analogies.", category: "Research & Analysis", source: "feynman" },
-    { name: "alpha-research", desc: "Search, read, and query academic research papers via the alpha CLI.", category: "Research & Analysis", source: "feynman" },
-    { name: "research-wiki", desc: "Persistent research knowledge base. Karpathy LLM Wiki pattern — compile once, keep current.", category: "Research & Analysis", source: "aris" },
-    { name: "research-refine", desc: "Turn a vague research direction into a concrete, problem-anchored implementation-ready plan.", category: "Research & Analysis", source: "aris" },
-    // Web & Content
-    { name: "media-extract", desc: "Universal media extraction and analysis — YouTube, web articles, local video/audio/PDF, pasted transcripts.", category: "Web & Content", source: "external" },
-    { name: "defuddle", desc: "Extract clean markdown from web pages using the Defuddle CLI, removing clutter.", category: "Web & Content", source: "local" },
-    { name: "jobs", desc: "Inspect active background research — running processes, scheduled tasks, pending missions.", category: "Web & Content", source: "feynman" },
-    { name: "watch", desc: "Set up a recurring research watch on a topic, company, or paper area.", category: "Web & Content", source: "feynman" },
-    // Document & File
-    { name: "pdf", desc: "Read, extract, merge, or process PDF files.", category: "Document & File", source: "anthropic" },
-    { name: "docx", desc: "Create, read, edit, or manipulate Word documents (.docx files).", category: "Document & File", source: "anthropic" },
-    { name: "xlsx", desc: "Open, read, edit, or fix spreadsheet files.", category: "Document & File", source: "anthropic" },
-    { name: "pptx", desc: "Create, read, or edit PowerPoint presentation files.", category: "Document & File", source: "anthropic" },
-    // Engineering & Code
-    { name: "spec-driven-development", desc: "Write a spec before coding starts. Use when requirements are unclear or unstated.", category: "Engineering & Code", source: "external" },
-    { name: "planning-and-task-breakdown", desc: "Break a spec into atomic, implementable tasks. Use before writing any code.", category: "Engineering & Code", source: "external" },
-    { name: "api-and-interface-design", desc: "Guides stable API and interface design. Use when designing REST endpoints or module boundaries.", category: "Engineering & Code", source: "external" },
-    { name: "documentation-and-adrs", desc: "Write ADRs and project docs. Use when making architectural decisions or shipping features.", category: "Engineering & Code", source: "external" },
-    { name: "verification-before-completion", desc: "Evidence before assertions. Run before any completion claim, commit, or PR.", category: "Engineering & Code", source: "local" },
-    { name: "systematic-debugging", desc: "Root-cause before fixes. Use when encountering any bug or unexpected behavior.", category: "Engineering & Code", source: "local" },
-    { name: "requesting-code-review", desc: "Dispatch a code reviewer subagent. Use after completing a task or major feature.", category: "Engineering & Code", source: "local" },
-    { name: "receiving-code-review", desc: "Receive and evaluate code review feedback with technical rigor.", category: "Engineering & Code", source: "local" },
-    { name: "finishing-a-development-branch", desc: "Guide completion of development work — verify tests, merge options, cleanup.", category: "Engineering & Code", source: "local" },
-    { name: "mcp-builder", desc: "Scaffold and build MCP (Model Context Protocol) servers. Use when building new MCP integrations.", category: "Engineering & Code", source: "anthropic" },
-    { name: "claude-api", desc: "Build, debug, and optimize Claude API / Anthropic SDK apps with prompt caching.", category: "Engineering & Code", source: "anthropic" },
-    { name: "webapp-testing", desc: "Test local web applications using Playwright. Verify frontend functionality and debug UI.", category: "Engineering & Code", source: "anthropic" },
-    // Gemini & Google AI
-    { name: "gemini-api-dev", desc: "Build apps with Gemini models — multimodal, function calling, structured outputs.", category: "Gemini & Google AI", source: "local" },
-    { name: "gemini-interactions-api", desc: "Call the Gemini API for text generation, chat, streaming, and function calling.", category: "Gemini & Google AI", source: "local" },
-    { name: "gemini-live-api-dev", desc: "Build real-time bidirectional streaming apps with the Gemini Live API.", category: "Gemini & Google AI", source: "local" },
-    { name: "vertex-ai-api-dev", desc: "Use Gemini on Google Cloud Vertex AI. Enterprise environments, Gen AI SDK.", category: "Gemini & Google AI", source: "local" },
-    // Multi-Agent & Orchestration
-    { name: "dispatching-parallel-agents", desc: "Dispatch independent tasks to parallel agents with isolated context windows.", category: "Multi-Agent & Orchestration", source: "local" },
-    { name: "subagent-driven-development", desc: "Execute implementation plans by dispatching fresh subagents per task with two-stage review.", category: "Multi-Agent & Orchestration", source: "local" },
-    { name: "brainstorming", desc: "Explore intent and requirements before any implementation. HARD GATE before building.", category: "Multi-Agent & Orchestration", source: "local" },
-    { name: "writing-plans", desc: "Write comprehensive implementation plans before touching code.", category: "Multi-Agent & Orchestration", source: "local" },
-    // Skill Dev & Optimization
-    { name: "writing-skills", desc: "TDD for skill creation — RED-GREEN-REFACTOR cycle using pressure scenarios and subagent testing.", category: "Skill Dev & Optimization", source: "local" },
-    { name: "skill-creator", desc: "Create new skills, modify and improve existing skills, and measure skill performance.", category: "Skill Dev & Optimization", source: "anthropic" },
-    { name: "skill-optimizer", desc: "Karpathy autoresearch loop for autonomously improving Claude Code skill files.", category: "Skill Dev & Optimization", source: "local" },
-    { name: "meta-optimize", desc: "Analyze skill invocation logs and propose improvements to skills and workflow sequences.", category: "Skill Dev & Optimization", source: "aris" },
-    { name: "autoresearch", desc: "Autonomous experiment loop — try ideas, measure results, keep what works, repeat.", category: "Skill Dev & Optimization", source: "local" },
-    // Session & Memory
-    { name: "agent-session-summary", desc: "Structured end-of-session handoff. Saves to deepagents/sessions/. Use /wrap.", category: "Session & Memory", source: "local" },
-    { name: "session-log", desc: "Write a durable session log capturing completed work, findings, open questions, next steps.", category: "Session & Memory", source: "feynman" },
-    { name: "session-search", desc: "Search past session transcripts and logs to recover prior work and decisions.", category: "Session & Memory", source: "feynman" },
-    // Obsidian & Vault
-    { name: "obsidian-cli", desc: "Interact with Obsidian vaults — read, create, search, manage notes and tasks.", category: "Obsidian & Vault", source: "local" },
-    { name: "obsidian-markdown", desc: "Create and edit Obsidian Flavored Markdown with wikilinks, callouts, and properties.", category: "Obsidian & Vault", source: "local" },
-    { name: "obsidian-bases", desc: "Create and edit Obsidian Bases (.base files) — database-like views of notes.", category: "Obsidian & Vault", source: "local" },
-    // Paper & Academic
-    { name: "paper-writing", desc: "Turn research findings into a polished paper-style draft with sections and citations.", category: "Paper & Academic", source: "feynman" },
-    { name: "paper-code-audit", desc: "Compare a paper's claims against its public codebase. Identify mismatches and gaps.", category: "Paper & Academic", source: "feynman" },
-    { name: "replication", desc: "Plan or execute a replication of a paper's results, claims, or benchmarks.", category: "Paper & Academic", source: "feynman" },
-    { name: "idea-discovery", desc: "Full idea discovery pipeline — survey field, generate ideas, check novelty, refine.", category: "Paper & Academic", source: "aris" },
-    { name: "auto-review-loop", desc: "Autonomous multi-round review and improvement loop until quality threshold is met.", category: "Paper & Academic", source: "aris" },
-    // Client & Business
-    { name: "cerberus", desc: "Deep client research and architecture validation for Principal & Agent engagements.", category: "Client & Business", source: "local" },
-    { name: "doc-coauthoring", desc: "Structured workflow for co-authoring documentation, proposals, and technical specs.", category: "Client & Business", source: "anthropic" },
-    // Creator & Content
-    { name: "write", desc: "Generalized writing skill for any platform and format — newsletters, YouTube scripts, guides, sales pages, social posts.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "voice", desc: "Apply an authentic writing voice to produced content. Personality layer invoked by other writing skills.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "research-creator", desc: "Topic and competitor research for any content type. Identifies content gaps before writing.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "title", desc: "Generate optimized titles, headlines, and subject lines for any content type.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "hook", desc: "Create retention-optimized opening hooks — video intros, newsletter leads, social post openers.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "extract-ideas", desc: "Mine source material for repurposable content angles and ideas.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "thumbnail", desc: "Design high-CTR YouTube thumbnails and cover images. Title-aware, concept-first.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "social-graphic", desc: "Create social media graphics, newsletter headers, blog feature images, OG images, profile banners.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "design-system", desc: "Create, update, or refresh a visual design system or art style guide.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "brand-guidelines", desc: "Define, codify, or update brand identity and connect it to visual design systems.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "nanobanana", desc: "AI image generation and editing using Google Gemini models. Requires GEMINI_API_KEY.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "plan-newsletter", desc: "Plan a complete newsletter issue — research, draft, subject line, opening hook, and social posts.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "optimize-newsletter", desc: "Optimize a newsletter draft or write a full issue from an outline. Polish, improve, rewrite.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "newsletter-visuals", desc: "Audit a newsletter draft for visual opportunities and generate on-brand visual assets.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "newsletter-to-video", desc: "Repurpose a newsletter issue into a YouTube video outline.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "plan-video", desc: "Complete YouTube video plan — title options, thumbnail concepts, hooks, content outline.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "repurpose-video", desc: "Repurpose a completed YouTube video into newsletter issues, social posts, and other formats.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "community-post", desc: "Create YouTube community posts that drive views and audience engagement.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "ideate-notes", desc: "Generate Substack Note ideas by scanning published YouTube videos, newsletters, and Notes.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "write-note", desc: "Create high-engagement Substack Notes. Single short posts or promotion of a newsletter issue.", category: "Creator & Content", source: "ai-launchpad" },
-    { name: "youtube-data", desc: "Retrieve YouTube data via the YouTube Data API — video search, channel details, transcripts, comments, trends.", category: "Creator & Content", source: "ai-launchpad" },
-  ],
-  agents: [
-    { name: "principal-engineer", desc: "Implementation engineer. Takes Architect specs, writes code, runs tests, commits.", initials: "PE" },
-    { name: "principal-architect", desc: "Technical architect. Concept to spec, task breakdown, ADRs, project scaffolding.", initials: "PA" },
-    { name: "principal-strategy", desc: "Offer and product strategist. Market validation, competitor analysis, pricing, go/no-go.", initials: "PS" },
-    { name: "principal-pipeline", desc: "Pipeline and outreach specialist. Lead gen, outreach drafts, CRM hygiene.", initials: "PP" },
-    { name: "principal-delivery", desc: "Client delivery PM. Milestones, timelines, risks, client comms, handoffs.", initials: "PD" },
-    { name: "thumbnail-reviewer", desc: "Expert YouTube thumbnail reviewer. Critiques concepts against proven CTR design requirements.", initials: "TR" },
-    { name: "youtube-researcher", desc: "YouTube research specialist. Uses the YouTube Data API to analyze channels, videos, comments, transcripts.", initials: "YR" },
-  ],
+// DATA is loaded from library_data.json (generated by scripts/sync_library.py
+// from ~/dev/projects/pna-library/library.yaml — the canonical skill catalog).
+// Experts are kept inline for now; they don't live in library.yaml yet.
+let DATA = {
+  skills: [],
+  agents: [],
+  prompts: [],
   experts: [
     { name: "Claudeclaw Missions", domain: "claudeclaw-missions", lastSync: "2026-04-21" },
     { name: "Creator Stack", domain: "creator-stack", lastSync: "2026-04-23" },
-  ]
+  ],
 };
 
 const CATEGORY_COLORS = {
-  "Research & Analysis": "#3b82f6",
-  "Web & Content":       "#22d3ee",
-  "Document & File":     "#a855f7",
-  "Engineering & Code":  "#10b981",
-  "Gemini & Google AI":  "#f59e0b",
-  "Multi-Agent & Orchestration": "#06b6d4",
-  "Skill Dev & Optimization":    "#8b5cf6",
-  "Session & Memory":    "#ec4899",
-  "Obsidian & Vault":    "#84cc16",
-  "Paper & Academic":    "#f97316",
-  "Client & Business":   "#ef4444",
-  "Creator & Content":   "#d946ef",
+  "Research & Analysis":              "#3b82f6",
+  "Web & Content":                    "#22d3ee",
+  "Document & File":                  "#a855f7",
+  "Document & File Operations":       "#a855f7",
+  "Engineering & Code":               "#10b981",
+  "Engineering Practices":            "#14b8a6",
+  "Gemini & Google AI":               "#f59e0b",
+  "Multi-Agent & Orchestration":      "#06b6d4",
+  "Skill Dev & Optimization":         "#8b5cf6",
+  "Skill Development & Optimization": "#8b5cf6",
+  "Session & Memory":                 "#ec4899",
+  "Session & Memory Management":      "#ec4899",
+  "Obsidian & Vault":                 "#84cc16",
+  "Paper & Academic":                 "#f97316",
+  "Principal & Agent Consulting":     "#ef4444",
+  "P&A Publishing":                   "#0ea5e9",
+  "Client & Business":                "#dc2626",
+  "Creator & Content":                "#d946ef",
+  "Uncategorized":                    "#64748b",
 };
 
 const SOURCE_STYLES = {
@@ -626,6 +539,7 @@ const SOURCE_STYLES = {
   "aris":        { label: "ARIS",        color: "#a855f7", bg: "rgba(168,85,247,0.1)" },
   "anthropic":   { label: "ANTHROPIC",   color: "#10b981", bg: "rgba(16,185,129,0.1)" },
   "ai-launchpad":{ label: "AI LAUNCHPAD",color: "#d946ef", bg: "rgba(217,70,239,0.1)" },
+  "principal":   { label: "PRINCIPAL",   color: "#ef4444", bg: "rgba(239,68,68,0.1)" },
   "external":    { label: "EXTERNAL",    color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
 };
 
@@ -820,9 +734,29 @@ document.getElementById('search-input').addEventListener('input', e => {
   }, 150);
 });
 
-// Init
-updateStats();
-render();
+// Init — fetch dynamic catalog from library_data.json, then render.
+// Cache-bust with timestamp so the 30-min refresh job's updates show up
+// without a hard reload.
+fetch('library_data.json?t=' + Date.now())
+  .then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(data => {
+    DATA.skills = data.skills || [];
+    DATA.agents = data.agents || [];
+    DATA.prompts = data.prompts || [];
+    updateStats();
+    render();
+  })
+  .catch(err => {
+    console.error('Failed to load library_data.json:', err);
+    document.getElementById('content').innerHTML =
+      `<div class="empty-state">Failed to load skill catalog. ` +
+      `Run <code>scripts/sync_library.py</code> to regenerate ` +
+      `<code>library_data.json</code>.<br><small>${err.message}</small></div>`;
+    updateStats();
+  });
 </script>
 </body>
 </html>
