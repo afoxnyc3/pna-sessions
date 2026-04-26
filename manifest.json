@@ -637,5 +637,15 @@
       "mermaid"
     ],
     "type": "diagram"
+  },
+  {
+    "type": "design",
+    "title": "RR Debug Pack",
+    "date": "2026-04-26",
+    "agent": "principal_engineer",
+    "path": "designs/2026-04-26-rr-debug-pack.html",
+    "tags": [
+      "debug"
+    ]
   }
 ]
