@@ -651,5 +651,19 @@
       "skill-pack",
       "consulting"
     ]
+  },
+  {
+    "type": "design",
+    "title": "PNA Case Base \u2014 Design Pack",
+    "date": "2026-04-26",
+    "agent": "principal_architect",
+    "path": "designs/2026-04-26-pna-case-base--design-pack.html",
+    "tags": [
+      "case-base",
+      "adr",
+      "architecture",
+      "knowledge-base",
+      "principal-plugin"
+    ]
   }
 ]

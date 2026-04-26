@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_architect" />
+  <meta name="dcterms.date" content="2026-04-26" />
+  <title>PNA Case Base — Design Pack</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PNA Case Base — Design Pack</h1>
+<p class="author">principal_architect</p>
+<p class="date">2026-04-26</p>
+</header>
+<hr />
+<h1 id="readme">README</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/pna-case-base/README.md</code></em></p>
+<h1 id="pna-case-base">pna-case-base</h1>
+<blockquote>
+<p>The Principal &amp; Agent compounding memory. Engagement records and
+extracted patterns.</p>
+</blockquote>
+<h2 id="status">Status</h2>
+<p><code>active</code> — schema scaffolded, awaiting seed records</p>
+<h2 id="what-it-is">What it is</h2>
+<p>A private git repo of P&amp;A engagement records and the patterns
+extracted from them. Every completed engagement writes a case record via
+the <code>engagement-retrospective</code> skill; the
+<code>pattern-recognition</code> skill queries this repo to find analog
+cases for new engagements. Over time, this repo becomes the
+irreplaceable asset: the methodology plugin
+(<code>principal-plugin</code>) is reproducible; the case base is
+not.</p>
+<h2 id="what-it-is-not">What it is not</h2>
+<ul>
+<li>Not a database. Flat markdown, grep-retrievable, git-versioned.</li>
+<li>Not a public repo. Private, always.</li>
+<li>Not a dumping ground for raw client data. Anonymisation is
+mandatory. See <a
+href="./docs/ANONYMIZATION.md">docs/ANONYMIZATION.md</a>.</li>
+<li>Not multi-tenant. One operator, one case base.</li>
+<li>Not a build target. No CI, no tooling, no indexer in v1.</li>
+</ul>
+<h2 id="directory-schema">Directory schema</h2>
+<pre><code>cases/                        # one file per engagement
+  YYYY-MM-&lt;client-slug&gt;.md
+patterns/
+  triggers/                   # signals that indicate a problem archetype
+  architectures/              # solution shapes that worked
+  anti-patterns/              # things that looked good and failed
+  playbooks/                  # multi-step sequences proven across 2+ cases
+templates/                    # empty starting points
+  case.md
+  pattern-trigger.md
+  pattern-architecture.md
+  pattern-anti.md
+  pattern-playbook.md
+TAXONOMY.md                   # enumerations: trigger signals, archetypes, industries
+docs/
+  ANONYMIZATION.md            # mandatory pre-commit policy
+  adr/                        # decisions</code></pre>
+<h2 id="how-writes-happen">How writes happen</h2>
+<p>Only via <code>engagement-retrospective</code>. Never by hand (use
+the skill even for seed records; this keeps frontmatter consistent).</p>
+<h2 id="how-reads-happen">How reads happen</h2>
+<p>Via <code>pattern-recognition</code> (when shipped) or ad-hoc grep /
+<code>obsidian-cli</code>. Markdown + frontmatter is enough for v1
+retrieval.</p>
+<h2 id="pattern-maturity">Pattern maturity</h2>
+<ul>
+<li><code>emerging</code> — 1 citing case. Not yet proven.</li>
+<li><code>confirmed</code> — 2+ citing cases. Safe to lean on.</li>
+<li><code>retired</code> — deprecated by a later pattern or
+disproven.</li>
+</ul>
+<h2 id="key-links">Key links</h2>
+<ul>
+<li>Spec: <a href="./SPEC.md">SPEC.md</a></li>
+<li>Roadmap: <a href="./ROADMAP.md">ROADMAP.md</a></li>
+<li>Tasks: <a href="./TASKS.md">TASKS.md</a></li>
+<li>Architecture: <a href="./ARCHITECTURE.md">ARCHITECTURE.md</a></li>
+<li>Anonymisation policy: <a
+href="./docs/ANONYMIZATION.md">docs/ANONYMIZATION.md</a></li>
+<li>Taxonomy: <a href="./TAXONOMY.md">TAXONOMY.md</a></li>
+<li>Decisions: <a href="./docs/adr/">docs/adr/</a></li>
+</ul>
+<h2 id="consumers">Consumers</h2>
+<ul>
+<li><a
+href="https://github.com/afoxnyc3/principal-plugin"><code>principal-plugin</code></a>
+— skills read and write here.</li>
+</ul>
+<hr />
+<h1 id="spec">SPEC</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/pna-case-base/SPEC.md</code></em></p>
+<h1 id="pna-case-base-spec">pna-case-base — Spec</h1>
+<h2 id="problem">Problem</h2>
+<p>The Principal plugin (<code>principal-plugin</code>) ships two skills
+that require a persistent, queryable store of engagement history:
+<code>engagement-retrospective</code> writes case records at engagement
+close, and <code>pattern-recognition</code> (not yet shipped) reads from
+the store to find analogs for new engagements. Without this store, every
+engagement starts from a blank page and the methodology does not
+compound. The data is sensitive (client-identifying), grows slowly
+(engagement-cadence, not event-cadence), and benefits from
+human-readable diffs.</p>
+<h2 id="proposed-solution">Proposed Solution</h2>
+<p>A private git repo at <code>github.com/afoxnyc3/pna-case-base</code>
+containing flat markdown files with YAML frontmatter. Five directory
+buckets under <code>patterns/</code> (triggers, architectures,
+anti-patterns, playbooks, plus <code>cases/</code> for the
+source-of-truth engagement records). A <code>TAXONOMY.md</code>
+enumerates the categorical dimensions. An <code>ANONYMIZATION.md</code>
+defines the mandatory pre-commit policy. Templates under
+<code>templates/</code> give <code>engagement-retrospective</code> a
+stable shape to write against. No database, no indexer, no CI in v1;
+grep and frontmatter are sufficient retrieval primitives.</p>
+<h2 id="non-goals">Non-Goals</h2>
+<ul>
+<li>Not a database. No SQLite, no Postgres, no vector store in v1.</li>
+<li>Not an indexer. No embeddings, no BM25, no custom retrieval in
+v1.</li>
+<li>Not a public repo. Always private.</li>
+<li>Not multi-tenant. Single operator.</li>
+<li>Not a CI-gated repo. No automated tests in v1; anonymisation is
+enforced at authoring time, not commit time.</li>
+<li>Not a general-purpose note store. Only P&amp;A engagement records
+and derived patterns live here.</li>
+<li>Not the plugin’s install target. Consumers clone this repo alongside
+the plugin; it is not bundled.</li>
+<li>Not a source of public case studies. Anonymised case studies are
+published separately via <code>pna-sessions</code>.</li>
+</ul>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Private repo exists at
+<code>github.com/afoxnyc3/pna-case-base</code> with <code>main</code>
+branch and the directory schema from README.</label></li>
+<li><label><input type="checkbox" /><code>TAXONOMY.md</code> enumerates
+at minimum: trigger_signals, problem_archetypes, solution_archetypes,
+industry_tags, data_sensitivity_levels, engagement_outcomes,
+pattern_maturity. Each of the first four has ≥5 seed values;
+data_sensitivity_levels uses the standard 4-tier classification;
+engagement_outcomes ≥5; pattern_maturity is a closed 3-value set
+(emerging, confirmed, retired).</label></li>
+<li><label><input type="checkbox" /><code>docs/ANONYMIZATION.md</code>
+lists (a) the redaction rules, (b) the prohibited-data list, (c) the
+pre-commit checklist, (d) the breach protocol.</label></li>
+<li><label><input type="checkbox" /><code>templates/case.md</code>
+contains full YAML frontmatter matching the ER model in
+<code>principal-plugin/ARCHITECTURE.md</code> and section stubs for all
+six retro parts (story, job, shape, what worked, what didn’t, what’s
+reusable).</label></li>
+<li><label><input
+type="checkbox" /><code>templates/pattern-trigger.md</code>,
+<code>templates/pattern-architecture.md</code>,
+<code>templates/pattern-anti.md</code>,
+<code>templates/pattern-playbook.md</code> each exist with their type’s
+frontmatter and a body stub.</label></li>
+<li><label><input
+type="checkbox" /><code>docs/adr/0001-flat-markdown-over-database.md</code>
+exists and records the no-DB decision.</label></li>
+<li><label><input
+type="checkbox" /><code>docs/adr/0002-anonymisation-at-authoring-not-commit.md</code>
+exists.</label></li>
+<li><label><input
+type="checkbox" /><code>engagement-retrospective</code> skill can, on a
+dry-run, write a valid case file using <code>templates/case.md</code>
+without manual fixup.</label></li>
+<li><label><input type="checkbox" />At least one seed case (Spector
+Capisce) is committed with all frontmatter fields populated and body
+sections written.</label></li>
+<li><label><input type="checkbox" />Grep test passes:
+<code>grep -r "solution_archetype: skill-pack" cases/</code> returns at
+least one match after seeding.</label></li>
+<li><label><input type="checkbox" />README explicitly names the repo as
+private and points to the anonymisation policy in the first
+screen.</label></li>
+</ul>
+<h2 id="tech-stack">Tech Stack</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Storage</td>
+<td>Flat markdown + YAML frontmatter</td>
+<td>Human-readable, git-diffable, zero runtime dependency. Matches
+Obsidian conventions Alex already uses. Any future indexer can be added
+without a migration.</td>
+</tr>
+<tr>
+<td>Hosting</td>
+<td>Private GitHub repo</td>
+<td>Versioned, backed up, accessible by CLI tools and sub-agents that
+already authenticate to GitHub. No separate auth to manage.</td>
+</tr>
+<tr>
+<td>Retrieval</td>
+<td>grep + frontmatter scan</td>
+<td>Case counts will be in the tens for years. An indexer is premature
+optimisation. grep hits every file in &lt;200ms at expected scale.</td>
+</tr>
+<tr>
+<td>Templates</td>
+<td>Static markdown files under <code>templates/</code></td>
+<td><code>engagement-retrospective</code> copies from here to
+<code>cases/</code> or <code>patterns/</code>. No template engine
+needed.</td>
+</tr>
+<tr>
+<td>Anonymisation</td>
+<td>Pre-commit checklist in <code>ANONYMIZATION.md</code> enforced by
+the skill’s procedure</td>
+<td>Automated PII scrubbing has false negatives. Making anonymisation a
+human gate during the retrospective interview is more reliable than
+regex.</td>
+</tr>
+<tr>
+<td>Versioning</td>
+<td>Git tags per quarter for case-base snapshots</td>
+<td>Cheap point-in-time reference for audits or engagement
+disputes.</td>
+</tr>
+<tr>
+<td>Access control</td>
+<td>GitHub repo permissions (owner only in v1)</td>
+<td>Matches single-operator assumption. Additional collaborators added
+per engagement basis later.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="architecture">Architecture</h2>
+<p>See <code>ARCHITECTURE.md</code>. Data model matches the ER diagram
+in <code>principal-plugin/ARCHITECTURE.md</code>. Cross-repo contract is
+path-based: <code>principal-plugin</code> skills reference
+<code>cases/</code>, <code>patterns/triggers/</code>, etc., via relative
+path assumptions (operator clones both repos side-by-side under
+<code>~/dev/projects/</code>).</p>
+<h2 id="risks">Risks</h2>
+<ol type="1">
+<li><strong>Client data leakage via commit</strong> — client name,
+contact emails, or uniquely identifying metrics pushed to git history.
+Likelihood: M, Impact: H — Mitigation: <code>ANONYMIZATION.md</code>
+policy, mandatory pre-commit checklist in retrospective skill, private
+repo. Residual: git history is forever; a leaked commit requires full
+repo rotation.</li>
+<li><strong>Anonymisation false negatives</strong> — operator believes a
+record is anonymised when it is not. Likelihood: M, Impact: H —
+Mitigation: ANONYMIZATION.md has explicit prohibited-data list;
+second-pass review before commit is part of retrospective skill
+procedure. Accepted residual risk: operator discipline.</li>
+<li><strong>Schema drift between plugin and case base</strong> — plugin
+evolves frontmatter fields, case base doesn’t keep up. Likelihood: M,
+Impact: M — Mitigation: <code>templates/</code> directory is the source
+of truth; <code>engagement-retrospective</code> regenerates templates if
+drift detected; ADR required for any schema change.</li>
+<li><strong>Grep retrieval becomes slow</strong> — thousands of cases
+someday. Likelihood: L (years away), Impact: M — Accepted. Add an
+indexer when counts exceed ~500 cases.</li>
+<li><strong>Pattern over-promotion</strong> — promoting
+<code>emerging</code> to <code>confirmed</code> too eagerly from 1.5
+cases. Likelihood: M, Impact: M — Mitigation: promotion requires two
+distinct case citations, enforced in retrospective skill procedure.</li>
+<li><strong>Repo loss</strong> — laptop dies, GitHub outage during a
+retrospective. Likelihood: L, Impact: H — Mitigation: GitHub is the
+durable copy; local clone is cache. Weekly <code>git push</code> is part
+of the engagement close ritual.</li>
+<li><strong>Scope creep</strong> — case base becomes a dumping ground
+for notes, references, marketing drafts. Likelihood: M, Impact: L —
+Mitigation: Non-Goals list is explicit; README refuses any content that
+is not an engagement artefact or derived pattern.</li>
+</ol>
+<h2 id="open-questions">Open Questions</h2>
+<p>None. Defaults applied: - Private repo (always). - Single operator in
+v1. - No indexer in v1. - Anonymisation enforced at authoring time. -
+Repo lives under <code>~/dev/projects/</code> alongside plugin. -
+Quarterly tags rather than per-case tags.</p>
+<hr />
+<h1 id="architecture-1">ARCHITECTURE</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/pna-case-base/ARCHITECTURE.md</code></em></p>
+<h1 id="architecture-pna-case-base">Architecture — pna-case-base</h1>
+<h2 id="context">Context</h2>
+<pre class="mermaid"><code>graph LR
+    Plugin[principal-plugin skills] --&gt;|writes| CaseBase[(pna-case-base)]
+    Plugin --&gt;|reads| CaseBase
+    Operator[Operator / Alex] --&gt;|invokes skill| Plugin
+    Operator --&gt;|direct ad-hoc grep| CaseBase
+    GH[GitHub private remote] &lt;--&gt;|sync| CaseBase</code></pre>
+<p>The repo is a passive data store. All writes route through
+<code>engagement-retrospective</code>. All reads are either via
+<code>pattern-recognition</code> (when shipped) or direct operator
+grep.</p>
+<h2 id="data-model">Data Model</h2>
+<pre class="mermaid"><code>erDiagram
+    CASE ||--o{ TRIGGER_CITATION : &quot;cites&quot;
+    CASE ||--o{ ARCHITECTURE_CITATION : &quot;cites&quot;
+    CASE ||--o{ ANTI_CITATION : &quot;cites&quot;
+    CASE {
+        string slug
+        string client_anon
+        date started
+        date closed
+        string jtbd_outcome
+        string solution_archetype
+        list tech_stack
+        list problem_archetypes
+        list trigger_signals
+        string industry
+        number engagement_value_usd
+        bool synthetic
+    }
+    TRIGGER_PATTERN ||--o{ TRIGGER_CITATION : &quot;cited-by&quot;
+    ARCHITECTURE_PATTERN ||--o{ ARCHITECTURE_CITATION : &quot;cited-by&quot;
+    ANTI_PATTERN ||--o{ ANTI_CITATION : &quot;cited-by&quot;
+    TRIGGER_PATTERN {
+        string name
+        string signal_text
+        string when_present
+        list cited_cases
+        enum maturity
+    }
+    ARCHITECTURE_PATTERN {
+        string name
+        string shape
+        list required_tech
+        list guardrails
+        list cited_cases
+        enum maturity
+    }
+    ANTI_PATTERN {
+        string name
+        string looks_like
+        string why_it_fails
+        list cited_cases
+    }
+    PLAYBOOK ||--o{ CASE : &quot;grounded-in&quot;
+    PLAYBOOK {
+        string name
+        list steps
+        list cited_cases
+        enum maturity
+    }</code></pre>
+<p>Citations are path references in the case frontmatter (for example
+<code>trigger_patterns: [triggers/budget-objection.md]</code>).
+Validation is prose-level; no foreign-key enforcement.</p>
+<h2 id="retrieval-flow-v1-grep-based">Retrieval Flow (v1:
+grep-based)</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant S as pattern-recognition skill
+    participant FS as Filesystem (pna-case-base)
+    participant R as Ranker (skill-local)
+
+    S-&gt;&gt;FS: grep frontmatter for archetype / industry / signal
+    FS--&gt;&gt;S: candidate file paths
+    S-&gt;&gt;FS: read full case files
+    FS--&gt;&gt;S: case content
+    S-&gt;&gt;R: score similarity vs query (LLM judge)
+    R--&gt;&gt;S: ranked matches
+    S--&gt;&gt;S: return top-3 with citations</code></pre>
+<p>No persistent index. Case count is expected to stay under 100 for v1;
+grep latency is not a concern at that scale.</p>
+<h2 id="directory-responsibilities">Directory Responsibilities</h2>
+<ul>
+<li><strong>cases/</strong> — the source of truth. Each file is one
+engagement. Never edit post-commit except for amendments (record in the
+file itself).</li>
+<li><strong>patterns/triggers/</strong> — observable signals that
+indicate a problem archetype. Short (≤200 words).</li>
+<li><strong>patterns/architectures/</strong> — solution shapes that
+worked. Includes required tech, guardrails, known gotchas.</li>
+<li><strong>patterns/anti-patterns/</strong> — approaches that looked
+right and failed. Single-case fine; duplication strengthens.</li>
+<li><strong>patterns/playbooks/</strong> — multi-step sequences that
+worked across ≥2 cases. Higher bar than single patterns.</li>
+<li><strong>templates/</strong> — starting points copied by
+<code>engagement-retrospective</code>. Treat as the schema source of
+truth.</li>
+<li><strong>docs/</strong> — policies and ADRs. Not consumed by
+skills.</li>
+</ul>
+<h2 id="cross-repo-contract-with-principal-plugin">Cross-Repo Contract
+with principal-plugin</h2>
+<ul>
+<li><code>principal-plugin</code> skills assume the case base lives at
+<code>../pna-case-base/</code> relative to the plugin clone, or at
+<code>$PNA_CASE_BASE</code> if set.</li>
+<li>Skills read templates from <code>templates/</code> and write to
+<code>cases/</code> or <code>patterns/*/</code>.</li>
+<li>Any schema change requires an ADR in <strong>this</strong> repo and
+a corresponding update to the retrospective skill.</li>
+</ul>
+<h2 id="what-this-repo-explicitly-is-not">What this repo explicitly is
+not</h2>
+<ul>
+<li>Not a CI target. No GitHub Actions in v1.</li>
+<li>Not an indexer host. No sqlite-fts, no embeddings, no vector
+store.</li>
+<li>Not a multi-repo federation. One repo; one operator.</li>
+<li>Not a marketing surface. Public case studies live in
+<code>pna-sessions</code>, not here.</li>
+</ul>
+<hr />
+<h1 id="roadmap">ROADMAP</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/pna-case-base/ROADMAP.md</code></em></p>
+<h1 id="roadmap-pna-case-base">Roadmap — pna-case-base</h1>
+<h2 id="phase-0-schema-scaffold-this-commit">Phase 0 — Schema scaffold
+(this commit)</h2>
+<p>Exit: - Repo initialised (private) at
+<code>github.com/afoxnyc3/pna-case-base</code>. - Directory schema
+populated with <code>.gitkeep</code> where empty. - Templates, TAXONOMY,
+ANONYMIZATION policy, ADRs committed.</p>
+<h2 id="phase-1-seed-cases">Phase 1 — Seed cases</h2>
+<p>Goals: - Commit case #1 (Spector Capisce) via
+<code>engagement-retrospective</code> dry-run against the live
+engagement. - Commit 2 synthetic-but-grounded cases covering archetypes
+not in Spector (candidates: voice-agent, email-triage). - Validate that
+retrospective’s writes produce files that match templates with no manual
+fixup.</p>
+<p>Exit criteria: - <code>cases/</code> contains 3 files with full
+frontmatter. - Each case cites ≥1 trigger pattern and ≥1 architecture
+pattern (creating the patterns where needed, tagged
+<code>emerging</code>). - Grep tests in SPEC acceptance pass.</p>
+<p>Dependencies: <code>engagement-retrospective</code> skill in
+<code>principal-plugin</code> stable.</p>
+<h2 id="phase-2-taxonomy-tightening">Phase 2 — Taxonomy tightening</h2>
+<p>Goals: - Review TAXONOMY against 3 seed cases. - Collapse or split
+enumerations that proved too broad or too narrow in practice. - Document
+any taxonomy decisions as new ADRs.</p>
+<p>Exit criteria: - TAXONOMY v1 frozen, tagged as
+<code>taxonomy-v1</code>. - Each seed case re-validated against frozen
+taxonomy. - ADRs written for any collapse/split decisions.</p>
+<p>Dependencies: Phase 1.</p>
+<h2 id="phase-3-pattern-promotion-discipline">Phase 3 — Pattern
+promotion discipline</h2>
+<p>Goals: - Process: every new case forces a pass over existing
+<code>emerging</code> patterns to check for promotion candidates. - At
+least 2 patterns promote from <code>emerging</code> to
+<code>confirmed</code> after 5-6 cases.</p>
+<p>Exit criteria: - Promotion procedure documented in README. - ≥2
+confirmed patterns exist. - <code>engagement-retrospective</code>
+checklist updated to include the promotion pass.</p>
+<p>Dependencies: 5-6 cases in <code>cases/</code>.</p>
+<h2 id="phase-4-retrieval-validation">Phase 4 — Retrieval
+validation</h2>
+<p>Goals: - <code>pattern-recognition</code> skill in
+<code>principal-plugin</code> runs against this repo and returns
+structured matches. - Benchmark: given a seeded problem description,
+retrieval returns the correct case in top-3.</p>
+<p>Exit criteria: - <code>pattern-recognition</code> shipped in plugin
+and integration test passes against this repo. - Retrieval latency
+&lt;1s on the full case base at current size.</p>
+<p>Dependencies: <code>pattern-recognition</code> skill exists (not yet
+built).</p>
+<h2 id="phase-5-indexer-evaluation-deferred">Phase 5 — Indexer
+evaluation (deferred)</h2>
+<p>Trigger: case count &gt;250, or grep latency &gt;2s on common
+queries, whichever first. Goals: - Decide whether to add a lightweight
+index (sqlite FTS, ripgrep cache) or stay with grep. - If adding an
+index, write ADR documenting why grep is no longer sufficient.</p>
+<p>No fixed exit criteria until the trigger condition is met.</p>
+<hr />
+<h1 id="tasks">TASKS</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/pna-case-base/TASKS.md</code></em></p>
+<h1 id="tasks-pna-case-base">Tasks — pna-case-base</h1>
+<p>Atomic tasks. One PR, one acceptance check.</p>
+<h2 id="phase-0-schema-scaffold">Phase 0 — Schema scaffold</h2>
+<h3 id="t0.1-initialise-repo-with-planning-docs-and-schema">T0.1
+Initialise repo with planning docs and schema</h3>
+<ul>
+<li>Labels: setup, phase-0</li>
+<li>Acceptance: private repo exists at
+<code>github.com/afoxnyc3/pna-case-base</code> with README, SPEC,
+ROADMAP, TASKS, ARCHITECTURE, TAXONOMY, docs/ANONYMIZATION.md, 2 ADRs, 5
+templates, and directory schema under <code>cases/</code> and
+<code>patterns/</code> committed.</li>
+<li>Est: XS</li>
+<li>Status: in progress (this PR)</li>
+</ul>
+<h3 id="t0.2-add-.gitkeep-to-empty-bucket-directories">T0.2 Add .gitkeep
+to empty bucket directories</h3>
+<ul>
+<li>Labels: setup, phase-0</li>
+<li>Acceptance: <code>cases/</code>, <code>patterns/triggers/</code>,
+<code>patterns/architectures/</code>,
+<code>patterns/anti-patterns/</code>, <code>patterns/playbooks/</code>
+each contain a <code>.gitkeep</code> so git tracks the empty dirs.</li>
+<li>Est: XS</li>
+<li>Status: completed as part of T0.1</li>
+</ul>
+<h3 id="t0.3-validate-templates-render-by-engagement-retrospective">T0.3
+Validate templates render by engagement-retrospective</h3>
+<ul>
+<li>Labels: phase-0, validation</li>
+<li>Acceptance: dry-run of <code>engagement-retrospective</code> on a
+test client produces a case file under <code>cases/</code> that matches
+<code>templates/case.md</code> with zero manual fixup.</li>
+<li>Est: S</li>
+</ul>
+<h2 id="phase-1-seed-cases-1">Phase 1 — Seed cases</h2>
+<h3 id="t1.1-commit-spector-capisce-case-record">T1.1 Commit Spector
+Capisce case record</h3>
+<ul>
+<li>Labels: phase-1, content</li>
+<li>Acceptance: <code>cases/2026-04-spector-capisce.md</code> exists
+with all frontmatter populated, all six retro sections filled,
+anonymisation checklist passed.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t1.2-commit-synthetic-case-voice-agent-archetype">T1.2 Commit
+synthetic case: voice-agent archetype</h3>
+<ul>
+<li>Labels: phase-1, content</li>
+<li>Acceptance: <code>cases/2026-QX-synth-voice-&lt;slug&gt;.md</code>
+exists with grounded-but-synthetic data, flagged in frontmatter as
+<code>synthetic: true</code>.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t1.3-commit-synthetic-case-email-triage-archetype">T1.3 Commit
+synthetic case: email-triage archetype</h3>
+<ul>
+<li>Labels: phase-1, content</li>
+<li>Acceptance: same as T1.2 for email-triage.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t1.4-extract-emerging-patterns-from-seed-cases">T1.4 Extract
+emerging patterns from seed cases</h3>
+<ul>
+<li>Labels: phase-1, patterns</li>
+<li>Acceptance: for each of the 3 seed cases, ≥1 trigger pattern and ≥1
+architecture pattern exist in the correct <code>patterns/</code> subdir,
+tagged <code>emerging</code>, citing the source case.</li>
+<li>Est: M</li>
+</ul>
+<h2 id="phase-2-taxonomy-tightening-1">Phase 2 — Taxonomy
+tightening</h2>
+<h3 id="t2.1-review-taxonomy-against-seed-cases">T2.1 Review TAXONOMY
+against seed cases</h3>
+<ul>
+<li>Labels: phase-2, taxonomy</li>
+<li>Acceptance: written review in
+<code>docs/taxonomy-review-phase-2.md</code> noting enumerations that
+are too broad, too narrow, or missing. One-line decision per
+enumeration.</li>
+<li>Est: S</li>
+</ul>
+<h3 id="t2.2-collapse-or-split-enumerations-as-decided">T2.2 Collapse or
+split enumerations as decided</h3>
+<ul>
+<li>Labels: phase-2, taxonomy</li>
+<li>Acceptance: TAXONOMY.md updated; seed cases re-validated and their
+frontmatter updated if needed; ADR written for any non-trivial
+change.</li>
+<li>Est: S</li>
+</ul>
+<h3 id="t2.3-tag-taxonomy-v1">T2.3 Tag taxonomy-v1</h3>
+<ul>
+<li>Labels: phase-2, release</li>
+<li>Acceptance: git tag <code>taxonomy-v1</code> exists on main.</li>
+<li>Est: XS</li>
+</ul>
+<h2 id="phase-3-pattern-promotion">Phase 3 — Pattern promotion</h2>
+<h3 id="t3.1-document-pattern-promotion-procedure-in-readme">T3.1
+Document pattern promotion procedure in README</h3>
+<ul>
+<li>Labels: phase-3, docs</li>
+<li>Acceptance: README section defines when <code>emerging</code>
+promotes to <code>confirmed</code> (2 distinct case citations), when
+patterns retire, who decides.</li>
+<li>Est: XS</li>
+</ul>
+<h3
+id="t3.2-add-promotion-pass-to-engagement-retrospective-checklist">T3.2
+Add promotion pass to engagement-retrospective checklist</h3>
+<ul>
+<li>Labels: phase-3, process</li>
+<li>Acceptance: change to
+<code>principal-plugin/skills/engagement-retrospective/SKILL.md</code>
+adds a promotion check step in Part 6.</li>
+<li>Est: S</li>
+</ul>
+<h3 id="t3.3-first-confirmed-pattern">T3.3 First confirmed pattern</h3>
+<ul>
+<li>Labels: phase-3, content</li>
+<li>Acceptance: at least one <code>patterns/*/*.md</code> file has
+<code>maturity: confirmed</code> and cites ≥2 case files.</li>
+<li>Est: depends on engagement cadence</li>
+</ul>
+<h2 id="phase-4-retrieval-validation-1">Phase 4 — Retrieval
+validation</h2>
+<h3
+id="t4.1-integration-test-pattern-recognition-retrieves-from-case-base">T4.1
+Integration test: pattern-recognition retrieves from case base</h3>
+<ul>
+<li>Labels: phase-4, integration</li>
+<li>Acceptance: running <code>pattern-recognition</code> skill with a
+seeded problem description returns the correct case in top-3
+matches.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t4.2-retrieval-latency-benchmark">T4.2 Retrieval latency
+benchmark</h3>
+<ul>
+<li>Labels: phase-4, perf</li>
+<li>Acceptance: grep-based retrieval over full case base returns results
+in &lt;1s; result recorded in
+<code>docs/retrieval-benchmark.md</code>.</li>
+<li>Est: XS</li>
+</ul>
+<hr />
+<h1 id="taxonomy">TAXONOMY</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/pna-case-base/TAXONOMY.md</code></em></p>
+<h1 id="taxonomy-1">Taxonomy</h1>
+<p>Controlled enumerations used in case and pattern frontmatter. Adding
+values is allowed; removing or renaming requires an ADR.</p>
+<h2 id="trigger_signals">trigger_signals</h2>
+<p>Observable phrases or situations that indicate a particular problem
+archetype is in play.</p>
+<ul>
+<li><code>budget-objection</code> — “we don’t have budget for AI right
+now”</li>
+<li><code>tool-sprawl</code> — “we have too many tools” / “our software
+costs are out of control”</li>
+<li><code>compliance-wedge</code> — client raises HIPAA, PCI, SOC 2,
+SHIELD, or GDPR in discovery</li>
+<li><code>manual-routing</code> — humans doing inbox triage or ticket
+routing as a full-time activity</li>
+<li><code>expert-bottleneck</code> — one person holds domain knowledge
+everyone else waits on</li>
+<li><code>after-hours-coverage</code> — phone, chat, or email goes
+unanswered outside business hours</li>
+<li><code>data-lake-orphan</code> — client paid for a data warehouse or
+lake that is unused</li>
+<li><code>failed-ai-pilot</code> — client tried AI before with ChatGPT
+or a vendor and it did not stick</li>
+<li><code>shadow-it</code> — individual team members subscribe to tools
+on personal cards</li>
+</ul>
+<h2 id="problem_archetypes">problem_archetypes</h2>
+<p>The shape of the underlying problem, independent of solution.</p>
+<ul>
+<li><code>knowledge-retrieval</code> — the answer exists; finding it is
+the work</li>
+<li><code>expert-bottleneck</code> — one person gates decisions</li>
+<li><code>manual-classification</code> — sorting, tagging, or routing at
+volume</li>
+<li><code>content-drafting</code> — first-draft generation of emails,
+proposals, reports</li>
+<li><code>repetitive-copy-paste</code> — moving data between systems
+that do not integrate</li>
+<li><code>after-hours-coverage</code> — service must run when humans are
+not available</li>
+<li><code>compliance-reporting</code> — periodic evidence-gathering for
+audits</li>
+<li><code>quality-review</code> — checking human work against a
+rubric</li>
+</ul>
+<h2 id="solution_archetypes">solution_archetypes</h2>
+<p>The shape of what we built.</p>
+<ul>
+<li><code>skill-pack</code> — Claude Code or Claude.ai skills</li>
+<li><code>single-call</code> — one-shot API call, stateless</li>
+<li><code>workflow</code> — deterministic chain of LLM calls</li>
+<li><code>tool-use-workflow</code> — workflow with tool calls, code
+controls the loop</li>
+<li><code>open-agent</code> — model decides trajectory</li>
+<li><code>multi-agent</code> — multiple specialised agents with handoff
+protocol</li>
+<li><code>voice-agent</code> — phone / voice channel</li>
+<li><code>email-agent</code> — inbox-triggered</li>
+<li><code>chat-bot</code> — Slack / Teams channel</li>
+<li><code>scheduled-job</code> — cron-triggered periodic process</li>
+<li><code>local-inference</code> — MLX or equivalent on operator
+hardware, privacy-bound</li>
+</ul>
+<h2 id="industry_tags">industry_tags</h2>
+<p>Client industry. Use broad buckets; verticalise only when a third
+case in the same vertical arrives.</p>
+<ul>
+<li><code>msp</code> — managed service provider</li>
+<li><code>financial-services</code></li>
+<li><code>health</code></li>
+<li><code>legal</code></li>
+<li><code>professional-services</code></li>
+<li><code>ecommerce</code></li>
+<li><code>saas</code></li>
+<li><code>manufacturing</code></li>
+<li><code>education</code></li>
+<li><code>nonprofit</code></li>
+<li><code>other</code></li>
+</ul>
+<h2 id="data_sensitivity_levels">data_sensitivity_levels</h2>
+<p>Classification carried on any data touched by the solution.</p>
+<ul>
+<li><code>public</code> — already in the public domain</li>
+<li><code>internal</code> — company-internal, not
+customer-identifying</li>
+<li><code>confidential</code> — business-sensitive, competitive</li>
+<li><code>restricted</code> — PII, PHI, PCI, or regulated financial
+data</li>
+</ul>
+<h2 id="engagement_outcomes">engagement_outcomes</h2>
+<p>Single word status at close of engagement.</p>
+<ul>
+<li><code>shipped-adopted</code> — delivered and client is actively
+using it</li>
+<li><code>shipped-dormant</code> — delivered but not in daily use</li>
+<li><code>killed-pre-build</code> — scoped and killed before code was
+written</li>
+<li><code>killed-mid-build</code> — started and stopped before
+delivery</li>
+<li><code>client-churned</code> — client ended relationship during or
+shortly after engagement</li>
+<li><code>handed-off</code> — delivered and transferred to client’s
+internal team</li>
+</ul>
+<h2 id="pattern_maturity">pattern_maturity</h2>
+<p>Applies to pattern records, not cases.</p>
+<ul>
+<li><code>emerging</code> — 1 citing case</li>
+<li><code>confirmed</code> — ≥2 citing cases from distinct
+engagements</li>
+<li><code>retired</code> — superseded or disproven; keep for history, do
+not cite</li>
+</ul>
+<hr />
+<h1 id="anonymization">Anonymization</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/pna-case-base/docs/ANONYMIZATION.md</code></em></p>
+<h1 id="anonymisation-policy">Anonymisation Policy</h1>
+<p>Non-negotiable. Every file committed to this repo passes this
+checklist. A single leaked commit requires repo rotation; git history is
+forever.</p>
+<h2 id="redaction-rules">Redaction rules</h2>
+<p>Before committing any case file, replace the following with
+pseudonymous or categorical substitutes:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Raw</th>
+<th>Replace with</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Client legal name</td>
+<td>Pseudonym matching <code>client_anon</code> in frontmatter
+(e.g. “NorthMSP-01”)</td>
+</tr>
+<tr>
+<td>Employee names</td>
+<td>Role only (e.g. “CFO”, “Lead Engineer”, “Ops Manager”)</td>
+</tr>
+<tr>
+<td>Email addresses</td>
+<td>Redacted or categorical (“info@client” → “contact-email”)</td>
+</tr>
+<tr>
+<td>Phone numbers</td>
+<td>Redacted</td>
+</tr>
+<tr>
+<td>Specific dollar amounts ≥ $50k</td>
+<td>Round to nearest $10k and label as approximate</td>
+</tr>
+<tr>
+<td>Customer lists, counts &lt; 50</td>
+<td>Redact; use industry bracket instead</td>
+</tr>
+<tr>
+<td>Proprietary product names owned by the client</td>
+<td>Generic category name</td>
+</tr>
+<tr>
+<td>Physical addresses</td>
+<td>Redact; region only if relevant</td>
+</tr>
+<tr>
+<td>Internal project codenames</td>
+<td>Redact</td>
+</tr>
+<tr>
+<td>Contract numbers, invoice numbers</td>
+<td>Redact</td>
+</tr>
+</tbody>
+</table>
+<p>Dollar amounts between $10k and $50k stay as rounded figures; under
+$10k is fine verbatim.</p>
+<h2 id="prohibited-data-never-commit-even-redacted">Prohibited data
+(never commit, even redacted)</h2>
+<ul>
+<li>Authentication credentials (API keys, passwords, tokens) — treat as
+incident if encountered.</li>
+<li>PHI (health) or PCI (cardholder) data of any form.</li>
+<li>SSNs, EINs, tax IDs.</li>
+<li>Security findings that name an unpatched exploitable vulnerability
+on a client system.</li>
+<li>Anything the client explicitly marked confidential in writing.</li>
+</ul>
+<p>If a record’s content cannot be written without including prohibited
+data, <strong>do not write the record</strong>. Capture the lesson as a
+pattern fragment instead, with no case attribution.</p>
+<h2 id="pre-commit-checklist">Pre-commit checklist</h2>
+<p>Ran as part of <code>engagement-retrospective</code> before file
+commit:</p>
+<ol type="1">
+<li><label><input type="checkbox" />Client legal name replaced with
+pseudonym in every occurrence.</label></li>
+<li><label><input type="checkbox" />No employee names present (grep for
+common first-name patterns).</label></li>
+<li><label><input type="checkbox" />No email addresses or phone
+numbers.</label></li>
+<li><label><input type="checkbox" />Dollar amounts meet the rounding
+rule.</label></li>
+<li><label><input type="checkbox" />Customer identifiers categorised,
+not counted exactly.</label></li>
+<li><label><input type="checkbox" />No prohibited data
+present.</label></li>
+<li><label><input type="checkbox" />Frontmatter <code>client_anon</code>
+field set and matches the body.</label></li>
+<li><label><input type="checkbox" />Second pass by a different pair of
+eyes if the engagement was high-profile (operator option, not always
+triggered).</label></li>
+<li><label><input type="checkbox" /><code>git diff</code> previewed
+immediately before commit.</label></li>
+</ol>
+<h2 id="breach-protocol">Breach protocol</h2>
+<p>If a commit is made that includes prohibited or insufficiently
+anonymised data:</p>
+<ol type="1">
+<li>Stop work. Do not push if the push has not yet happened.</li>
+<li>If already pushed: <code>git log</code> the exposed commit, note the
+SHA, and <strong>escalate to Alex immediately</strong>. Do not attempt a
+force-push rewrite alone.</li>
+<li>Full repo rotation is the default remediation: create a fresh
+private repo, copy sanitised content, delete the old repo via GitHub UI
+(not just archive).</li>
+<li>Record the incident in
+<code>docs/incidents/YYYY-MM-DD-&lt;slug&gt;.md</code> with root cause,
+scope, and process change.</li>
+</ol>
+<h2
+id="why-anonymisation-happens-at-authoring-time-not-at-commit-time">Why
+anonymisation happens at authoring time, not at commit time</h2>
+<p>Automated PII regex scans have false negatives (unusual names, non-US
+phone formats, contextual identifiers like “their biggest client is X”).
+A human pass during retrospective catches contextual identifiers regex
+cannot. ADR-0002 records this trade-off. The checklist above is the
+compensating control.</p>
+<hr />
+<h1 id="adr-0001-flat-markdown-over-database">ADR-0001 Flat Markdown
+over Database</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/pna-case-base/docs/adr/0001-flat-markdown-over-database.md</code></em></p>
+<h1 id="adr-0001-flat-markdown-over-a-database">ADR-0001: Flat markdown
+over a database</h1>
+<ul>
+<li>Status: accepted</li>
+<li>Date: 2026-04-21</li>
+<li>Deciders: Principal Architect</li>
+</ul>
+<h2 id="context-1">Context</h2>
+<p>The case base stores engagement records and extracted patterns. Data
+volume is engagement-cadence (tens of records per year), not
+event-cadence. Consumers are Claude skills and ad-hoc operator grep.
+Human-readable diffs matter; the operator regularly reviews cases by
+eye.</p>
+<h2 id="decision">Decision</h2>
+<p>Flat markdown files with YAML frontmatter, hosted in a private git
+repo. No database, no indexer, no build step in v1. Retrieval uses grep
+and frontmatter scan.</p>
+<h2 id="alternatives-considered">Alternatives Considered</h2>
+<ul>
+<li><strong>SQLite + FTS5</strong>. Would give fast full-text retrieval
+and structured queries. Adds a runtime dependency, a schema migration
+story, and loses git-diffability. Premature optimisation at the expected
+scale (&lt;100 records for v1). Rejected.</li>
+<li><strong>Postgres + pgvector</strong>. Full-featured store with
+embedding retrieval. Adds hosting cost, auth surface, and a backup
+story. Massively over-scoped for a single-operator case base.
+Rejected.</li>
+<li><strong>Obsidian vault folder</strong>. Operator already uses
+Obsidian. Would give good local ergonomics but couples the store to one
+machine; no native git versioning; harder to cite from sub-agents.
+Rejected.</li>
+<li><strong>Notion / Airtable</strong>. Vendor lock-in, no offline
+access, poor fit for skill consumption. Rejected.</li>
+</ul>
+<h2 id="consequences">Consequences</h2>
+<p>Easier: - Zero infra. <code>git clone</code> is the install. - Diffs
+are meaningful; reviewing changes is a normal git workflow. - Sub-agents
+(architect, librarian, engineer) can read by path without any new
+integration. - Anonymisation review happens in a plain editor, not a DB
+UI.</p>
+<p>Harder: - No structured queries.
+<code>SELECT * WHERE industry = 'msp'</code> becomes a grep pattern. -
+No foreign-key enforcement between cases and patterns; citations are
+prose-validated. - Retrieval cost scales linearly; trigger in ROADMAP
+Phase 5 flips to an indexer if needed.</p>
+<hr />
+<h1 id="adr-0002-anonymisation-at-authoring-not-commit">ADR-0002
+Anonymisation at Authoring Not Commit</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/pna-case-base/docs/adr/0002-anonymisation-at-authoring-not-commit.md</code></em></p>
+<h1
+id="adr-0002-anonymisation-enforced-at-authoring-time-not-commit-time">ADR-0002:
+Anonymisation enforced at authoring time, not commit time</h1>
+<ul>
+<li>Status: accepted</li>
+<li>Date: 2026-04-21</li>
+<li>Deciders: Principal Architect</li>
+</ul>
+<h2 id="context-2">Context</h2>
+<p>Case records contain client-identifying information that must be
+removed before commit. The options for enforcement are: (a) automated
+pre-commit hook with regex-based PII detection, (b) CI job that fails
+the build on unexpected patterns, (c) a human checklist enforced by the
+skill that authors the file.</p>
+<h2 id="decision-1">Decision</h2>
+<p>Enforce anonymisation at authoring time via a mandatory checklist in
+<code>docs/ANONYMIZATION.md</code>. The
+<code>engagement-retrospective</code> skill runs this checklist before
+emitting the final commit. No automated regex gate; no CI.</p>
+<h2 id="alternatives-considered-1">Alternatives Considered</h2>
+<ul>
+<li><strong>Pre-commit regex hook</strong>. Catches email addresses,
+phone numbers, common PII. Fast, cheap. Fails on non-US phone formats,
+unusual name spellings, and contextual identifiers (“their biggest
+competitor is X”). False negatives would create a misleading sense of
+safety. Rejected as a primary control; can be added later as a
+belt-and-braces layer.</li>
+<li><strong>CI PII scanner</strong>. Higher quality than simple regex
+(e.g. Presidio, gitleaks). Still has false negatives on contextual
+identifiers. Adds a required-checks gate on a single-operator repo,
+which is friction without much benefit. Rejected for v1.</li>
+<li><strong>Post-commit periodic scan</strong>. Reviewer sweeps the repo
+monthly looking for leaks. Too late; git history is already permanent.
+Rejected.</li>
+</ul>
+<h2 id="consequences-1">Consequences</h2>
+<p>Easier: - Anonymisation happens while the record is still being
+edited; fixes are cheap. - Contextual identifiers (client sentence
+patterns, named competitors) get caught by human judgement, which regex
+misses. - Skill owns the policy; updating the policy updates the skill
+and the checklist in one place.</p>
+<p>Harder: - Single point of failure is operator discipline. If the
+checklist is skipped, there is no second line of defence. - No automated
+record of which files passed the check. Mitigation:
+<code>anonymisation_checked: true</code> flag in case frontmatter; skill
+refuses to write the file until the flag flips. - Reversible leaks
+require repo rotation, not history rewrite. Cost is high but
+predictable.</p>
+<h2 id="follow-up-trigger">Follow-up trigger</h2>
+<p>If the case base grows past 50 records or a second operator is added,
+revisit this decision. Automated gates become higher-value at that
+point.</p>
+</body>
+</html>
