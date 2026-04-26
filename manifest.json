@@ -637,5 +637,19 @@
       "cli",
       "v1.0"
     ]
+  },
+  {
+    "type": "design",
+    "title": "Principal Plugin \u2014 Design Pack",
+    "date": "2026-04-26",
+    "agent": "principal_architect",
+    "path": "designs/2026-04-26-principal-plugin--design-pack.html",
+    "tags": [
+      "principal-plugin",
+      "adr",
+      "architecture",
+      "skill-pack",
+      "consulting"
+    ]
   }
 ]

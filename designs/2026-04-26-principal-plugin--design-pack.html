@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_architect" />
+  <meta name="dcterms.date" content="2026-04-26" />
+  <title>Principal Plugin — Design Pack</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Principal Plugin — Design Pack</h1>
+<p class="author">principal_architect</p>
+<p class="date">2026-04-26</p>
+</header>
+<hr />
+<h1 id="readme">README</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/README.md</code></em></p>
+<h1 id="principal-plugin">principal-plugin</h1>
+<blockquote>
+<p>The Principal &amp; Agent consulting methodology, encoded as a Claude
+skills plugin.</p>
+</blockquote>
+<h2 id="status">Status</h2>
+<p><code>active</code> — MVP-5 shipped, v1 build in progress (12 skills
+remaining)</p>
+<h2 id="what-it-is">What it is</h2>
+<p>A composable Claude skills plugin that runs an end-to-end AI
+consulting engagement: wedge (SaaS audit), discovery, design,
+governance, delivery, and retrospective. Five skills are
+production-ready; twelve are backlog. Each engagement reads from and
+writes to a separate <code>pna-case-base</code> repo that compounds
+pattern library across engagements.</p>
+<h2 id="what-it-is-not">What it is not</h2>
+<ul>
+<li>Not a hosted application. Deployment surface is Claude Code /
+Claude.ai, installed via plugin or skill copy.</li>
+<li>Not a customer-facing agent. Consumer is the operator (Alex) running
+the engagement.</li>
+<li>Not a replacement for judgement. Skills enforce sequence and quality
+bar; they do not replace the consultant.</li>
+<li>Not a multi-tenant product in v1. Personal operator tooling first;
+productisation is a later, separate decision.</li>
+</ul>
+<h2 id="quick-start">Quick start</h2>
+<pre class="bash"><code># Install skills into Claude Code
+cp -r skills/* ~/.claude/skills/
+# Or use the P&amp;A library system
+library add principal-plugin</code></pre>
+<h2 id="lifecycle">Lifecycle</h2>
+<p>Skills fire in phase order. Skipping phases breaks the artefact
+chain.</p>
+<pre><code>PHASE 0 WEDGE      → saas-decommission
+PHASE 1 DISCOVERY  → opportunity-discovery → jtbd-discovery → data-readiness-5c
+PHASE 2 DESIGN     → problem-decomposition → pattern-recognition → systems-thinking
+                   → impact-effort-matrix → agentic-workflow-solutioning
+PHASE 3 GOVERN     → threat-model → blast-radius → compliance-scan → adoption-risk
+PHASE 4 DELIVER    → live-agent-prototype → roi-calculator → ai-usage-policy
+                   → engagement-retrospective</code></pre>
+<p>Bold = shipped in MVP-5.</p>
+<h2 id="key-links">Key links</h2>
+<ul>
+<li>Spec: <a href="./SPEC.md">SPEC.md</a></li>
+<li>Roadmap: <a href="./ROADMAP.md">ROADMAP.md</a></li>
+<li>Tasks: <a href="./TASKS.md">TASKS.md</a></li>
+<li>Architecture: <a href="./ARCHITECTURE.md">ARCHITECTURE.md</a></li>
+<li>Decisions: <a href="./docs/adr/">docs/adr/</a></li>
+<li>Plugin CLAUDE.md: <a href="./CLAUDE.md">CLAUDE.md</a></li>
+</ul>
+<h2 id="dependencies">Dependencies</h2>
+<ul>
+<li><code>pna-case-base</code> — separate repo. Blocking dependency for
+<code>engagement-retrospective</code> and
+<code>pattern-recognition</code>. Not yet created.</li>
+<li><code>pna-library</code> — skill distribution system (exists).</li>
+<li>Claude Code ≥ skill-pack-compatible version.</li>
+</ul>
+<hr />
+<h1 id="spec">SPEC</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/SPEC.md</code></em></p>
+<h1 id="principal-plugin-spec">principal-plugin — Spec</h1>
+<h2 id="problem">Problem</h2>
+<p>P&amp;A engagements today are manually reproduced each time. Every
+new client conversation starts from a blank page, and the methodology
+lives only in Alex’s head. Without encoded methodology, engagements take
+longer to scope, vary in quality, cannot be delegated to sub-agents, and
+do not compound across clients. Competitors with similar AI-consulting
+pitches are entering the market; P&amp;A needs a defensible repeatable
+delivery asset.</p>
+<h2 id="proposed-solution">Proposed Solution</h2>
+<p>Package the full P&amp;A engagement lifecycle as a Claude skills
+plugin (<code>principal-plugin</code>), with seventeen skills spanning
+five phases (Wedge, Discovery, Design, Govern, Deliver). Each skill
+ships as a versioned <code>SKILL.md</code> with a pushy description,
+inputs, procedure, output template, failure modes, and hand-off to the
+next skill. A companion repo (<code>pna-case-base</code>) stores
+anonymised engagement records and extracted patterns;
+<code>engagement-retrospective</code> writes to it,
+<code>pattern-recognition</code> reads from it, and it becomes the
+compounding asset over time. Distribution uses the existing
+<code>pna-library</code> system and symlinks into
+<code>~/.claude/skills/</code>.</p>
+<h2 id="non-goals">Non-Goals</h2>
+<ul>
+<li>Not building a hosted SaaS product. v1 is operator-only
+tooling.</li>
+<li>Not replacing human consultant judgement. Skills enforce sequence
+and quality bar; they do not auto-decide.</li>
+<li>Not integrating directly with external CRMs, calendars, or invoicing
+systems in v1.</li>
+<li>Not supporting multi-tenant use. Single operator, single case
+base.</li>
+<li>Not shipping fine-tuned models or custom training. Skills use stock
+Claude models only.</li>
+<li>Not adding voice or chat front-ends. Runtime is Claude Code /
+Claude.ai.</li>
+<li>Not encoding industry-specific variants (health, finance, legal) in
+v1. Generic methodology first; vertical packs later.</li>
+<li>Not a replacement for <code>pna-library</code>. This plugin is
+consumed via library; it does not replicate library’s distribution
+logic.</li>
+</ul>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />All seventeen skills exist at
+<code>skills/&lt;name&gt;/SKILL.md</code>, each validated by
+<code>writing-skills</code> skill linter without errors.</label></li>
+<li><label><input type="checkbox" />Each skill has an
+<code>evals/</code> fixture with ≥3 binary assertions and ≥1 reference
+input.</label></li>
+<li><label><input type="checkbox" />Each skill has a reference output in
+<code>examples/</code> derived from a real or anonymised
+engagement.</label></li>
+<li><label><input type="checkbox" />Each skill’s frontmatter
+<code>description</code> field passes the “pushy” test: starts with
+“ALWAYS use this skill when…” or equivalent, and lists ≥4 trigger
+signals.</label></li>
+<li><label><input type="checkbox" />Lifecycle sequence enforced: each
+skill’s <code>Hand-off</code> section names the next skill; critic-pass
+verifies the chain has no orphans or cycles.</label></li>
+<li><label><input type="checkbox" /><code>pna-case-base</code> repo
+exists at <code>github.com/afoxnyc3/pna-case-base</code> (private) with
+schema dirs <code>cases/</code>, <code>patterns/triggers/</code>,
+<code>patterns/architectures/</code>,
+<code>patterns/anti-patterns/</code>, <code>patterns/playbooks/</code>,
+plus <code>TAXONOMY.md</code>.</label></li>
+<li><label><input
+type="checkbox" /><code>engagement-retrospective</code> committed at
+least two case records to <code>pna-case-base</code> from real
+engagements.</label></li>
+<li><label><input type="checkbox" /><code>pattern-recognition</code>
+skill retrieves case-base analogs and returns ≥1 structured match on a
+seeded query.</label></li>
+<li><label><input type="checkbox" /><code>library</code> skill lists
+<code>principal-plugin</code> as installable and
+<code>library add principal-plugin</code> completes without
+error.</label></li>
+<li><label><input type="checkbox" />Install verification: running
+<code>cp -r skills/* ~/.claude/skills/ &amp;&amp; claude --list-skills</code>
+shows all seventeen skills with their pushy descriptions.</label></li>
+<li><label><input type="checkbox" />One published case study
+(anonymised) links at least three skills in sequence for a real
+engagement (Spector is the expected seed case).</label></li>
+</ul>
+<h2 id="tech-stack">Tech Stack</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skill format</td>
+<td>anthropics/skills <code>SKILL.md</code> with YAML frontmatter</td>
+<td>Matches Claude’s native skill loader. Zero custom parser.
+Interoperable with existing <code>pna-library</code>.</td>
+</tr>
+<tr>
+<td>Packaging</td>
+<td>Flat <code>skills/&lt;name&gt;/</code> dirs, no build step</td>
+<td>Skills load as source. Build pipelines add failure modes without
+value for markdown files.</td>
+</tr>
+<tr>
+<td>Distribution</td>
+<td><code>pna-library</code> + symlinks into
+<code>~/.claude/skills/</code></td>
+<td>Already in use across P&amp;A; avoids inventing a second system.
+Librarian agent owns this lane.</td>
+</tr>
+<tr>
+<td>Case-base storage</td>
+<td>Separate git repo, markdown files with YAML frontmatter</td>
+<td>Versioned, diffable, searchable with <code>obsidian-cli</code> and
+grep; no runtime dependency. Keeps engagement data out of the plugin
+repo.</td>
+</tr>
+<tr>
+<td>Eval harness</td>
+<td><code>skill-optimizer</code> + Karpathy binary-assertion loop</td>
+<td>Alex’s existing standard. Librarian runs loops automatically (Fri
+5pm cron already scheduled).</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td><code>writing-skills</code> skill (linter), critic pass per ADR</td>
+<td>Catches missing frontmatter, dead hand-offs, non-pushy descriptions
+before ship.</td>
+</tr>
+<tr>
+<td>Voice/style enforcement</td>
+<td>Per-skill style guide in CLAUDE.md + retro-pass during PR
+review</td>
+<td>Lightweight; avoids a custom style-checker that would drift from
+intent.</td>
+</tr>
+<tr>
+<td>Versioning</td>
+<td>SemVer at plugin level, skill-level version field in
+frontmatter</td>
+<td>Consumers pin plugin version; librarian cron enforces.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="architecture">Architecture</h2>
+<p>See <code>ARCHITECTURE.md</code> for topology and sequence diagrams.
+High-level:</p>
+<ul>
+<li><strong>Plugin repo (this)</strong> hosts SKILL.md files, examples,
+evals, and plugin-level CLAUDE.md.</li>
+<li><strong>Case-base repo (<code>pna-case-base</code>)</strong> hosts
+engagement records and extracted patterns. Read by
+<code>pattern-recognition</code>, written by
+<code>engagement-retrospective</code>.</li>
+<li><strong>Library system (<code>pna-library</code>)</strong>
+distributes the plugin into operator environments via symlinks.</li>
+<li><strong>Runtime</strong> is Claude Code or Claude.ai; skills load on
+demand based on description match.</li>
+</ul>
+<h2 id="risks">Risks</h2>
+<ol type="1">
+<li><strong>Case-base bootstrap</strong>: no real case data on day 1.
+<code>pattern-recognition</code> returns empty until ≥3 cases seeded. —
+Likelihood: H, Impact: M — Mitigation: seed with Spector + two
+synthetic-but-grounded cases before shipping
+<code>pattern-recognition</code>.</li>
+<li><strong>Skill under-triggering</strong>: Claude may not fire skills
+reliably without aggressive descriptions. — Likelihood: M, Impact: H —
+Mitigation: enforce pushy-description rule in critic pass; run
+skill-optimizer loops on each skill before v1 release.</li>
+<li><strong>Lifecycle drift</strong>: operator fires skills out of phase
+order, degrading output. — Likelihood: M, Impact: M — Mitigation: each
+SKILL.md’s <code>When to use it</code> section names prerequisite
+skills; hand-off prompts at end of every skill reinforce order.</li>
+<li><strong>Operator single point of failure</strong>: methodology lives
+in one operator’s head even after encoding. — Likelihood: M, Impact: H —
+Accepted for v1; mitigation deferred to productisation phase.</li>
+<li><strong>Case-base data sensitivity</strong>: real engagement records
+contain client-identifying info. — Likelihood: H, Impact: H —
+Mitigation: mandatory anonymisation step in
+<code>engagement-retrospective</code>; case-base repo private; no CI
+that egresses case content.</li>
+<li><strong>Plugin install drift across machines</strong>: symlinks
+break on new laptop or fresh Claude Code install. — Likelihood: M,
+Impact: L — Mitigation: <code>/bootstrap</code> command idempotent;
+daily-notes already flag a backup task for
+<code>~/.claude/skills/</code>.</li>
+<li><strong>12-skill backlog scope creep</strong>: building all 12
+skills at once invites half-finished work. — Likelihood: M, Impact: M —
+Mitigation: roadmap sequences them one-per-week max; critic pass gate
+per skill.</li>
+<li><strong>Competitive leakage</strong>: methodology is the moat;
+publishing the repo publicly surrenders it. — Likelihood: H (if public),
+Impact: H — Mitigation: repo stays <strong>private</strong> on GitHub;
+only anonymised case studies are externally visible.</li>
+</ol>
+<h2 id="open-questions">Open Questions</h2>
+<p>None. Any remaining ambiguity has been defaulted and documented
+inline. Specific defaults applied:</p>
+<ul>
+<li>Case-base repo is private (per Risk 8).</li>
+<li>Plugin repo is private for v1 (can be flipped to public later if
+commercialised).</li>
+<li>Skill distribution via <code>pna-library</code> (not a separate
+plugin marketplace).</li>
+<li>No vertical packs in v1; Alex revisits after 3 engagements.</li>
+</ul>
+<hr />
+<h1 id="architecture-1">ARCHITECTURE</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/ARCHITECTURE.md</code></em></p>
+<h1 id="architecture-principal-plugin">Architecture —
+principal-plugin</h1>
+<h2 id="system-context">System Context</h2>
+<pre class="mermaid"><code>graph TB
+    Operator[Operator / Alex] --&gt;|invokes| ClaudeRuntime[Claude Code or Claude.ai]
+    ClaudeRuntime --&gt;|loads on description match| Plugin[principal-plugin skills]
+    Plugin --&gt;|reads patterns| CaseBase[(pna-case-base repo)]
+    Plugin --&gt;|writes cases and patterns| CaseBase
+    Library[pna-library distribution] --&gt;|symlinks| SkillDir[&quot;~/.claude/skills/&quot;]
+    Plugin -.-&gt;|published via| Library
+    ClaudeRuntime --&gt;|resolves| SkillDir</code></pre>
+<h2 id="skill-lifecycle-sequence">Skill Lifecycle Sequence</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant O as Operator
+    participant Wedge as saas-decommission
+    participant Disc as opportunity-discovery
+    participant JTBD as jtbd-discovery
+    participant Data as data-readiness-5c
+    participant Decomp as problem-decomposition
+    participant Pat as pattern-recognition
+    participant Sys as systems-thinking
+    participant IE as impact-effort-matrix
+    participant Sol as agentic-workflow-solutioning
+    participant Threat as threat-model
+    participant Blast as blast-radius
+    participant Comp as compliance-scan
+    participant Adopt as adoption-risk
+    participant Proto as live-agent-prototype
+    participant ROI as roi-calculator
+    participant Policy as ai-usage-policy
+    participant Retro as engagement-retrospective
+    participant CB as pna-case-base
+
+    O-&gt;&gt;Wedge: new prospect
+    Wedge-&gt;&gt;O: CFO memo
+    O-&gt;&gt;Disc: opportunities
+    Disc-&gt;&gt;JTBD: candidate jobs
+    JTBD-&gt;&gt;Data: outcome statement
+    Data-&gt;&gt;Decomp: data readiness gate
+    Decomp-&gt;&gt;Pat: issue tree
+    Pat-&gt;&gt;CB: query analogs
+    CB--&gt;&gt;Pat: matching cases
+    Pat-&gt;&gt;Sys: structured analog set
+    Sys-&gt;&gt;IE: feedback loops
+    IE-&gt;&gt;Sol: prioritised branch
+    Sol-&gt;&gt;Threat: architecture spec
+    Threat-&gt;&gt;Blast: threat list
+    Blast-&gt;&gt;Comp: blast radius
+    Comp-&gt;&gt;Adopt: compliance map
+    Adopt-&gt;&gt;Proto: rollout plan
+    Proto-&gt;&gt;ROI: working scaffold
+    ROI-&gt;&gt;Policy: savings case
+    Policy-&gt;&gt;Retro: usage policy
+    Retro-&gt;&gt;CB: write case + patterns</code></pre>
+<h2 id="repository-layout">Repository Layout</h2>
+<pre><code>principal-plugin/
+├── README.md
+├── CLAUDE.md                   # plugin-level agent instructions (voice, sequencing)
+├── SPEC.md
+├── ROADMAP.md
+├── TASKS.md
+├── ARCHITECTURE.md
+├── .gitignore
+├── docs/
+│   └── adr/
+│       ├── 0001-skill-pack-over-hosted-app.md
+│       ├── 0002-case-base-as-separate-repo.md
+│       └── 0003-sequential-lifecycle-enforcement.md
+├── research/
+│   ├── PA_Consulting_Toolkit.xlsx
+│   └── source-package-README.md
+└── skills/
+    ├── saas-decommission/
+    │   ├── SKILL.md
+    │   ├── evals/               # T0.3
+    │   └── examples/            # T0.4
+    ├── problem-decomposition/
+    ├── agentic-workflow-solutioning/
+    ├── threat-model/
+    └── engagement-retrospective/</code></pre>
+<h2 id="data-model-case-base-companion-repo">Data Model — Case Base
+(Companion Repo)</h2>
+<pre class="mermaid"><code>erDiagram
+    CASE ||--o{ PATTERN_TRIGGER : &quot;cites&quot;
+    CASE ||--o{ PATTERN_ARCHITECTURE : &quot;cites&quot;
+    CASE ||--o{ PATTERN_ANTI : &quot;cites&quot;
+    CASE {
+        string slug
+        string client_anon
+        date started
+        date closed
+        string jtbd_outcome
+        string solution_archetype
+        list tech_stack
+        list problem_archetypes
+        list trigger_signals
+        string industry
+        number engagement_value_usd
+    }
+    PATTERN_TRIGGER {
+        string name
+        string signal_text
+        string when_present
+        list cited_cases
+        enum maturity &quot;emerging | confirmed | retired&quot;
+    }
+    PATTERN_ARCHITECTURE {
+        string name
+        string shape
+        list required_tech
+        list guardrails
+        list cited_cases
+        enum maturity
+    }
+    PATTERN_ANTI {
+        string name
+        string looks_like
+        string why_it_fails
+        list cited_cases
+    }
+    TAXONOMY ||--o{ CASE : &quot;classifies&quot;
+    TAXONOMY {
+        list trigger_signals
+        list problem_archetypes
+        list solution_archetypes
+        list industry_tags
+    }</code></pre>
+<p>Cases write via <code>engagement-retrospective</code>. Patterns
+promote from <code>emerging</code> (1 case) to <code>confirmed</code>
+(≥2 cases). Anti-patterns are single-case by default; duplication
+strengthens confidence.</p>
+<h2 id="component-responsibilities">Component Responsibilities</h2>
+<ul>
+<li><strong>skills/</strong> — each skill is self-contained:
+frontmatter, procedure, output template, hand-off. No shared runtime
+code.</li>
+<li><strong>docs/adr/</strong> — architectural decisions with context
+and alternatives. Read before proposing deviations.</li>
+<li><strong>research/</strong> — source material (xlsx toolkit, original
+package README). Not part of the runtime contract; kept for
+traceability.</li>
+<li><strong>CLAUDE.md</strong> (plugin-level) — voice rules, lifecycle
+sequence, quality bar, operator wisdom. Read when a skill is authored or
+edited.</li>
+</ul>
+<h2 id="install-surfaces">Install Surfaces</h2>
+<ol type="1">
+<li><strong>Direct copy</strong>:
+<code>cp -r skills/* ~/.claude/skills/</code>. Manual, immediate, no
+dependencies.</li>
+<li><strong>Library</strong>: <code>library add principal-plugin</code>.
+Symlinks from <code>pna-library</code> checkout.</li>
+<li><strong>Bootstrap</strong>: <code>/bootstrap</code> command (to be
+added in T0.2) does both idempotently.</li>
+</ol>
+<h2 id="non-components-deliberately-excluded">Non-Components
+(deliberately excluded)</h2>
+<ul>
+<li>No build step. Markdown is the artefact.</li>
+<li>No CI for the runtime (skills are interpreted by Claude). CI can be
+added later for lint and eval regression; not required for v1.</li>
+<li>No database. Case base is flat files.</li>
+<li>No web UI. All interaction through Claude Code / Claude.ai.</li>
+<li>No telemetry. Operator-private tooling.</li>
+</ul>
+<hr />
+<h1 id="roadmap">ROADMAP</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/ROADMAP.md</code></em></p>
+<h1 id="roadmap-principal-plugin">Roadmap — principal-plugin</h1>
+<h2 id="phase-0-planning-this-doc-set">Phase 0 — Planning (this doc
+set)</h2>
+<p>Exit: SPEC accepted by Alex, repo initialised locally and on GitHub,
+MVP-5 skills committed.</p>
+<h2 id="phase-1-case-base-bootstrap">Phase 1 — Case base bootstrap</h2>
+<p>Goals: - Scaffold <code>pna-case-base</code> repo with schema,
+taxonomy, and templates. - Seed case #1 (Spector Capisce, mid-engagement
+is fine). - Seed one synthetic-but-grounded case per major archetype
+(skill-pack, voice agent) so <code>pattern-recognition</code> has ≥3
+records.</p>
+<p>Exit criteria: - <code>github.com/afoxnyc3/pna-case-base</code>
+exists (private) with directory schema populated. -
+<code>engagement-retrospective</code> dry-run writes a valid case record
+and commits without manual fixup. - <code>TAXONOMY.md</code> covers the
+trigger signals and problem archetypes present in the three seed
+cases.</p>
+<p>Dependencies: MVP-5 shipped. Case-base SPEC drafted separately by
+architect.</p>
+<h2 id="phase-2-discovery-skills-phase-1-of-lifecycle">Phase 2 —
+Discovery skills (Phase 1 of lifecycle)</h2>
+<p>Goals: - Build <code>opportunity-discovery</code>,
+<code>jtbd-discovery</code>, <code>data-readiness-5c</code>. - Evals +
+examples per skill. - Validate sequencing:
+<code>saas-decommission</code> → <code>opportunity-discovery</code> →
+<code>jtbd-discovery</code> → <code>data-readiness-5c</code> runs clean
+on a dry client.</p>
+<p>Exit criteria: - Three new SKILL.md files committed, each passing
+<code>writing-skills</code> lint. - <code>skill-optimizer</code> loop
+run on each; description scores ≥ baseline. - One end-to-end dry-run
+captured in <code>examples/dry-runs/phase-1.md</code>.</p>
+<p>Dependencies: Phase 1 complete so discovery outputs have somewhere to
+write.</p>
+<h2
+id="phase-3-design-skills-phase-2-of-lifecycle-minus-the-two-already-built">Phase
+3 — Design skills (Phase 2 of lifecycle, minus the two already
+built)</h2>
+<p>Goals: - Build <code>pattern-recognition</code>,
+<code>systems-thinking</code>, <code>impact-effort-matrix</code>. -
+<code>pattern-recognition</code> must successfully retrieve ≥1 analog
+from seeded case base.</p>
+<p>Exit criteria: - Three new SKILL.md files committed and linted. -
+<code>pattern-recognition</code> integration test passes: query a seeded
+case type, returns matching case ID with similarity score. - End-to-end
+dry-run from <code>problem-decomposition</code> →
+<code>agentic-workflow-solutioning</code> captured.</p>
+<p>Dependencies: Phase 1 (case base has records).</p>
+<h2
+id="phase-4-governance-skills-phase-3-of-lifecycle-minus-threat-model">Phase
+4 — Governance skills (Phase 3 of lifecycle, minus threat-model)</h2>
+<p>Goals: - Build <code>blast-radius</code>,
+<code>compliance-scan</code>, <code>adoption-risk</code>. - Align with
+<code>threat-model</code> to form the governance triad.</p>
+<p>Exit criteria: - Three new SKILL.md files committed and linted. -
+Governance package dry-run: given an architecture spec, produces threat
+model + blast radius + compliance + adoption plan as a cohesive set. -
+Residual-risk register template in <code>examples/</code> signed off by
+Alex.</p>
+<p>Dependencies: None beyond MVP-5.</p>
+<h2
+id="phase-5-delivery-skills-phase-4-of-lifecycle-minus-retrospective">Phase
+5 — Delivery skills (Phase 4 of lifecycle, minus retrospective)</h2>
+<p>Goals: - Build <code>live-agent-prototype</code>,
+<code>roi-calculator</code>, <code>ai-usage-policy</code>. -
+<code>live-agent-prototype</code> must produce a working Claude Code
+skeleton (not just spec).</p>
+<p>Exit criteria: - Three new SKILL.md files committed and linted. -
+<code>live-agent-prototype</code> output successfully runs locally on a
+toy scenario. - <code>roi-calculator</code> output validated against
+<code>saas-decommission</code> memo (savings reconciliation).</p>
+<p>Dependencies: Phases 1-4 complete (delivery depends on upstream
+artefacts).</p>
+<h2 id="phase-6-v1-release-and-hardening">Phase 6 — v1 release and
+hardening</h2>
+<p>Goals: - Full lifecycle dry-run on one real client engagement
+(Spector). - All 17 skills through <code>skill-optimizer</code> loop. -
+<code>library</code> manifest updated; plugin installable via one
+command on a fresh machine. - Published case study (anonymised) linked
+from plugin README.</p>
+<p>Exit criteria: - Spector engagement produces retrospective committed
+to case base. - <code>/bootstrap</code> on a fresh Claude Code install
+pulls the plugin and all 17 skills fire on their triggers in a smoke
+test. - Pattern library has ≥4 records across ≥2 archetypes. - README
+includes one public anonymised case link.</p>
+<hr />
+<h1 id="tasks">TASKS</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/TASKS.md</code></em></p>
+<h1 id="tasks-principal-plugin">Tasks — principal-plugin</h1>
+<p>Atomic tasks. Each is a single PR with a single acceptance check.
+Labels match future GitHub issue labels.</p>
+<h2 id="phase-0-planning-this-commit">Phase 0 — Planning (this
+commit)</h2>
+<h3 id="t0.1-initialise-repo-with-planning-docs">T0.1 Initialise repo
+with planning docs</h3>
+<ul>
+<li>Labels: setup, phase-0</li>
+<li>Acceptance: repo at
+<code>github.com/afoxnyc3/principal-plugin</code> (private) with README,
+SPEC, ROADMAP, TASKS, ARCHITECTURE, CLAUDE.md, 5 MVP skills, initial
+ADRs, and <code>.gitignore</code> committed.</li>
+<li>Est: XS</li>
+<li>Status: in progress (this PR)</li>
+</ul>
+<h3 id="t0.2-add-.claude-commands-for-install-and-bootstrap">T0.2 Add
+.claude/ commands for install and bootstrap</h3>
+<ul>
+<li>Labels: setup, phase-0, devex</li>
+<li>Acceptance: <code>.claude/commands/install-skills.md</code> exists;
+running it copies <code>skills/*</code> into
+<code>~/.claude/skills/</code> and prints a verification list.</li>
+<li>Est: XS</li>
+</ul>
+<h3 id="t0.3-add-eval-harness-directory-convention">T0.3 Add eval
+harness directory convention</h3>
+<ul>
+<li>Labels: setup, phase-0, quality</li>
+<li>Acceptance: each of the 5 MVP skills has an <code>evals/</code>
+subdir with at least 3 binary assertions and 1 reference input fixture,
+per <code>skill-optimizer</code> format.</li>
+<li>Est: S</li>
+</ul>
+<h3 id="t0.4-add-reference-output-per-mvp-skill">T0.4 Add reference
+output per MVP skill</h3>
+<ul>
+<li>Labels: setup, phase-0, quality</li>
+<li>Acceptance: each of the 5 MVP skills has
+<code>examples/reference-output.md</code> derived from a real or
+anonymised engagement.</li>
+<li>Est: S</li>
+</ul>
+<h2 id="phase-1-case-base-bootstrap-1">Phase 1 — Case base
+bootstrap</h2>
+<h3 id="t1.1-draft-spec-for-pna-case-base-as-a-separate-project">T1.1
+Draft SPEC for pna-case-base as a separate project</h3>
+<ul>
+<li>Labels: phase-1, case-base, planning</li>
+<li>Acceptance: <code>~/dev/projects/pna-case-base/SPEC.md</code> exists
+defining directory schema, case record frontmatter, pattern types, and
+taxonomy format.</li>
+<li>Est: S</li>
+</ul>
+<h3 id="t1.2-initialise-pna-case-base-repo">T1.2 Initialise
+pna-case-base repo</h3>
+<ul>
+<li>Labels: phase-1, case-base, setup</li>
+<li>Acceptance: private GitHub repo exists with directories
+<code>cases/</code>, <code>patterns/triggers/</code>,
+<code>patterns/architectures/</code>,
+<code>patterns/anti-patterns/</code>, <code>patterns/playbooks/</code>,
+plus <code>TAXONOMY.md</code> and <code>README.md</code>.</li>
+<li>Est: XS</li>
+</ul>
+<h3 id="t1.3-seed-spector-case-record">T1.3 Seed Spector case
+record</h3>
+<ul>
+<li>Labels: phase-1, case-base, content</li>
+<li>Acceptance: <code>cases/2026-04-spector-capisce.md</code> committed
+with full frontmatter, JTBD outcome, solution archetype, and sections
+1-6 from the retro template.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t1.4-seed-two-synthetic-but-grounded-cases">T1.4 Seed two
+synthetic-but-grounded cases</h3>
+<ul>
+<li>Labels: phase-1, case-base, content</li>
+<li>Acceptance: two additional case records committed covering
+archetypes not in Spector (candidates: voice agent, email triage).</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t1.5-draft-taxonomy.md-covering-seed-cases">T1.5 Draft
+TAXONOMY.md covering seed cases</h3>
+<ul>
+<li>Labels: phase-1, case-base, content</li>
+<li>Acceptance: TAXONOMY.md enumerates trigger signals, problem
+archetypes, solution archetypes, industry tags present in the 3 seed
+cases.</li>
+<li>Est: S</li>
+</ul>
+<h2 id="phase-2-discovery-skills">Phase 2 — Discovery skills</h2>
+<h3 id="t2.1-build-skill-opportunity-discovery">T2.1 Build skill:
+opportunity-discovery</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-2, skill, discovery</li>
+<li>Acceptance: <code>skills/opportunity-discovery/SKILL.md</code> +
+evals + example; passes <code>writing-skills</code> lint;
+skill-optimizer baseline run recorded.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t2.2-build-skill-jtbd-discovery">T2.2 Build skill:
+jtbd-discovery</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-2, skill, discovery</li>
+<li>Acceptance: same as T2.1.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t2.3-build-skill-data-readiness-5c">T2.3 Build skill:
+data-readiness-5c</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-2, skill, discovery</li>
+<li>Acceptance: same as T2.1.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t2.4-capture-phase-1-lifecycle-dry-run">T2.4 Capture Phase 1
+lifecycle dry-run</h3>
+<ul>
+<li>Labels: phase-2, quality, integration</li>
+<li>Acceptance: <code>examples/dry-runs/phase-1.md</code> walks a
+fictional client through saas-decommission → opportunity-discovery →
+jtbd-discovery → data-readiness-5c with outputs stitched.</li>
+<li>Est: S</li>
+</ul>
+<h2 id="phase-3-design-skills">Phase 3 — Design skills</h2>
+<h3 id="t3.1-build-skill-pattern-recognition">T3.1 Build skill:
+pattern-recognition</h3>
+<ul>
+<li>Owner: principal_architect (SPEC) → principal_engineer
+(implementation)</li>
+<li>Labels: phase-3, skill, design, code-bearing</li>
+<li>Acceptance: SKILL.md committed; integration test retrieves ≥1 case
+from seeded case base with similarity reasoning shown.</li>
+<li>Est: L</li>
+<li>Note: depends on Phase 1 seeding. Architect drafts SPEC first;
+engineer implements on <code>engineer/pattern-recognition</code>
+branch.</li>
+</ul>
+<h3 id="t3.2-build-skill-systems-thinking">T3.2 Build skill:
+systems-thinking</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-3, skill, design</li>
+<li>Acceptance: SKILL.md + evals + example; lint passes.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t3.3-build-skill-impact-effort-matrix">T3.3 Build skill:
+impact-effort-matrix</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-3, skill, design</li>
+<li>Acceptance: SKILL.md + evals + example; lint passes.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t3.4-capture-phase-2-lifecycle-dry-run">T3.4 Capture Phase 2
+lifecycle dry-run</h3>
+<ul>
+<li>Labels: phase-3, quality, integration</li>
+<li>Acceptance: <code>examples/dry-runs/phase-2.md</code> from
+problem-decomposition → agentic-workflow-solutioning, including
+pattern-recognition and systems-thinking insertions.</li>
+<li>Est: S</li>
+</ul>
+<h2 id="phase-4-governance-skills">Phase 4 — Governance skills</h2>
+<h3 id="t4.1-build-skill-blast-radius">T4.1 Build skill:
+blast-radius</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-4, skill, govern</li>
+<li>Acceptance: SKILL.md + evals + example; lint passes; integration
+with threat-model output demonstrated.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t4.2-build-skill-compliance-scan">T4.2 Build skill:
+compliance-scan</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-4, skill, govern</li>
+<li>Acceptance: SKILL.md + evals + example; covers SHIELD, SOC 2, HIPAA,
+PCI, GDPR at minimum.</li>
+<li>Est: M</li>
+<li>Note: v1 is a rubric/checklist; v2 (optional, out of scope) may add
+tooling via architect+engineer.</li>
+</ul>
+<h3 id="t4.3-build-skill-adoption-risk">T4.3 Build skill:
+adoption-risk</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-4, skill, govern</li>
+<li>Acceptance: SKILL.md + evals + example.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t4.4-sign-off-residual-risk-register-template">T4.4 Sign-off
+residual-risk register template</h3>
+<ul>
+<li>Labels: phase-4, quality</li>
+<li>Acceptance:
+<code>examples/governance/residual-risk-register.md</code> approved by
+Alex; reused by threat-model hand-off.</li>
+<li>Est: S</li>
+</ul>
+<h2 id="phase-5-delivery-skills">Phase 5 — Delivery skills</h2>
+<h3 id="t5.1-build-skill-live-agent-prototype">T5.1 Build skill:
+live-agent-prototype</h3>
+<ul>
+<li>Owner: principal_architect (SPEC) → principal_engineer
+(implementation)</li>
+<li>Labels: phase-5, skill, deliver, code-bearing</li>
+<li>Acceptance: SKILL.md produces a scaffold that runs; dry-run on toy
+scenario produces a working Claude Code skill.</li>
+<li>Est: L</li>
+<li>Note: Architect drafts SPEC first (scaffold templates, validation
+pipeline); engineer implements on
+<code>engineer/live-agent-prototype</code> branch.</li>
+</ul>
+<h3 id="t5.2-build-skill-roi-calculator">T5.2 Build skill:
+roi-calculator</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-5, skill, deliver</li>
+<li>Acceptance: SKILL.md + evals + example; output reconciles to
+saas-decommission memo numbers.</li>
+<li>Est: M</li>
+<li>Note: v1 is a markdown formula template; v2 (optional) may add a
+spreadsheet generator.</li>
+</ul>
+<h3 id="t5.3-build-skill-ai-usage-policy">T5.3 Build skill:
+ai-usage-policy</h3>
+<ul>
+<li>Owner: principal_librarian</li>
+<li>Labels: phase-5, skill, deliver</li>
+<li>Acceptance: SKILL.md + evals + example; template covers access, data
+handling, kill-switch, incident response.</li>
+<li>Est: M</li>
+</ul>
+<h2 id="phase-6-v1-release">Phase 6 — v1 release</h2>
+<h3 id="t6.1-run-full-lifecycle-on-real-spector-engagement">T6.1 Run
+full lifecycle on real Spector engagement</h3>
+<ul>
+<li>Labels: phase-6, dogfood</li>
+<li>Acceptance: all 17 skills fire in sequence on Spector; retrospective
+committed to case base.</li>
+<li>Est: L (bounded by real engagement timeline)</li>
+</ul>
+<h3 id="t6.2-run-skill-optimizer-loop-on-all-17-skills">T6.2 Run
+skill-optimizer loop on all 17 skills</h3>
+<ul>
+<li>Labels: phase-6, quality</li>
+<li>Acceptance: each skill has a recorded optimizer run; descriptions
+scored ≥ baseline; any drops rolled back.</li>
+<li>Est: M</li>
+</ul>
+<h3 id="t6.3-publish-anonymised-case-study-externally">T6.3 Publish
+anonymised case study externally</h3>
+<ul>
+<li>Labels: phase-6, marketing</li>
+<li>Acceptance: one public case study links from plugin README;
+anonymisation reviewed by Alex before publish.</li>
+<li>Est: S</li>
+</ul>
+<h3 id="t6.4-verify-fresh-machine-install-via-bootstrap">T6.4 Verify
+fresh-machine install via /bootstrap</h3>
+<ul>
+<li>Labels: phase-6, devex</li>
+<li>Acceptance: on a fresh Claude Code install, <code>/bootstrap</code>
+pulls pna-library, installs principal-plugin, and all 17 skills are
+listed by <code>claude --list-skills</code>.</li>
+<li>Est: S</li>
+</ul>
+<hr />
+<h1 id="swot">SWOT</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/docs/SWOT.md</code></em></p>
+<h1 id="swot-principal-plugin">SWOT — principal-plugin</h1>
+<p>Architect’s honest read. Written to be useful, not flattering.</p>
+<h2 id="strengths">Strengths</h2>
+<ol type="1">
+<li><strong>The methodology is real and scar-tissued.</strong> Every
+skill is written against actual operator experience (272K-event security
+investigation, 6→400-user rollout, $171K cost takeout). Competitors
+pitching “AI consulting” skill packs cannot fake this. It shows in the
+procedure sections and the failure-mode lists.</li>
+<li><strong>Skill format is native to the runtime.</strong> No custom
+loader, no build step, no hosted infra. <code>SKILL.md</code> with pushy
+frontmatter is exactly what Claude expects. Zero integration tax on
+install.</li>
+<li><strong>Sequence is enforced through prose, not code.</strong>
+ADR-0003 chose discipline over orchestration. That keeps skills
+independently testable and portable. Also means no runtime to
+break.</li>
+<li><strong>Distribution is already solved.</strong>
+<code>pna-library</code> exists; librarian agent already runs grooming
+cron. Shipping a new plugin is not a new problem.</li>
+<li><strong>MVP-5 covers every lifecycle phase.</strong> Wedge
+(saas-decommission), spine (problem-decomposition), taste
+(agentic-workflow-solutioning), moat (threat-model), compounding
+(engagement-retrospective). You can run an engagement end-to-end today,
+not after 17 skills are built.</li>
+<li><strong>Threat-model as a gate is an actual moat.</strong> Most
+AI-consulting pitches stop at the architecture diagram. Forcing a
+STRIDE-for-agents pass before build is a credibility multiplier with
+CIOs and CTOs.</li>
+<li><strong>Voice is consistent.</strong> The prose reads like one
+operator. That makes the deliverables feel like they came from a human
+consultant, which is the point.</li>
+</ol>
+<h2 id="weaknesses">Weaknesses</h2>
+<ol type="1">
+<li><strong>Case base does not exist.</strong>
+<code>engagement-retrospective</code> and the future
+<code>pattern-recognition</code> skill both require
+<code>pna-case-base</code>. Until it is scaffolded and seeded, the
+compounding loop is theoretical. This is the single biggest v1
+blocker.</li>
+<li><strong>No evals or reference outputs shipped.</strong> Plugin-level
+CLAUDE.md promises <code>evals/</code> and <code>examples/</code> per
+skill; none exist. This violates your own quality bar as stated.</li>
+<li><strong>12 skills still to build.</strong> That’s most of the
+plugin. MVP-5 is a spine, not a product. Anyone installing today sees
+gaps in Phase 1, Phase 3, and Phase 4.</li>
+<li><strong>Methodology is single-operator.</strong> If Alex is hit by a
+bus, the plugin is the only artefact; it captures procedure but not
+taste. Encoding taste takes more cycles than one-pass authoring.</li>
+<li><strong>No sub-agent integration yet.</strong> Principal skills
+exist alongside ClaudeClaw’s principals (architect, engineer, librarian)
+but there is no documented hand-off: who fires saas-decommission when a
+lead arrives? This is operator-driven today; it could be delegated.</li>
+<li><strong>Skill triggering is unmeasured.</strong> Pushy descriptions
+are hopeful, not verified. Without a routing log it is hard to know
+which skills under-fire in live use. Librarian’s skill-optimizer loop is
+available but not yet applied here.</li>
+<li><strong>No public proof yet.</strong> Repo is private, no case study
+is published, no marketing surface beyond Alex’s network. Zero external
+signal.</li>
+</ol>
+<h2 id="opportunities">Opportunities</h2>
+<ol type="1">
+<li><strong>Case base becomes the moat over time.</strong> Every retro
+compounds. After 10 engagements the plugin stops being “methodology” and
+becomes “a consulting firm in a repo”. Very few competitors will build
+this because it requires doing the engagements.</li>
+<li><strong>Anonymised case studies as marketing.</strong> Each
+engagement can produce a public case study (in
+<code>pna-sessions</code>) linking three or more skills. That becomes
+the lead magnet the plugin itself cannot be (because it is
+private).</li>
+<li><strong>Vertical packs.</strong> Once generic lifecycle is proven,
+derivative packs (health-principal, finance-principal, legal-principal)
+are cheap to ship and command premium pricing. ADR-0002 and repo
+separation make vertical packs additive, not forks.</li>
+<li><strong>Productise later.</strong> If the methodology proves
+repeatable, wrapping it as a hosted app for non-technical consultants is
+a realistic Year-2 move. v1 operator-first keeps optionality.</li>
+<li><strong>Training data for downstream agents.</strong> Once the case
+base has records, it feeds future fine-tunes or RAG augmentations of a
+P&amp;A-specific consulting agent. Data gathered as a side effect of
+shipping work.</li>
+<li><strong>Integration with ClaudeClaw pipeline.</strong>
+<code>saas-decommission</code> could auto-trigger when a prospect
+replies to outreach with budget objection language. Not v1, but a
+credible Phase 6+ loop.</li>
+<li><strong>Competitive timing.</strong> AI-consulting as a category is
+~12 months from saturation. Shipping this methodology now, before the
+category commoditises, is the right moment.</li>
+</ol>
+<h2 id="threats">Threats</h2>
+<ol type="1">
+<li><strong>Anthropic changes skill format or loader.</strong> Low
+probability in the short term, but the plugin’s entire runtime contract
+is owned by Anthropic. Mitigation: keep skill files format-minimal;
+avoid reliance on undocumented behaviour.</li>
+<li><strong>Competitor publishes a similar methodology
+publicly.</strong> Once the category shape is visible, a competitor
+could open-source a comparable plugin and undercut the moat. Mitigation:
+keep the case base private (that is the irreplaceable asset), not the
+methodology files.</li>
+<li><strong>Client data leakage through case base.</strong> Any leak
+would be existential. Mitigation in place (anonymisation, private repo,
+no CI egress) but the risk is high-impact. Any new tooling that touches
+the case base must re-run threat-model.</li>
+<li><strong>Skill under-firing in real use.</strong> If Claude’s
+description-match heuristics shift, pushy descriptions may stop
+triggering reliably. Mitigation: skill-optimizer loop on a cron; monitor
+routing logs once they exist.</li>
+<li><strong>Operator bottleneck.</strong> Alex is the only person who
+can currently run the methodology end-to-end with judgement. Every
+client engagement goes through one calendar. Mitigation deferred to
+productisation.</li>
+<li><strong>Roadmap drag.</strong> 12 skills across 5 phases is a lot of
+solo authoring. If two quarters pass with v1 incomplete, competitors may
+catch up. Mitigation: librarian agent can author skills to spec;
+architect reviews. Do not do this solo.</li>
+<li><strong>Compliance surface grows faster than the skills.</strong>
+New regulations (EU AI Act, state-level AI laws, sector-specific
+rulings) continuously expand <code>compliance-scan</code> scope.
+Mitigation: case-base <code>patterns/compliance/</code> tracks regs
+encountered; scan skill updates per engagement, not on a cadence.</li>
+</ol>
+<h2 id="the-one-line">The one line</h2>
+<p>Principal’s strongest asset is not the five skills; it is the case
+base that does not exist yet. Build <code>pna-case-base</code> next, or
+the compounding loop is a promise you cannot keep.</p>
+<hr />
+<h1 id="adr-0001-skill-pack-over-hosted-app">ADR-0001 Skill Pack over
+Hosted App</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/docs/adr/0001-skill-pack-over-hosted-app.md</code></em></p>
+<h1
+id="adr-0001-ship-principal-as-a-skill-pack-not-a-hosted-application">ADR-0001:
+Ship Principal as a skill pack, not a hosted application</h1>
+<ul>
+<li>Status: accepted</li>
+<li>Date: 2026-04-21</li>
+<li>Deciders: Principal Architect</li>
+</ul>
+<h2 id="context">Context</h2>
+<p>The Principal methodology could be distributed as (a) a hosted web
+application, (b) a multi-agent system, (c) a Claude Code skill pack, or
+(d) a plain PDF methodology document. Each has different handoff
+characteristics, cost profiles, and maintenance burdens. The consumer is
+a technical operator (Alex) running engagements in Claude Code;
+secondary consumers are other P&amp;A sub-agents (architect, engineer,
+librarian).</p>
+<h2 id="decision">Decision</h2>
+<p>Ship as a flat Claude skill pack: one <code>SKILL.md</code> per
+capability, distributed through the existing <code>pna-library</code>
+system, installed into <code>~/.claude/skills/</code> via symlink. No
+hosted runtime, no build step, no custom parser.</p>
+<h2 id="alternatives-considered">Alternatives Considered</h2>
+<ul>
+<li><strong>Hosted web application</strong>. Gives a branded UI and
+non-technical access, but creates ongoing infra ownership, auth, tenant
+isolation, and support burden. v1 consumer is technical and already in
+Claude Code. Rejected.</li>
+<li><strong>Multi-agent system</strong>. Would let skills run as
+separate agents with specialised context. Adds orchestration tax,
+debugging complexity, and duplicates work already done in ClaudeClaw.
+Single-agent-with-skills is the simpler pattern until a specific skill
+proves it needs isolation. Rejected.</li>
+<li><strong>PDF or Notion methodology doc</strong>. Zero integration
+with runtime; requires human interpretation on every engagement; does
+not compound. Rejected.</li>
+</ul>
+<h2 id="consequences">Consequences</h2>
+<p>Easier: - Zero infra to maintain. - Clean handoff to client operators
+who already use Claude Code. - Skills compose with other Claude skills
+the operator already has. - Versioning via git; rollback is trivial.</p>
+<p>Harder: - No GUI. Non-technical operators cannot use this directly
+(accepted; not the target audience for v1). - Skill triggering depends
+on Claude’s description match; requires pushy descriptions and ongoing
+tuning. - No central telemetry; have to rely on retrospectives to learn
+what is and is not working.</p>
+<hr />
+<h1 id="adr-0002-case-base-as-separate-repo">ADR-0002 Case Base as
+Separate Repo</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/docs/adr/0002-case-base-as-separate-repo.md</code></em></p>
+<h1 id="adr-0002-host-the-case-base-in-a-separate-repo">ADR-0002: Host
+the case base in a separate repo</h1>
+<ul>
+<li>Status: accepted</li>
+<li>Date: 2026-04-21</li>
+<li>Deciders: Principal Architect</li>
+</ul>
+<h2 id="context-1">Context</h2>
+<p><code>engagement-retrospective</code> writes engagement records and
+<code>pattern-recognition</code> reads them. These artefacts contain
+client-identifying information and accumulate across engagements
+independently of the plugin’s code lifecycle. They are consumed by the
+plugin at runtime but should not ship inside the plugin repo.</p>
+<h2 id="decision-1">Decision</h2>
+<p>Create <code>pna-case-base</code> as a separate private GitHub repo.
+Flat markdown files with YAML frontmatter. Directory schema:
+<code>cases/</code>, <code>patterns/triggers/</code>,
+<code>patterns/architectures/</code>,
+<code>patterns/anti-patterns/</code>, <code>patterns/playbooks/</code>,
+plus <code>TAXONOMY.md</code>. Plugin skills reference it by path
+convention, not by import.</p>
+<h2 id="alternatives-considered-1">Alternatives Considered</h2>
+<ul>
+<li><strong>Inside principal-plugin repo</strong>. Simpler to bootstrap
+but conflates methodology with client data. Any future public release of
+the plugin becomes risky. Rejected.</li>
+<li><strong>Database (SQLite or Postgres)</strong>. Structured,
+queryable, but adds a runtime dependency, backup story, and egress risk.
+Markdown grep covers 95% of retrieval needs at zero infra cost.
+Rejected.</li>
+<li><strong>Obsidian vault folder</strong>. Compatible with operator’s
+existing tooling but coupled to local-only storage; no GitHub history;
+harder to share with future collaborators or sub-agents. Rejected.</li>
+</ul>
+<h2 id="consequences-1">Consequences</h2>
+<p>Easier: - Plugin repo stays free of client data; can be made public
+later if commercialised. - Case base can grow independently; schema
+evolves via PRs. - Anonymisation is a repo-level policy enforceable at
+commit time. - Sub-agents (architect, librarian) can reference case-base
+paths without taking a code dependency on the plugin.</p>
+<p>Harder: - Two repos to keep in sync on schema changes. - Cross-repo
+tooling (e.g. integration tests) requires path conventions the skills
+must respect. - Bootstrap is a two-step install (<code>/bootstrap</code>
+handles this, per T0.2).</p>
+<hr />
+<h1 id="adr-0003-sequential-lifecycle-enforcement">ADR-0003 Sequential
+Lifecycle Enforcement</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/docs/adr/0003-sequential-lifecycle-enforcement.md</code></em></p>
+<h1
+id="adr-0003-enforce-sequential-lifecycle-through-prose-and-hand-offs-not-code">ADR-0003:
+Enforce sequential lifecycle through prose and hand-offs, not code</h1>
+<ul>
+<li>Status: accepted</li>
+<li>Date: 2026-04-21</li>
+<li>Deciders: Principal Architect</li>
+</ul>
+<h2 id="context-2">Context</h2>
+<p>The engagement lifecycle is sequential:
+<code>saas-decommission</code> before <code>opportunity-discovery</code>
+before <code>jtbd-discovery</code>, and so on. Skipping phases degrades
+output. The plugin needs to enforce this order without building a
+runtime that would couple skills together or require a custom
+loader.</p>
+<h2 id="decision-2">Decision</h2>
+<p>Enforce sequence in three places, all prose-level:</p>
+<ol type="1">
+<li>Every <code>SKILL.md</code> frontmatter description names
+preconditions (“ALWAYS use after X has run”).</li>
+<li>Every <code>SKILL.md</code> body includes a
+<code>When to use it</code> section that lists prerequisite skills.</li>
+<li>Every <code>SKILL.md</code> ends with a <code>Hand-off</code>
+section that names the next skill and prompts the operator to fire
+it.</li>
+</ol>
+<p>No runtime gate. Skills remain independently loadable; the sequence
+is maintained by Claude reading the cues and by operator discipline.</p>
+<h2 id="alternatives-considered-2">Alternatives Considered</h2>
+<ul>
+<li><strong>Runtime orchestrator</strong>. A wrapper that refuses to
+fire a skill until its prerequisite has produced a recognised output.
+Adds a runtime component that must be maintained and tested. Violates
+the skill-pack-only decision from ADR-0001. Rejected.</li>
+<li><strong>Skill-in-skill composition</strong> (skill A calls skill B).
+Couples skills tightly; makes each skill harder to test in isolation;
+breaks the “skill is self-contained” mental model. Rejected.</li>
+<li><strong>No enforcement</strong>. Rely on Alex’s memory. Works for
+one operator; breaks the moment methodology is delegated to sub-agents
+or another human. Rejected.</li>
+</ul>
+<h2 id="consequences-2">Consequences</h2>
+<p>Easier: - Skills remain plain markdown; no runtime surface. -
+Operators can deviate when context demands (explicit override is fine;
+silent skip is the risk). - Claude’s own description match reinforces
+order when pushy descriptions cite preconditions.</p>
+<p>Harder: - No hard gate means operators can skip phases. The cost is
+output quality; the mitigation is the retrospective, which catches
+skipped steps after the fact. - Critic pass must verify the hand-off
+chain (no orphan skills, no cycles) on every new skill PR. - First-time
+users need to read CLAUDE.md to understand the lifecycle; sequence is
+not discoverable purely from skill names.</p>
+<hr />
+<h1 id="adr-0004-authorship-split-for-remaining-12-skills">ADR-0004
+Authorship Split for Remaining 12 Skills</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/principal-plugin/docs/adr/0004-authorship-split-for-remaining-12-skills.md</code></em></p>
+<h1 id="adr-0004-authorship-split-for-the-remaining-12-skills">ADR-0004:
+Authorship split for the remaining 12 skills</h1>
+<ul>
+<li>Status: accepted</li>
+<li>Date: 2026-04-24</li>
+<li>Deciders: Principal Architect (with Alex sign-off)</li>
+</ul>
+<h2 id="context-3">Context</h2>
+<p>MVP-5 shipped with five skills (<code>problem-decomposition</code>,
+<code>agentic-workflow-solutioning</code>, <code>threat-model</code>,
+<code>saas-decommission</code>, <code>engagement-retrospective</code>).
+ROADMAP Phases 2-5 add twelve more to complete the lifecycle. Each new
+skill is one unit of authored work. Two distinct production modes are
+available:</p>
+<ul>
+<li><strong>Librarian</strong> authors markdown-heavy SKILL.md files:
+frontmatter description, when-to-use, workflow, evals, reference output.
+Runs skill-optimizer loop post-authoring. No code outside the
+SKILL.md.</li>
+<li><strong>Architect + Engineer</strong> is required when the skill
+bundles executable logic that the SKILL.md alone cannot express:
+retrieval, scaffolding, tool orchestration, code generation. Architect
+produces the SPEC; engineer implements to the spec on a feature branch;
+librarian polishes the SKILL.md wrapper at the end.</li>
+</ul>
+<p>Routing every skill through architect+engineer is over-investment for
+framework-and-rubric skills. Routing every skill through librarian is
+under-investment for skills whose acceptance criteria require executable
+behaviour (e.g. “integration test retrieves ≥1 case with similarity
+score”, “scaffold that runs on a toy scenario”).</p>
+<h2 id="decision-3">Decision</h2>
+<p>Split the twelve into ten librarian-authored skills and two
+architect-specced + engineer-implemented skills.</p>
+<h3 id="librarian-authors-10">Librarian authors (10)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Skill</th>
+<th>Phase</th>
+<th>Why librarian</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>opportunity-discovery</td>
+<td>2</td>
+<td>Elicitation rubric; prompts + frontmatter</td>
+</tr>
+<tr>
+<td>jtbd-discovery</td>
+<td>2</td>
+<td>JTBD framework application; prose + templates</td>
+</tr>
+<tr>
+<td>data-readiness-5c</td>
+<td>2</td>
+<td>Five-C checklist; rubric with scoring prompts</td>
+</tr>
+<tr>
+<td>systems-thinking</td>
+<td>3</td>
+<td>Causal-loop/stock-flow framework in prose</td>
+</tr>
+<tr>
+<td>impact-effort-matrix</td>
+<td>3</td>
+<td>2x2 scoring rubric</td>
+</tr>
+<tr>
+<td>blast-radius</td>
+<td>4</td>
+<td>Governance rubric; no external tooling</td>
+</tr>
+<tr>
+<td>compliance-scan</td>
+<td>4</td>
+<td>Framework walk (SHIELD, SOC 2, HIPAA, PCI, GDPR) in prose; v1 is
+checklist, not automated scanner</td>
+</tr>
+<tr>
+<td>adoption-risk</td>
+<td>4</td>
+<td>Risk rubric; Likert-style scoring</td>
+</tr>
+<tr>
+<td>roi-calculator</td>
+<td>5</td>
+<td>Formula template in markdown; v2 may bolt on a spreadsheet, out of
+scope for v1</td>
+</tr>
+<tr>
+<td>ai-usage-policy</td>
+<td>5</td>
+<td>Policy template covering access, data handling, kill-switch,
+incident response</td>
+</tr>
+</tbody>
+</table>
+<h3 id="architect-spec-engineer-implementation-2">Architect SPEC +
+Engineer implementation (2)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Skill</th>
+<th>Phase</th>
+<th>Why architect+engineer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pattern-recognition</td>
+<td>3</td>
+<td>Acceptance requires case-base retrieval with similarity reasoning.
+Needs retrieval strategy decision (grep-over-taxonomy vs embedding vs
+hybrid), integration with pna-case-base filesystem layout, and an
+integration test that actually queries and returns a case ID with score.
+SKILL.md alone cannot satisfy this.</td>
+</tr>
+<tr>
+<td>live-agent-prototype</td>
+<td>5</td>
+<td>Acceptance requires producing a Claude Code skeleton that actually
+runs. Skill must generate scaffolded files (SKILL.md, evals, example
+inputs) and validate the scaffold by executing a dry-run. Code
+generation + validation pipeline.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="alternatives-considered-3">Alternatives considered</h2>
+<p><strong>A. All twelve to librarian.</strong> Rejected.
+<code>pattern-recognition</code> and <code>live-agent-prototype</code>
+have executable acceptance criteria that a markdown-only authoring flow
+cannot verify. Would produce SKILL.md files that fail their own
+integration tests.</p>
+<p><strong>B. All twelve to architect+engineer.</strong> Rejected.
+Over-investment. Ten of the twelve are rubrics, frameworks, or policy
+templates. Librarian-authored skill files with skill-optimizer loops
+have a shorter feedback cycle and are the right tool for markdown
+artefacts. Using architect+engineer here would add weeks of
+spec-and-implement overhead for skills where the markdown is the
+product.</p>
+<p><strong>C. Split on phase boundaries (e.g. all Phase 2-3 to
+librarian, all Phase 4-5 to architect).</strong> Rejected. Phase is not
+a proxy for authoring mode. Phase 3 contains both
+<code>pattern-recognition</code> (code) and
+<code>systems-thinking</code> (prose). Phase 4 is pure rubrics, not
+code.</p>
+<h2 id="consequences-3">Consequences</h2>
+<p><strong>Easier:</strong> - Parallelism. Librarian can author 10
+skills independent of the two code-bearing tracks. Architect’s scope is
+smaller and sharper. - Right-sized verification. Librarian uses
+skill-optimizer + lint; engineer uses test-driven-development +
+integration tests. - Clear ownership when Clarke kicks back weak
+work.</p>
+<p><strong>Harder:</strong> - Two workstreams to track. Mitigation:
+mission queue per stream, hive_mind logging, weekly cross-check against
+ROADMAP exit criteria. - <code>pattern-recognition</code> blocks Phase 3
+end-to-end dry-run (T3.4). Mitigation: librarian ships
+<code>systems-thinking</code> and <code>impact-effort-matrix</code> in
+parallel with architect’s pattern-recognition SPEC so the latter is on
+the critical path but not the only Phase 3 work. -
+<code>live-agent-prototype</code> blocks Phase 5 end-to-end dry-run.
+Mitigation: same pattern; librarian ships <code>roi-calculator</code>
+and <code>ai-usage-policy</code> while architect+engineer build the
+prototype generator.</p>
+<h2 id="execution-order-recommended-not-binding">Execution order
+(recommended, not binding)</h2>
+<ol type="1">
+<li><strong>Immediately parallel-safe</strong> (no Phase 1 case-base
+dependency): blast-radius, compliance-scan, adoption-risk,
+ai-usage-policy, roi-calculator.</li>
+<li><strong>After Phase 1 seed case-base exists</strong> (Librarian):
+opportunity-discovery, jtbd-discovery, data-readiness-5c,
+systems-thinking, impact-effort-matrix.</li>
+<li><strong>Architect specs in parallel with (1)</strong>:
+pattern-recognition SPEC, live-agent-prototype SPEC.</li>
+<li><strong>Engineer implements after each SPEC lands</strong>:
+pattern-recognition, live-agent-prototype.</li>
+</ol>
+<p>Phase-gating in ROADMAP still holds; this is the intra-phase work
+ordering.</p>
+<h2 id="hand-off-protocol">Hand-off protocol</h2>
+<ul>
+<li>Librarian work: one mission per skill via
+<code>mission-cli.js --agent principal_librarian</code>. Brief includes
+target path, acceptance criteria from TASKS.md, and the P&amp;A skill
+manifest block.</li>
+<li>Architect work: one mission per SPEC (two SPECs total), output is
+<code>~/dev/projects/principal-plugin/skills/&lt;slug&gt;/SPEC.md</code>
+before any engineer work starts.</li>
+<li>Engineer work: one mission per implementation, gated on the SPEC
+being merged. Branch <code>engineer/&lt;skill-slug&gt;</code>, PR into
+<code>main</code>.</li>
+<li>Clarke verifies each completion against the relevant skill’s
+acceptance criteria in TASKS.md before closing the loop.</li>
+</ul>
+</body>
+</html>
