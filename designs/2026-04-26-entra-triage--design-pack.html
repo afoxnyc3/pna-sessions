@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_architect" />
+  <meta name="dcterms.date" content="2026-04-26" />
+  <title>Entra Triage — Design Pack</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Entra Triage — Design Pack</h1>
+<p class="author">principal_architect</p>
+<p class="date">2026-04-26</p>
+</header>
+<hr />
+<h1 id="readme">README</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/entra-triage/README.md</code></em></p>
+<h1 id="entra-triage">entra-triage</h1>
+<p><strong>Status:</strong> 🟡 In development — Phase 1
+(Roadrunner-driven; see <code>tasks/tasks.yaml</code>)</p>
+<p>Microsoft Entra ID security triage and response.
+<strong>Single-tenant</strong> operations console (one Entra tenant per
+deployment; see <a href="./docs/adr/0005-single-tenant.md">ADR
+0005</a>).</p>
+<h2 id="what-it-does">What it does</h2>
+<ul>
+<li>Ingests Entra identity telemetry (sign-ins, audit logs, risky users,
+role changes) via Microsoft Graph</li>
+<li>Runs specialized agents to triage identity risk and detect
+anomalies</li>
+<li>Evaluates tenant posture against Microsoft best-practice
+baselines</li>
+<li>Surfaces bounded response actions behind approval gates — v1 is
+advisory; analysts execute approved actions manually in the Azure portal
+(see <a href="./docs/adr/0006-read-only-graph-v1.md">ADR 0006</a>)</li>
+<li>Full audit trail for every state change</li>
+</ul>
+<h2 id="quick-start-local-mock-mode">Quick start (local, mock mode)</h2>
+<pre class="bash"><code># Prerequisites: Node 20+, Docker
+
+cp .env.example .env           # MOCK_GRAPH_API=true by default
+docker-compose up -d           # postgres + redis
+npm install
+npm run db:migrate             # run migrations
+npm run db:seed                # seed baseline controls
+npm run dev                    # all apps in parallel via turbo</code></pre>
+<p>Open http://localhost:3000</p>
+<h2 id="monorepo-layout">Monorepo layout</h2>
+<pre><code>apps/web        Next.js 14 frontend
+apps/api        tRPC + Express API
+apps/workers    Ingestion + triage workers
+packages/
+  agents        Anthropic SDK agents (tool-use structured output)
+  connectors    Microsoft Graph API client + mock drop-in
+  policy        Response policy engine + guardrails
+  shared        Types, zod schemas, Drizzle ORM
+  ui            Shared components
+db/migrations   PostgreSQL schema and migrations
+tasks/tasks.yaml  Roadrunner implementation queue
+hooks/          Roadrunner Stop/SessionStart/PreCompact/PostToolUse hooks
+roadrunner.py   Vendored Roadrunner controller</code></pre>
+<h2 id="implementation-queue">Implementation queue</h2>
+<p>Tasks are driven by Roadrunner. See <a
+href="./tasks/tasks.yaml"><code>tasks/tasks.yaml</code></a> for current
+state, and <a href="./ROADMAP.md">ROADMAP.md</a> for phase
+narrative.</p>
+<pre class="bash"><code>python3 roadrunner.py status    # all tasks + current progress
+python3 roadrunner.py next      # next eligible task
+python3 roadrunner.py analyze   # validate tasks.yaml shape
+python3 roadrunner.py health    # at-a-glance health</code></pre>
+<p>The loop enforces: one task per cycle, validation-as-gate, per-task
+branches (<code>roadrunner/ENTRA-XXX</code>), and lint + commit before
+the next task brief fires. See the <a
+href="../roadrunner-cli/docs/WORKFLOW.md">Roadrunner workflow doc</a>
+for diagrams.</p>
+<h2 id="key-links">Key links</h2>
+<ul>
+<li>Spec: <a href="./SPEC.md">SPEC.md</a></li>
+<li>Architecture: <a href="./ARCHITECTURE.md">ARCHITECTURE.md</a></li>
+<li>Roadmap: <a href="./ROADMAP.md">ROADMAP.md</a></li>
+<li>ADRs: <a href="./docs/adr/">docs/adr/</a></li>
+<li>GitHub: https://github.com/afoxnyc3/entra-triage (private)</li>
+</ul>
+<h2 id="tech-stack">Tech stack</h2>
+<p>Next.js 14 · tRPC · Drizzle · PostgreSQL · Redis · BullMQ · Anthropic
+SDK · Turborepo · TypeScript strict</p>
+<hr />
+<h1 id="spec">SPEC</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/entra-triage/SPEC.md</code></em></p>
+<h1 id="entra-triage-spec">entra-triage — Spec</h1>
+<h2 id="problem">Problem</h2>
+<p>Organizations running Microsoft Entra ID have fragmented visibility
+into identity security events: sign-ins, audit logs, risky users, role
+changes, application registrations, and service principals. Microsoft
+publishes detailed security operations guidance but customers need an
+opinionated tool that continuously ingests telemetry, triages events,
+checks posture against best-practice baselines, and proposes or executes
+constrained response actions — with a full audit trail and
+analyst-friendly UI.</p>
+<h2 id="proposed-solution">Proposed Solution</h2>
+<p>A single-tenant identity security operations tool that connects to
+one Entra ID tenant via Microsoft Graph, ingests identity telemetry,
+runs specialized agents to triage risk and detect anomalies, evaluates
+posture against Microsoft best-practice baselines, and surfaces findings
+in a clean analyst UI. Response actions that are destructive or
+sensitive require explicit approval. Everything is auditable.</p>
+<p>Initial deployment target: Chelsea Piers or a personal dev Entra
+tenant. Not an MSP platform. Not multi-tenant.</p>
+<h2 id="non-goals">Non-Goals</h2>
+<ul>
+<li>No multi-tenancy, no tenant switcher, no MSP/MSSP features in
+v1</li>
+<li>No support for on-prem Active Directory in v1</li>
+<li>No offensive security, password spraying, or credential testing</li>
+<li>No automatic disabling of users, deleting applications, or rewriting
+Conditional Access policies without explicit approval</li>
+<li>Not a full SIEM</li>
+<li>No Sentinel workspace dependency in v1</li>
+</ul>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Connect to a single Entra tenant via
+env-configured Graph credentials</label></li>
+<li><label><input type="checkbox" />Graph permissions are validated at
+startup before ingestion begins</label></li>
+<li><label><input type="checkbox" />Audit logs and sign-ins are ingested
+and visible in normalized form</label></li>
+<li><label><input type="checkbox" />Incidents are deduped and grouped
+into analyst-friendly cases</label></li>
+<li><label><input type="checkbox" />Baseline report maps findings to
+Microsoft best practices with scored gaps</label></li>
+<li><label><input type="checkbox" />Response actions are blocked,
+approved, or auto-run according to the policy matrix</label></li>
+<li><label><input type="checkbox" />Every system action, agent action,
+and human override is auditable</label></li>
+<li><label><input type="checkbox" />UI is usable for a single analyst;
+exportable reports are generated</label></li>
+<li><label><input type="checkbox" /><code>MOCK_GRAPH_API=true</code>
+enables full local development without real Entra
+credentials</label></li>
+<li><label><input
+type="checkbox" /><code>docker-compose up &amp;&amp; ./scripts/dev-setup.sh</code>
+produces a working local environment from scratch</label></li>
+</ul>
+<h2 id="tech-stack-1">Tech Stack</h2>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 30%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>Next.js 14 + TypeScript + Tailwind</td>
+<td>App dir, server components, type safety</td>
+</tr>
+<tr>
+<td>API</td>
+<td>tRPC + Express</td>
+<td>End-to-end type safety, no schema drift</td>
+</tr>
+<tr>
+<td>Workers</td>
+<td>TypeScript worker pool (BullMQ)</td>
+<td>Durable job queue, retry, dead-letter</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>PostgreSQL + Drizzle ORM</td>
+<td>Relational integrity for security event data</td>
+</tr>
+<tr>
+<td>Cache/Queue</td>
+<td>Redis + BullMQ</td>
+<td>Fast state, reliable job delivery</td>
+</tr>
+<tr>
+<td>Object storage</td>
+<td>Local filesystem (v1), S3-compatible (later)</td>
+<td>Evidence exports, report artifacts</td>
+</tr>
+<tr>
+<td>Agents</td>
+<td>Anthropic SDK with tool use</td>
+<td>Direct control, no external framework dependency</td>
+</tr>
+<tr>
+<td>Guardrails</td>
+<td>Custom policy engine (<code>packages/policy</code>)</td>
+<td>assertActionPermitted() gate before any write</td>
+</tr>
+<tr>
+<td>Monorepo</td>
+<td>Turborepo + npm workspaces</td>
+<td>Shared packages, parallel builds</td>
+</tr>
+</tbody>
+</table>
+<h2 id="architecture">Architecture</h2>
+<p>See ARCHITECTURE.md. High-level: - <code>apps/web</code> — analyst UI
+(dashboard, incident explorer, baseline, approvals) -
+<code>apps/api</code> — tRPC API, all data access, auth -
+<code>apps/workers</code> — ingestion + triage + baseline workers -
+<code>packages/agents</code> — 6 specialized Anthropic agents -
+<code>packages/connectors</code> — Microsoft Graph client with mock mode
+- <code>packages/policy</code> — action approval matrix and guardrails -
+<code>packages/shared</code> — types, zod schemas, Drizzle schema</p>
+<h2 id="risks">Risks</h2>
+<ol type="1">
+<li>Graph API rate limits and eventual consistency — Likelihood: H,
+Impact: M — Mitigation: backoff, cursor checkpointing, dead-letter</li>
+<li>Licensing gaps (P1 vs P2 for ID Protection signals) — Likelihood: H,
+Impact: M — Mitigation: graceful degradation, surface warnings in
+UI</li>
+<li>Agent LLM cost at ingestion volume — Likelihood: M, Impact: M —
+Mitigation: rule-based pre-filter before agent invocation (ADR
+0003)</li>
+<li>Secret management — Likelihood: L, Impact: H — Mitigation:
+credentials in <code>.env</code> only, never in DB or logs</li>
+</ol>
+<h2 id="open-questions">Open Questions</h2>
+<ol type="1">
+<li>Auth for the web UI — defaulting to a single hardcoded operator
+login (username/password in <code>.env</code>) for v1; proper auth is
+v2</li>
+<li>Report export format — defaulting to PDF via headless browser; Excel
+is v2</li>
+<li>Baseline control evaluation cadence — defaulting to on-demand +
+daily scheduled run</li>
+<li>Approval notifications — defaulting to console/log alerts in v1;
+email/Slack in v2</li>
+</ol>
+<h2 id="references">References</h2>
+<ul>
+<li>Microsoft Entra security best practices:
+https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices</li>
+<li>Microsoft Entra security operations guide:
+https://learn.microsoft.com/en-us/entra/architecture/security-operations-introduction</li>
+<li>Entra audit logs API:
+https://learn.microsoft.com/en-us/graph/api/resources/azure-ad-auditlog-overview</li>
+<li>Entra ID Protection risk policies:
+https://learn.microsoft.com/en-us/entra/id-protection/concept-identity-protection-policies</li>
+<li>Original spec input:
+workspace/uploads/1776954537842_entra-spec.md</li>
+</ul>
+<hr />
+<h1 id="architecture-1">ARCHITECTURE</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/entra-triage/ARCHITECTURE.md</code></em></p>
+<h1 id="architecture-entra-triage">Architecture — entra-triage</h1>
+<h2 id="system-context">System Context</h2>
+<pre class="mermaid"><code>graph TB
+    Analyst[Analyst] --&gt; Web[apps/web&lt;br/&gt;Next.js UI]
+    Web --&gt; API[apps/api&lt;br/&gt;tRPC + Express]
+    API --&gt; DB[(PostgreSQL)]
+    API --&gt; Redis[(Redis)]
+    Workers[apps/workers] --&gt; DB
+    Workers --&gt; Redis
+    Workers --&gt; Graph[Microsoft Graph API&lt;br/&gt;single Entra tenant]
+    Agents[packages/agents&lt;br/&gt;Anthropic SDK] --&gt; Workers
+    Policy[packages/policy&lt;br/&gt;Policy Engine] --&gt; API
+    Policy --&gt; Workers
+    Connectors[packages/connectors&lt;br/&gt;Graph Client] --&gt; Graph
+    Workers --&gt; Connectors</code></pre>
+<h2 id="component-map">Component Map</h2>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 39%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Responsibility</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/web</code></td>
+<td>Analyst UI: dashboard, incident explorer, baseline review, approval
+center</td>
+<td>Next.js 14, Tailwind, tRPC client</td>
+</tr>
+<tr>
+<td><code>apps/api</code></td>
+<td>HTTP API with simple auth; all data access goes through here</td>
+<td>tRPC, Express, JWT</td>
+</tr>
+<tr>
+<td><code>apps/workers</code></td>
+<td>IngestionWorker (Graph polling), TriageWorker (agent pipeline),
+BaselineWorker</td>
+<td>TypeScript, BullMQ, pino</td>
+</tr>
+<tr>
+<td><code>packages/agents</code></td>
+<td>6 specialized agents: sign-in triage, identity risk, directory
+change, baseline review, response policy, research</td>
+<td>Anthropic SDK, tool use</td>
+</tr>
+<tr>
+<td><code>packages/connectors</code></td>
+<td>Microsoft Graph API client with MSAL auth, pagination, backoff, full
+mock mode</td>
+<td><span class="citation"
+data-cites="microsoft/microsoft-graph-client">@microsoft/microsoft-graph-client</span>,
+<span class="citation"
+data-cites="azure/msal-node">@azure/msal-node</span></td>
+</tr>
+<tr>
+<td><code>packages/policy</code></td>
+<td>Action approval matrix, assertActionPermitted() guardrail,
+PolicyViolationError</td>
+<td>Pure TypeScript</td>
+</tr>
+<tr>
+<td><code>packages/shared</code></td>
+<td>All zod schemas, enums, constants, Drizzle DB schema</td>
+<td>zod, drizzle-orm</td>
+</tr>
+<tr>
+<td><code>packages/ui</code></td>
+<td>Shared React components (Badge, SeverityBadge, Card, Button)</td>
+<td>React, Tailwind</td>
+</tr>
+</tbody>
+</table>
+<h2 id="entra-connection-single-tenant">Entra Connection
+(single-tenant)</h2>
+<p>This is a single-tenant app. The connected Entra tenant is configured
+entirely via environment variables — no DB table, no UI for managing
+connections.</p>
+<pre><code>GRAPH_CLIENT_ID=        # App registration client ID in the target tenant
+GRAPH_CLIENT_SECRET=    # Client secret (never stored in DB)
+GRAPH_TENANT_ID=        # The Entra Directory ID to monitor</code></pre>
+<p>On startup, the API and workers validate these credentials and
+confirm required Graph permissions before ingestion begins. If
+<code>MOCK_GRAPH_API=true</code>, the mock client is used and no real
+credentials are needed.</p>
+<h2 id="ingestion-data-flow">Ingestion Data Flow</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant G as Microsoft Graph
+    participant IW as IngestionWorker
+    participant DB as PostgreSQL
+    participant TW as TriageWorker
+    participant A as Agent (pre-filter then LLM)
+
+    IW-&gt;&gt;DB: Load ingestion cursor
+    IW-&gt;&gt;G: GET /auditLogs/signIns?$skipToken=cursor
+    G--&gt;&gt;IW: page of events + nextLink
+    IW-&gt;&gt;IW: Dedup by event_id + content_hash
+    IW-&gt;&gt;DB: INSERT sign_in_events (skip dupes)
+    IW-&gt;&gt;DB: UPDATE ingestion_cursors
+    TW-&gt;&gt;DB: Fetch unprocessed events (batch)
+    TW-&gt;&gt;TW: Rule-based pre-filter (pass / flag / ambiguous)
+    TW-&gt;&gt;A: Ambiguous events only
+    A--&gt;&gt;TW: incidents[] + confidence scores
+    TW-&gt;&gt;DB: INSERT incidents (deduped by actor+category hash)
+    TW-&gt;&gt;DB: INSERT audit_log</code></pre>
+<h2 id="response-action-flow">Response Action Flow</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant A as Agent
+    participant PE as Policy Engine
+    participant DB as PostgreSQL
+    participant AN as Analyst
+
+    A-&gt;&gt;PE: evaluateAction(action)
+    PE--&gt;&gt;A: AutoExecutable | ApprovalRequired | Prohibited
+    alt AutoExecutable
+        A-&gt;&gt;DB: Execute + INSERT response_actions (completed)
+    else ApprovalRequired
+        A-&gt;&gt;DB: INSERT response_actions (pending)
+        AN-&gt;&gt;DB: Review + approve
+        A-&gt;&gt;DB: Execute + UPDATE response_actions (completed)
+    else Prohibited
+        A-&gt;&gt;DB: INSERT audit_log (blocked)
+    end</code></pre>
+<h2 id="key-design-decisions">Key Design Decisions</h2>
+<p>See <a href="./docs/adr/">docs/adr/</a> for full records.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 34%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Choice</th>
+<th>ADR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Monorepo structure</td>
+<td>Turborepo + npm workspaces</td>
+<td>0001</td>
+</tr>
+<tr>
+<td>Agent framework</td>
+<td>Anthropic SDK direct (no external Pi dependency)</td>
+<td>0002</td>
+</tr>
+<tr>
+<td>LLM cost control</td>
+<td>Rule-based pre-filter before agent invocation</td>
+<td>0003</td>
+</tr>
+<tr>
+<td>Secret management</td>
+<td>Env vars only, never in DB</td>
+<td>0004</td>
+</tr>
+<tr>
+<td>Single vs multi-tenant</td>
+<td>Single tenant, env-configured connection</td>
+<td>0005</td>
+</tr>
+</tbody>
+</table>
+<h2 id="package-dependency-graph">Package Dependency Graph</h2>
+<pre><code>apps/web         → packages/shared, packages/ui
+apps/api         → packages/shared, packages/connectors, packages/policy, packages/agents
+apps/workers     → packages/shared, packages/connectors, packages/agents, packages/policy
+packages/agents  → packages/shared, packages/policy
+packages/policy  → packages/shared
+packages/connectors → packages/shared
+packages/ui      → (no internal deps)
+packages/shared  → (no internal deps)</code></pre>
+<p>No circular dependencies. <code>packages/shared</code> is the
+dependency root.</p>
+<hr />
+<h1 id="roadmap">ROADMAP</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/entra-triage/ROADMAP.md</code></em></p>
+<h1 id="roadmap-entra-triage">Roadmap — entra-triage</h1>
+<p>Implementation is driven by Roadrunner. Canonical task definitions
+with validation commands live in <a
+href="./tasks/tasks.yaml"><code>tasks/tasks.yaml</code></a>. This file
+is the narrative overview.</p>
+<h2 id="phase-1-reconcile-foundation-entra-001-003">Phase 1 — Reconcile
+&amp; Foundation (ENTRA-001 → 003)</h2>
+<p>Goal: Align code with the single-tenant DB schema, get every
+workspace building, and land the Drizzle ORM layer.</p>
+<ul>
+<li><strong>ENTRA-001</strong> — Reconcile entity Zod schemas with
+<code>db/migrations/001_initial.sql</code>. Delete
+<code>tenant.ts</code> and <code>connector.ts</code> (out of scope per
+ADR 0005); strip <code>tenantId</code> from the remaining 12 entity
+files; fix <code>db/seed.sql</code> (removes broken
+<code>INSERT INTO tenants</code>).</li>
+<li><strong>ENTRA-002</strong> — <code>npm install</code> +
+<code>npm run build</code> green across all workspaces. Type/import
+fixes only, no business-logic changes.</li>
+<li><strong>ENTRA-003</strong> — Drizzle ORM layer in
+<code>packages/shared/src/db/</code> (<code>schema.ts</code>,
+<code>db.ts</code>, <code>migrate.ts</code>). Mirrors every table in the
+migration exactly.</li>
+</ul>
+<p><strong>Exit criteria:</strong> <code>npm run build</code> passes
+across the monorepo; <code>packages/shared</code> exports a working
+Drizzle client; no <code>tenantId</code> references anywhere in
+<code>packages/shared/src/entities/</code>.</p>
+<h2 id="phase-2-graph-connectors-entra-010-011">Phase 2 — Graph
+Connectors (ENTRA-010, 011)</h2>
+<p>Goal: Production-grade Graph client + full mock parity for local
+dev.</p>
+<ul>
+<li><strong>ENTRA-010</strong> — Real client with
+<code>@odata.nextLink</code> pagination, 429/503 exponential backoff
+honoring Retry-After, Zod-validated returns. Covers sign-ins,
+audit-logs, risky-users, directory, applications.</li>
+<li><strong>ENTRA-011</strong> — Mock client as a full drop-in: same
+interface, realistic fixtures, P1/P2 license-tier variants for graceful
+degradation on ID Protection endpoints.</li>
+</ul>
+<p><strong>Exit criteria:</strong>
+<code>MOCK_LICENSE_TIER=P1 MOCK_GRAPH_API=true</code> runs end-to-end
+without touching real Graph; <code>packages/connectors</code> builds +
+tests pass.</p>
+<h2 id="phase-3-pipeline-entra-020-030-031-032-040">Phase 3 — Pipeline
+(ENTRA-020, 030, 031, 032, 040)</h2>
+<p>Goal: End-to-end ingestion → triage with deterministic pre-filter +
+LLM agents on the ambiguous slice.</p>
+<ul>
+<li><strong>ENTRA-020</strong> — Ingestion worker with per-stream cursor
+checkpointing, content-hash dedup, dead-letter for malformed payloads,
+pino redaction of PII.</li>
+<li><strong>ENTRA-030</strong> — Agent base refactor to Anthropic tool
+use for structured output + mandatory confidence scores (per ADR
+0002).</li>
+<li><strong>ENTRA-031</strong> — SignInTriage + IdentityRisk agents on
+the new base.</li>
+<li><strong>ENTRA-032</strong> — DirectoryChange + BaselineReview +
+ResponsePolicy + Research agents. ResponsePolicyAgent returns
+<code>ApprovalRequired</code> for all write-type actions in v1 (per ADR
+0006 — no <code>AutoExecutable</code> until v2).</li>
+<li><strong>ENTRA-040</strong> — Triage worker: rule-based pre-filter
+(PASS / FLAG / AMBIGUOUS — ADR 0003), agent dispatch, incident dedup
+hash, audit_log writes.</li>
+</ul>
+<p><strong>Exit criteria:</strong> <code>MOCK_GRAPH_API=true</code>
+end-to-end produces incidents in the DB; audit_log has a row per
+incident; dedup prevents second-run duplicates.</p>
+<h2 id="phase-4-api-ui-entra-050-051-060-061">Phase 4 — API + UI
+(ENTRA-050, 051, 060, 061)</h2>
+<p>Goal: Analyst-facing application — read-heavy API, single-operator
+UI.</p>
+<ul>
+<li><strong>ENTRA-050</strong> — tRPC read routes:
+<code>incidents</code> (list/get/updateStatus/suppress),
+<code>cases</code> (list/get/create/addIncident/updateStatus),
+<code>auditLog</code> (read-only). JWT middleware gates all
+procedures.</li>
+<li><strong>ENTRA-051</strong> — tRPC action routes:
+<code>baseline</code>, <code>responseActions</code>,
+<code>ingestion</code>. <code>responseActions</code> includes
+<code>propose</code>/<code>approve</code>/<code>reject</code>/<code>markExecutedManually</code>
+— <strong>no <code>execute</code> procedure in v1 (ADR
+0006)</strong>.</li>
+<li><strong>ENTRA-060</strong> — UI shell: login
+(<code>OPERATOR_USERNAME</code>/<code>OPERATOR_PASSWORD</code> from
+<code>.env</code>), dashboard layout with sidebar, dashboard page (risk
+posture + ingestion health + recent incidents), incidents explorer with
+filters and detail drawer.</li>
+<li><strong>ENTRA-061</strong> — UI: baseline review page, approvals
+page (no Execute button — shows “manual execution” guidance + “Mark
+executed” action per ADR 0006), settings page (connection status,
+permission checker, ingestion controls, licensing-gap banner).</li>
+</ul>
+<p><strong>Exit criteria:</strong> Analyst can log in, view incidents,
+approve a proposed response action, mark it as manually executed, and
+see the full lifecycle in the audit log.</p>
+<h2 id="phase-5-test-hardening-entra-070-080-081-090">Phase 5 — Test
+Hardening (ENTRA-070, 080, 081, 090)</h2>
+<p>Goal: Tests, local-dev polish, E2E confidence.</p>
+<ul>
+<li><strong>ENTRA-070</strong> — Vitest unit tests: policy engine
+determinism, event parser normalization, dedup hash stability.</li>
+<li><strong>ENTRA-080</strong> — <code>docker-compose.yml</code>
+(postgres:16, redis:7) + <code>scripts/dev-setup.sh</code> (check node,
+compose up, wait for postgres, apply migration, seed, print
+“Ready”).</li>
+<li><strong>ENTRA-081</strong> — Integration tests against a live
+postgres container: ingestion lifecycle (3 events → 3 rows → dedup on
+re-run), triage lifecycle (anomalous event → incident + audit_log),
+response-action lifecycle (propose → policy gate ApprovalRequired →
+approve → markExecutedManually → completed, per ADR 0006).</li>
+<li><strong>ENTRA-090</strong> — Playwright E2E: login, dashboard,
+incidents filter + detail, approvals flow, baseline review.</li>
+</ul>
+<p><strong>Exit criteria:</strong> <code>npm run test</code> green
+across workspaces; <code>bash scripts/dev-setup.sh</code> produces a
+working local env from a clean clone;
+<code>npm run e2e --workspace=apps/web</code> passes all five specs.</p>
+<h2 id="backlog-v2-candidates">Backlog (v2 candidates)</h2>
+<ul>
+<li><strong>Scoped write Graph permissions</strong> —
+<code>User.RevokeSessionsAll</code> first (lowest blast radius), then
+narrow additions per ADR 0006 upgrade path. Unlocks
+<code>AutoExecutable</code> classification + tool-driven
+<code>execute</code> routes.</li>
+<li>Real Entra credentials and staging environment against a live
+tenant</li>
+<li>Multi-tenant support if product expands beyond single-org use (would
+supersede ADR 0005)</li>
+<li>Proper auth (Entra ID as IdP, or SSO) replacing v1 env-var
+login</li>
+<li>Email/Slack notifications for Critical/High incidents and pending
+approvals</li>
+<li>Excel report export (v1 is PDF)</li>
+<li>Sentinel workspace export</li>
+<li>On-prem Active Directory support</li>
+<li>HashiCorp Vault for secret management</li>
+<li>Anomaly detection pre-filter ML model (v1 is rule-based)</li>
+</ul>
+</body>
+</html>
