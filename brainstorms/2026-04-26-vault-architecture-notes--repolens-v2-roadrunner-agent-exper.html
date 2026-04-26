@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_architect" />
+  <meta name="dcterms.date" content="2026-04-26" />
+  <title>Vault Architecture Notes — Repolens v2, Roadrunner, Agent-Experts</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Vault Architecture Notes — Repolens v2, Roadrunner,
+Agent-Experts</h1>
+<p class="author">principal_architect</p>
+<p class="date">2026-04-26</p>
+</header>
+<hr />
+<h1 id="repolens-v2-design">Repolens v2 Design</h1>
+<p><em>Source:
+<code>/var/folders/kk/x_9j34mn7vv19fdj4s292p180000gn/T/pna_va_XXXX.EPeL254ozF/repolens-v2.md</code></em></p>
+<h1 id="repolens-v2">Repolens v2</h1>
+<p>AI-native repository intelligence tool. Ingests a local git repo,
+classifies and scores every file, builds token-efficient context
+bundles, and runs AI tasks against that context. Replaces pasting entire
+codebases into chat windows.</p>
+<h2 id="stack">Stack</h2>
+<p>Python 3.12 + SQLite + Anthropic SDK + Typer CLI. Local-first. No
+cloud dependencies for MVP.</p>
+<h2 id="architecture">Architecture</h2>
+<pre><code>repolens/
+├── ingestion/      scan repo, apply gitignore + custom filters
+├── classification/ rules-based file type + importance scoring
+├── summarization/  AI summaries at file, directory, repo scope (cached by content hash)
+├── context/        token-budgeted context bundle assembler
+├── ai/             Anthropic client, prompt templates, task executor
+├── db/             SQLite schema + data access layer
+└── cli/            Typer CLI entrypoint</code></pre>
+<p>Pipeline:
+<code>ingest → classify → summarize → context → run</code></p>
+<h2 id="key-decisions">Key decisions</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Choice</th>
+<th>ADR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Summarization strategy</td>
+<td>Per-file (not batch)</td>
+<td>[[ADR-001]]</td>
+</tr>
+<tr>
+<td>Default token budget</td>
+<td>32K (override: <code>--budget</code> or
+<code>REPOLENS_TOKEN_BUDGET</code>)</td>
+<td>[[ADR-002]]</td>
+</tr>
+<tr>
+<td>FastAPI layer</td>
+<td>Deferred — CLI first</td>
+<td>[[ADR-003]]</td>
+</tr>
+</tbody>
+</table>
+<p>ADRs live at <code>docs/decisions/</code> in the repo.</p>
+<h2 id="build-log">Build log</h2>
+<p>Per-task learnings and issue notes: [[repolens-v2-build-log]]</p>
+<h2 id="build-progress">Build progress</h2>
+<p>Driven by [<a href="#roadrunner-cli">roadrunner-cli</a>] — 22 tasks,
+mission-based (each task = one principal_engineer mission).</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Tasks</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scaffold</td>
+<td>T01</td>
+<td>✅ done</td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>T02, T03</td>
+<td>✅ done</td>
+</tr>
+<tr>
+<td>Ingestion</td>
+<td>T04, T05, T06</td>
+<td>✅ done</td>
+</tr>
+<tr>
+<td>Classification</td>
+<td>T07, T08</td>
+<td>T07 ✅ / T08 queued</td>
+</tr>
+<tr>
+<td>Summarization</td>
+<td>T09, T10, T11, T12, T13</td>
+<td>T09-T12 ✅ / T13 queued</td>
+</tr>
+<tr>
+<td>Context Engine</td>
+<td>T14, T15, T16</td>
+<td>T14-T15 ✅ / T16 queued</td>
+</tr>
+<tr>
+<td>AI Execution</td>
+<td>T17, T18</td>
+<td>T17 in progress / T18 queued</td>
+</tr>
+<tr>
+<td>Status/List CLI</td>
+<td>T19</td>
+<td>queued</td>
+</tr>
+<tr>
+<td>FastAPI</td>
+<td>T20, T21</td>
+<td>deferred</td>
+</tr>
+<tr>
+<td>Smoke test</td>
+<td>T22</td>
+<td>pending</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Current: 15/22 done. ~70%. 238 tests passing.</strong></p>
+<h2 id="how-to-run-once-build-complete">How to run (once build
+complete)</h2>
+<pre class="bash"><code>cd ~/dev/projects/repolens_v2_repo
+source .venv/bin/activate
+repolens ingest &lt;path&gt;           # register + scan repo
+repolens classify &lt;repo&gt;         # classify + score files
+repolens summarize &lt;repo&gt;        # generate AI summaries (costs tokens)
+repolens context &lt;repo&gt; --task analyze --budget 32000
+repolens run &lt;repo&gt; --task analyze --description &quot;What does this codebase do?&quot;</code></pre>
+<h2 id="live-roadrunner-session-when-ready">Live roadrunner session
+(when ready)</h2>
+<p>Once T08 + remaining tasks are queued:</p>
+<pre class="bash"><code>cd ~/dev/projects/repolens_v2_repo
+source .venv/bin/activate
+claude   # roadrunner loop takes over from here</code></pre>
+<p>Stop hook will drive through remaining tasks automatically. Default
+50 iterations.</p>
+<hr />
+<h1 id="repolens-v2-build-log">Repolens v2 Build Log</h1>
+<p><em>Source:
+<code>/var/folders/kk/x_9j34mn7vv19fdj4s292p180000gn/T/pna_va_XXXX.EPeL254ozF/repolens-v2-build-log.md</code></em></p>
+<h1 id="repolens-v2-build-log-learnings">Repolens v2 — Build Log &amp;
+Learnings</h1>
+<p>Per-task notes from the mission-driven build. Each entry records what
+was built, what broke, and what to carry forward.</p>
+<hr />
+<h2 id="t01-project-scaffold">T01 — Project scaffold</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Issue:</strong> Engineer
+returned “no output” — work was partially done but T01 never marked
+done, venv not set up, nothing committed. <strong>Root cause:</strong>
+Mission-cli result capture timed out or agent context ran out before
+returning. <strong>Fixes applied:</strong> -
+<code>setuptools.backends.legacy:build</code> →
+<code>setuptools.build_meta</code> (invalid backend) - Added
+<code>tests/test_scaffold.py</code> (pytest exited 5 with no tests —
+needed at least one) - Updated T01 validation commands to use
+<code>.venv/bin/</code> prefixes - Added venv activation instructions to
+<code>CLAUDE.md</code></p>
+<p><strong>Learning:</strong> Always add at least one real test in the
+scaffold so pytest exits 0, not 5. Venv prefix discipline needs to be
+set from task 1, not retrofitted.</p>
+<hr />
+<h2 id="t02-sqlite-schema-migration-runner">T02 — SQLite schema +
+migration runner</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> 25 tests.
+WAL mode + FK enforcement enabled at init. Idempotent.
+<code>schema_version</code> seeded. <strong>Notable:</strong> Engineer
+added <code>_ensure_row_factory</code> as a shared helper — good
+pattern, picked up by later tasks. <strong>Learning:</strong> Good
+practice to enable WAL + FKs at init time, not leave it to callers.</p>
+<hr />
+<h2 id="t03-data-access-layer">T03 — Data access layer</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> 38 tests,
+12 functions, zero raw SQL outside the module. <strong>Notable:</strong>
+<code>update_run</code> auto-sets <code>completed_at</code> on terminal
+status — nice defensive default. <code>file_paths</code> JSON-encoded in
+DB, decoded on read. Upsert is PATCH semantics (existing columns not in
+kwargs untouched). <strong>Notes for future tasks:</strong> FK pragma is
+per-connection — <code>PRAGMA foreign_keys=ON</code> needed after each
+<code>sqlite3.connect()</code> if cascade behaviour required.</p>
+<hr />
+<h2 id="t04-file-filters">T04 — File filters</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> 20 tests.
+Clean four-function interface. <strong>Notable:</strong>
+<code>is_binary</code> defaults to <code>True</code> on unreadable files
+— good safe default. <code>.git/</code> hardcoded as always-ignored
+regardless of <code>.gitignore</code>. <strong>Learning:</strong> Safe
+defaults on error &gt; silent failures. Never trust the caller to handle
+missing files gracefully.</p>
+<hr />
+<h2 id="t05-directory-scanner">T05 — Directory scanner</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> 8 tests.
+Scans this repo at 55 files. <strong>Notable:</strong> Used
+<code>os.scandir</code> not <code>os.walk</code> — correct for
+efficiency. sha256 per file. <strong>Learning:</strong>
+<code>os.scandir</code> is meaningfully faster than <code>os.walk</code>
+on large trees. Worth the extra code.</p>
+<hr />
+<h2 id="t06-cli-ingest-command">T06 — CLI ingest command</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Notable:</strong> Running
+ingest twice on same path updates rather than duplicates (get_repo check
++ upsert handles idempotency). DB at
+<code>~/.repolens/repolens.db</code> auto-created on first use.
+<strong>Learning:</strong> CLI commands that touch the DB should always
+be idempotent. User will run them more than once.</p>
+<hr />
+<h2 id="t07-file-classifier-scorer">T07 — File classifier + scorer</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Notable:</strong>
+<code>other</code> category captured 27/60 files on first classify run —
+<code>.pyc</code>, egg-info, lock files. Score ties at 1.0 for shallow
+<code>__init__.py</code> files (entry-point boost + depth=0).
+<strong>Learning:</strong> <code>other</code> being high is expected on
+a fresh Python project with build artifacts. Consider adding
+<code>generated</code> classification for
+<code>.pyc</code>/<code>__pycache__</code> in the scanner or filter
+layer rather than letting them through to classification.</p>
+<hr />
+<h2 id="t08-cli-classify-command">T08 — CLI classify command</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Output on this repo (60
+files):</strong> core=18, other=27, test=7, docs=4, config=4.
+<strong>Learning:</strong> Score differentiation improves with depth —
+shallow files all score 1.0 due to entry-point boost. The high
+<code>other</code> count is an upstream filter gap, not a classifier
+bug.</p>
+<hr />
+<h2 id="t09-ai-client-wrapper">T09 — AI client wrapper</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> 16 tests,
+all mocked (no real API calls in tests). <strong>Notable:</strong>
+<code>ValueError</code> raised before SDK touches missing key — correct.
+Returns <code>(str, int, int)</code> tuple consistently.
+<strong>Learning:</strong> Always validate API keys before instantiating
+the client. Fail fast with a clear message, not an SDK stack trace.</p>
+<hr />
+<h2 id="t10-prompt-templates">T10 — Prompt templates</h2>
+<p><strong>Status:</strong> ✅ Done (engineer returned no output —
+second occurrence) <strong>Quality:</strong> Code landed correctly. 4
+pure string functions, no I/O. <strong>Learning (meta):</strong> “No
+output” pattern now seen twice. Likely agent context runs out after
+writing code but before writing the result string. Not blocking but
+worth investigating the mission-cli result buffer.</p>
+<hr />
+<h2 id="t11-file-summarizer-with-caching">T11 — File summarizer with
+caching</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> Cache
+hit/miss verified. Content capped at 200k chars (~50K tokens) before API
+call. <strong>Notable:</strong> Cache key is
+<code>(repo_id, scope='file', relative_path)</code> + content_hash
+match. Hash mismatch triggers re-summarisation automatically.
+<strong>Learning:</strong> Cache-by-hash is the right pattern for AI
+summaries. Never re-summarise unchanged files.</p>
+<hr />
+<h2 id="t12-directory-repo-summarizer">T12 — Directory + repo
+summarizer</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> 28 new
+tests. Multi-repo isolation verified (repo_id is part of cache key).
+<strong>Notable:</strong> <code>_REPO_TARGET_PATH = ''</code> exported
+as constant — keeps the magic string in one place.
+<strong>Learning:</strong> Constants for magic DB values (like
+empty-string repo target) should be module-level exports, not inline
+literals scattered across callers.</p>
+<hr />
+<h2 id="t14-token-counter">T14 — Token counter</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> 12 tests.
+tiktoken working. Fallback verified. Pricing table correct.
+<strong>Pricing encoded:</strong> opus-4-5 ($15/$75), sonnet-4-5
+($3/$15), haiku-3-5 ($0.80/$4). Unknown model → sonnet pricing.
+<strong>Learning:</strong> Always encode a fallback for token counting.
+tiktoken can fail on unusual Python versions.</p>
+<hr />
+<h2 id="t15-context-packager">T15 — Context packager</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> 22 tests.
+Budget enforcement at 1.05x tolerance confirmed.
+<strong>Notable:</strong> <code>list_summaries_by_scope()</code> added
+to repository.py to keep SQL inside db/ — correct layering. Edge cases:
+file too large → summary fallback, file missing from disk → summary
+fallback, file with no summary and no disk → silently skipped.
+<strong>Learning:</strong> The “silently skip” vs “error” decision for
+missing files matters in batch operations. Skipping is right here — a
+context bundle with some gaps is better than a hard failure.</p>
+<hr />
+<h2 id="t17-task-executor-run-logging">T17 — Task executor + run
+logging</h2>
+<p><strong>Status:</strong> ✅ Done (engineer returned no output — third
+occurrence) <strong>Issue:</strong> Engineer imported
+<code>get_run</code> from repository.py but function didn’t exist —
+broke test collection for entire test suite. <strong>Fix:</strong> Added
+<code>get_run(conn, run_id) -&gt; dict | None</code> to repository.py.
+Natural function, should have been in T03 scope.
+<strong>Quality:</strong> Run lifecycle (running → done/failed)
+verified. <code>completed_at</code> auto-set on terminal status (from
+T03’s <code>update_run</code> design). <strong>Learning:</strong> When
+an engineer imports a function that doesn’t exist, it’s more likely a
+spec gap than engineer error. <code>get_run</code> is obviously needed
+alongside <code>create_run</code> and <code>update_run</code>. Specs
+should include all CRUD pairs.</p>
+<hr />
+<h2 id="t13-cli-summarize-command">T13 — CLI summarize command</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> 55 tests
+passing. <code>--scope file|dir|repo|all</code>, <code>--force</code>,
+token tracking, cost report all implemented. <strong>Design:</strong>
+Progress printed per-file during run. Token + cost summary at end.
+<code>--force</code> passes through to summarizer cache bypass.
+<strong>Learning:</strong> Good example of a CLI command that’s
+essentially a loop over existing primitives — the summarizers did the
+heavy lifting, T13 just wired them together with a clean interface.</p>
+<hr />
+<h2 id="t16-context-exporter-cli-context-command">T16 — Context exporter
++ CLI context command</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> New tests
+added to test_context.py. <code>export_markdown</code> and
+<code>export_json</code> as pure functions (no DB/API side effects).
+<strong>Design:</strong> Token count + file list go to stderr; formatted
+bundle content goes to stdout (or <code>--output</code> file). Clean
+separation lets the output be piped. <strong>Learning:</strong> Stderr
+for diagnostics, stdout for content. Simple rule that makes CLI tools
+composable.</p>
+<hr />
+<h2 id="t19-cli-status-list-runs-commands">T19 — CLI status, list, runs
+commands</h2>
+<p><strong>Status:</strong> ✅ Done <strong>Quality:</strong> All three
+commands implemented and validated. Graceful empty-table handling.
+<strong>Design:</strong> <code>list</code> shows repo table,
+<code>status</code> shows per-repo breakdown (file count, category
+breakdown, summary coverage %, last scan), <code>runs</code> shows
+recent run history with tokens + cost. <strong>Learning:</strong> These
+three commands are the “health check” surface for the tool — getting
+them right early is worth it. Users need fast answers to “what have I
+indexed?” and “what did that last run cost?”</p>
+<hr />
+<h2 id="meta-no-output-pattern">Meta: “No output” pattern</h2>
+<p>Seen on T01, T10, T17. Engineer completes the work (code lands,
+validated) but mission result string is empty. Hypothesis: agent context
+window exhausted after implementation, before writing result. Not
+blocking — work always lands correctly. But wastes a review cycle.
+<strong>Mitigation in place:</strong> “Report back with your result”
+added to all prompts. Seems to reduce but not eliminate.
+<strong>TODO:</strong> Investigate mission-cli result capture timeout.
+May need to increase buffer or add a checkpoint mid-task for large
+implementations.</p>
+<hr />
+<h2 id="build-progress-1">Build Progress</h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Tasks</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scaffold</td>
+<td>T01</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>T02, T03</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Ingestion</td>
+<td>T04, T05, T06</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Classification</td>
+<td>T07, T08</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>AI Core</td>
+<td>T09, T10, T17</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Summarization</td>
+<td>T11, T12</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Context Engine</td>
+<td>T14, T15</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>CLI Layer 2</td>
+<td>T13, T16, T19</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>In flight</td>
+<td>T18</td>
+<td>🔄</td>
+</tr>
+<tr>
+<td>Final</td>
+<td>T22</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>Deferred</td>
+<td>T20, T21 (FastAPI)</td>
+<td>⏸️</td>
+</tr>
+</tbody>
+</table>
+<p><strong>18/22 done. 310 tests. ~85% complete. T18 in
+flight.</strong></p>
+<hr />
+<h1 id="roadrunner-cli-architecture-notes">Roadrunner CLI Architecture
+Notes</h1>
+<p><em>Source:
+<code>/var/folders/kk/x_9j34mn7vv19fdj4s292p180000gn/T/pna_va_XXXX.EPeL254ozF/roadrunner-cli.md</code></em></p>
+<h1 id="roadrunner-cli">roadrunner-cli</h1>
+<p>Deterministic agentic loop for Claude Code. Python owns control.
+Claude owns execution. Hooks enforce completion.</p>
+<h2 id="what-it-does">What it does</h2>
+<p>Runs Claude Code through a task queue (<code>tasks/tasks.yaml</code>)
+where: - Every task must pass its <code>validation_commands</code>
+before it can be marked done - The Stop hook blocks Claude from exiting
+when tasks remain - The PreCompact hook snapshots state before context
+window resets - The SessionStart hook injects roadmap state after
+compaction restarts</p>
+<h2 id="architecture-1">Architecture</h2>
+<pre><code>tasks/tasks.yaml          ← task queue (todo → in_progress → done)
+roadrunner.py             ← controller: start, validate, complete, block
+.claude/settings.json     ← wires hooks to Claude Code events
+hooks/stop_hook.sh        ← blocks exit when tasks remain
+hooks/session_start_hook.sh  ← injects snapshot context on session start
+hooks/precompact_hook.sh  ← snapshots state before compaction
+hooks/post_write_hook.sh  ← surfaces ruff/yaml lint feedback</code></pre>
+<p><strong>10 ADRs</strong> documenting real bugs found and fixed:
+line-anchored completion signal, in-progress awareness, retry storm
+prevention, atomic writes, absolute hook paths, structured trace
+logging, dead hook cleanup, validation timeout, state schema versioning,
+hook→Python entry point unification.</p>
+<h2 id="status">Status</h2>
+<p><strong>102 tests. Active roadmap: ROAD-001 to ROAD-009.</strong></p>
+<p>Bootstrap (6/6 done). Now developing the project itself with its own
+tasks.yaml. Loop battle-tested via repolens-v2 build — drove 18+ tasks
+across the full pipeline.</p>
+<h2 id="roadmap-road-001-to-road-009">Roadmap (ROAD-001 to
+ROAD-009)</h2>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Title</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROAD-001</td>
+<td>pyproject.toml — pip packaging</td>
+<td>todo</td>
+</tr>
+<tr>
+<td>ROAD-002</td>
+<td>roadrunner init command</td>
+<td>todo</td>
+</tr>
+<tr>
+<td>ROAD-003</td>
+<td>roadrunner analyze command</td>
+<td>todo</td>
+</tr>
+<tr>
+<td>ROAD-004</td>
+<td>mypy type coverage</td>
+<td>todo</td>
+</tr>
+<tr>
+<td>ROAD-005</td>
+<td>PostCompact hook</td>
+<td>todo</td>
+</tr>
+<tr>
+<td>ROAD-006</td>
+<td>CONTRIBUTING.md + config docs</td>
+<td>todo</td>
+</tr>
+<tr>
+<td>ROAD-007</td>
+<td>roadrunner watch command</td>
+<td>todo</td>
+</tr>
+<tr>
+<td>ROAD-008</td>
+<td>PyPI publish workflow</td>
+<td>todo</td>
+</tr>
+<tr>
+<td>ROAD-009</td>
+<td>End-to-end worked example</td>
+<td>todo</td>
+</tr>
+</tbody>
+</table>
+<p>4 tasks immediately eligible: ROAD-001, ROAD-003, ROAD-005,
+ROAD-006.</p>
+<h2 id="embed-procedure-copy-in-pattern">Embed procedure (copy-in
+pattern)</h2>
+<pre class="bash"><code>cp roadrunner.py &lt;target-project&gt;/
+cp -r hooks/ &lt;target-project&gt;/hooks/
+cp .claude/settings.json &lt;target-project&gt;/.claude/settings.json
+mkdir -p tasks logs
+# Add tasks/tasks.yaml and CLAUDE.md
+python3 roadrunner.py health</code></pre>
+<h2 id="known-issues-resolved">Known issues / resolved</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hook paths used <code>.claude/hooks/</code> (wrong)</td>
+<td>Fixed — all hooks at <code>hooks/</code> with
+<code>$CLAUDE_PROJECT_DIR</code></td>
+</tr>
+<tr>
+<td><code>python</code> vs <code>python3</code> inconsistency</td>
+<td>Standardized to <code>python3</code> throughout</td>
+</tr>
+<tr>
+<td>TaskCompleted hook fired on wrong event</td>
+<td>Removed entirely (ADR-007). Replaced by SessionStart hook</td>
+</tr>
+<tr>
+<td>PostToolUse matcher had invalid <code>MultiEdit</code></td>
+<td>Fixed to <code>Write\|Edit</code></td>
+</tr>
+<tr>
+<td>Post-write hook silenced lint with <code>\|\| true</code></td>
+<td>Fixed — now emits output without blocking</td>
+</tr>
+<tr>
+<td>PreCompact dead additionalContext output</td>
+<td>Removed — PreCompact doesn’t support that field</td>
+</tr>
+</tbody>
+</table>
+<h2 id="notes-for-live-run">Notes for live run</h2>
+<ol type="1">
+<li>Run <code>claude</code> from project root — loop takes over via Stop
+hook</li>
+<li>Default max iterations: 50 (override:
+<code>ROADMAP_MAX_ITERATIONS=100 claude</code>)</li>
+<li>Auto-blocks tasks after 5 failed resume attempts; unblock manually
+with <code>python3 roadrunner.py block TASK-XXX --notes "reason"</code>
+then reset to todo via editing tasks.yaml</li>
+<li>Logs: <code>logs/trace.jsonl</code> (structured),
+<code>logs/CHANGELOG.md</code> (human audit),
+<code>logs/TASK-XXX.md</code> (per-task work log)</li>
+</ol>
+<hr />
+<h1 id="agent-experts-patterns">Agent-Experts Patterns</h1>
+<p><em>Source:
+<code>/var/folders/kk/x_9j34mn7vv19fdj4s292p180000gn/T/pna_va_XXXX.EPeL254ozF/agent-experts-patterns.md</code></em></p>
+<h1 id="agent-experts-pattern-lessons-learned">Agent Experts Pattern —
+Lessons Learned</h1>
+<h2 id="headline">Headline</h2>
+<p>Agents forget between sessions. The fix is a <strong>persistent YAML
+mental model</strong> per domain, read before acting, validated against
+code after acting, re-synced on a schedule. Code stays the source of
+truth. The YAML is a cache of <em>how to think about</em> the code.
+That’s the whole pattern.</p>
+<p>Everything else in disler/agent-experts is scaffolding around this
+idea.</p>
+<h2 id="why-this-matters-for-pa">Why this matters for P&amp;A</h2>
+<ul>
+<li><strong>research_a/b A/B test</strong>: each research agent can
+accumulate domain expertise files over sessions. Better expertise →
+better outputs. Measurable delta between frameworks.</li>
+<li><strong>creator-stack</strong>: first real consumer. Codify “what
+good creator content looks like for Alex” as an expertise file so the
+stack doesn’t drift each invocation.</li>
+<li><strong>Clarke delegation</strong>: expertise files sit next to
+principals’ CLAUDE.md as the domain layer. Persona prompt says <em>how
+you work</em>; expertise file says <em>what you know</em>.</li>
+</ul>
+<h2 id="the-7-patterns-ranked-by-leverage">The 7 patterns (ranked by
+leverage)</h2>
+<h3 id="domain-triad">1. Domain triad</h3>
+<p>Every domain gets three files:</p>
+<pre><code>experts/&lt;domain&gt;/
+├── expertise.yaml       # the mental model (canonical, versioned)
+├── question.md          # read-only Q&amp;A against the YAML
+└── self-improve.md      # rewrite YAML to match current code</code></pre>
+<p>Clean separation of storage, read path, write path. No other files.
+No drift risk between “docs” and “notes” and “reference”.</p>
+<h3 id="strict-line-cap">2. Strict line cap</h3>
+<p><code>MAX_LINES = 1000</code>. Self-improve loops an iterative trim
+until under cap. Trim priority:</p>
+<ol type="1">
+<li>Verbose descriptions → terse</li>
+<li>Redundant examples → one canonical each</li>
+<li>Low-priority edge cases → drop</li>
+</ol>
+<p>The cap is what keeps the YAML a <em>working reference</em> instead
+of documentation sprawl. No cap, no memory; just docs.</p>
+<h3 id="compile-check-as-validation-gate">3. Compile-check as validation
+gate</h3>
+<p>End of every self-improve run:</p>
+<pre class="bash"><code>python3 -c &quot;import yaml; yaml.safe_load(open(&#39;expertise.yaml&#39;))&quot;</code></pre>
+<p>Cheap correctness floor. Broken YAML never ships. Cost: milliseconds.
+Value: eliminates an entire class of silent failures.</p>
+<h3 id="plan-build-improve-orchestrator">4. Plan → Build → Improve
+orchestrator</h3>
+<p><code>plan_build_improve.md</code> chains three Task-tool
+subagents:</p>
+<ol type="1">
+<li><code>/experts:&lt;domain&gt;:plan [prompt]</code> →
+<code>path_to_plan</code></li>
+<li><code>/build [path_to_plan]</code> → build report</li>
+<li><code>/experts:&lt;domain&gt;:self-improve true</code> → drift
+report</li>
+</ol>
+<p>Load-bearing rule: <em>do not stop between steps</em>. Parent holds
+the thread, children do clean work with fresh context.</p>
+<h3 id="fresh-context-subagent-rule">5. Fresh-context subagent rule</h3>
+<p>Every subagent brief stands alone. No implicit context. Same
+discipline Clarke uses when delegating to principals. Confirms the
+universal law: <strong>delegation quality = brief quality</strong>.</p>
+<h3 id="sub-agent-contract-has-teeth">6. Sub-agent contract has
+teeth</h3>
+<p>Frontmatter: - <code>description</code> states <em>when to
+delegate</em> (not just what) - <code>tools</code> list is minimal and
+comma-separated</p>
+<p>Body: exactly 4 sections — Purpose / Instructions / Workflow /
+Report. No optional sections, no ceremony. Meta-agent enforces this
+shape; violations get regenerated.</p>
+<h3 id="single-file-build-agent">7. Single-file build agent</h3>
+<p><code>build-agent.md</code> implements one file at a time from a
+detailed spec. Parallelizable out of the box. Matches our atomic-task
+rule in TASKS.md. A spec with N atomic tasks = N parallel
+build-agents.</p>
+<h2
+id="supporting-concepts-from-the-tac-13-video-ztcdwqopvke">Supporting
+concepts (from the TAC-13 video, zTcDwqopvKE)</h2>
+<ul>
+<li><strong>Three atoms of meta-agentics</strong>: meta-prompt (prompts
+writing prompts), meta-agent (agents building agents), meta-skill
+(skills creating skills).</li>
+<li><strong>Act → Learn → Reuse</strong>: every task improves the mental
+model for next time. Compounding per domain.</li>
+<li><strong>Code is source of truth, expertise is mental model</strong>:
+never let them compete. Expertise re-reads code, not the other way
+around.</li>
+<li><strong>Scale-out pattern</strong>: fire N parallel experts against
+the same question when you need confidence.</li>
+</ul>
+<h2 id="pattern-pna-library-skill-mapping">Pattern → pna-library skill
+mapping</h2>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Skill slug</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Domain triad scaffolder</td>
+<td><code>agent-expert-kit</code></td>
+<td>plan drafted</td>
+</tr>
+<tr>
+<td>Re-sync loop</td>
+<td><code>self-improve-expertise</code></td>
+<td>plan drafted</td>
+</tr>
+<tr>
+<td>Prompt-writes-prompt</td>
+<td><code>meta-prompt</code></td>
+<td>plan drafted</td>
+</tr>
+<tr>
+<td>Plan/build/improve chain</td>
+<td><code>plan-build-improve</code></td>
+<td>plan drafted</td>
+</tr>
+<tr>
+<td>Parallel single-file build</td>
+<td><code>parallel-build</code></td>
+<td>plan drafted</td>
+</tr>
+<tr>
+<td>Read-only drift audit</td>
+<td><code>expertise-audit</code></td>
+<td>plan drafted</td>
+</tr>
+</tbody>
+</table>
+<p>Full plan at <code>~/dev/projects/agent-expert-kit/</code>.</p>
+<h2 id="composition-with-existing-library">Composition with existing
+library</h2>
+<ul>
+<li><strong>till-done</strong> (WIP) → execution discipline; gates
+before and after work</li>
+<li><strong>agent-expert-kit</strong> (planned) → memory discipline;
+what the agent <em>knows</em> about a domain</li>
+<li><strong>meta-optimize</strong> (shipped) → library discipline;
+prunes the skill shelf</li>
+<li><strong>skill-optimizer</strong> (shipped) → individual skill
+quality via Karpathy autoresearch</li>
+<li><strong>creator-stack</strong> (shipped) → first domain
+consumer</li>
+</ul>
+<p>Stack together: agents that verify their work, remember their domain,
+operate from a pruned shelf of sharp skills. That’s the whole agentic
+engineering thesis in one sentence.</p>
+<h2 id="open-questions">Open questions</h2>
+<ul>
+<li>Where do expertise files live? Per-agent
+<code>.claude/skills/&lt;agent&gt;/experts/&lt;domain&gt;/</code>, or
+shared at <code>~/.pna/experts/&lt;domain&gt;/</code> so research_a and
+research_b see the same mental model?</li>
+<li>Do we git-track expertise.yaml? (Yes for code-linked domains, no for
+ephemeral/personal. Default: yes.)</li>
+<li>Self-improve cadence — on-demand, post-commit hook, or nightly
+cron?</li>
+</ul>
+<h2 id="source">Source</h2>
+<ul>
+<li>Repo: github.com/disler/agent-experts (cloned to
+<code>~/dev/scratch/agent-experts</code>)</li>
+<li>Video: https://www.youtube.com/watch?v=zTcDwqopvKE (cached
+transcript:
+<code>~/.media-extract/cache/transcripts/zTcDwqopvKE-agent-experts-agents-that-learn.md</code>)</li>
+<li>Course page (paywalled):
+https://agenticengineer.com/tactical-agentic-coding/course/agent-experts</li>
+</ul>
+</body>
+</html>

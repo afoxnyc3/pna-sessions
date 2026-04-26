@@ -727,5 +727,19 @@
       "skills",
       "principal-plugin"
     ]
+  },
+  {
+    "type": "brainstorm",
+    "title": "Vault Architecture Notes \u2014 Repolens v2, Roadrunner, Agent-Experts",
+    "date": "2026-04-26",
+    "agent": "principal_architect",
+    "path": "brainstorms/2026-04-26-vault-architecture-notes--repolens-v2-roadrunner-agent-exper.html",
+    "tags": [
+      "architecture",
+      "repolens",
+      "roadrunner",
+      "agent-experts",
+      "patterns"
+    ]
   }
 ]
