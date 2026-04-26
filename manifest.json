@@ -714,5 +714,18 @@
       "memo",
       "system-state"
     ]
+  },
+  {
+    "type": "brainstorm",
+    "title": "Library Grooming Notes (2026-04-21)",
+    "date": "2026-04-26",
+    "agent": "principal_librarian",
+    "path": "brainstorms/2026-04-26-library-grooming-notes-2026-04-21.html",
+    "tags": [
+      "library",
+      "grooming",
+      "skills",
+      "principal-plugin"
+    ]
   }
 ]

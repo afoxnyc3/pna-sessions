@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_librarian" />
+  <meta name="dcterms.date" content="2026-04-21" />
+  <title>Library Grooming Notes (2026-04-21)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Library Grooming Notes (2026-04-21)</h1>
+<p class="author">principal_librarian</p>
+<p class="date">2026-04-21</p>
+</header>
+<hr />
+<h1 id="baseline-grooming">Baseline Grooming</h1>
+<p><em>Source:
+<code>/Users/alex/Documents/Obsidian/claudeclaw/Library/grooming/2026-04-21-baseline.md</code></em></p>
+<h1 id="library-baseline-2026-04-21">Library Baseline — 2026-04-21</h1>
+<p>First-session catalog audit. No invocation data yet (no
+skill_roster.yaml usage history from deepagents). This is a structural
+baseline only.</p>
+<h2 id="catalog-summary">Catalog Summary</h2>
+<p><strong>Total skills in library.yaml: 85</strong> Target per agent:
+8-12</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Category</th>
+<th>Count</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Research &amp; Analysis</td>
+<td>10</td>
+<td>deep-research, source-comparison, literature-review, novelty-check,
+peer-review, idea-refine, eli5, alpha-research, research-wiki,
+research-refine</td>
+</tr>
+<tr>
+<td>Web &amp; Content</td>
+<td>4</td>
+<td>media-extract, defuddle, jobs, watch</td>
+</tr>
+<tr>
+<td>Document &amp; File Operations</td>
+<td>4</td>
+<td>pdf, docx, xlsx, pptx</td>
+</tr>
+<tr>
+<td>Engineering &amp; Code</td>
+<td>12</td>
+<td>spec-driven-development, planning-and-task-breakdown,
+api-and-interface-design, documentation-and-adrs,
+verification-before-completion, systematic-debugging,
+requesting-code-review, receiving-code-review,
+finishing-a-development-branch, mcp-builder, claude-api,
+webapp-testing</td>
+</tr>
+<tr>
+<td>Gemini &amp; Google AI</td>
+<td>4</td>
+<td>gemini-api-dev, gemini-interactions-api, gemini-live-api-dev,
+vertex-ai-api-dev</td>
+</tr>
+<tr>
+<td>Multi-Agent &amp; Orchestration</td>
+<td>4</td>
+<td>dispatching-parallel-agents, subagent-driven-development,
+brainstorming, writing-plans</td>
+</tr>
+<tr>
+<td>Skill Development &amp; Optimization</td>
+<td>5</td>
+<td>writing-skills, skill-creator, skill-optimizer, meta-optimize,
+autoresearch</td>
+</tr>
+<tr>
+<td>Session &amp; Memory Management</td>
+<td>3</td>
+<td>agent-session-summary, session-log, session-search</td>
+</tr>
+<tr>
+<td>Obsidian &amp; Vault</td>
+<td>3</td>
+<td>obsidian-cli, obsidian-markdown, obsidian-bases</td>
+</tr>
+<tr>
+<td>Paper &amp; Academic</td>
+<td>5</td>
+<td>paper-writing, paper-code-audit, replication, idea-discovery,
+auto-review-loop</td>
+</tr>
+<tr>
+<td>Client &amp; Business</td>
+<td>2</td>
+<td>cerberus, doc-coauthoring</td>
+</tr>
+<tr>
+<td>Creator &amp; Content (AI Launchpad)</td>
+<td>21</td>
+<td>write, voice, research-creator, title, hook, extract-ideas,
+thumbnail, social-graphic, design-system, brand-guidelines, nanobanana,
+plan-newsletter, optimize-newsletter, newsletter-visuals,
+newsletter-to-video, plan-video, repurpose-video, community-post,
+ideate-notes, write-note, youtube-data</td>
+</tr>
+<tr>
+<td>Principal Agent stubs</td>
+<td>5</td>
+<td>principal-engineer, principal-architect, principal-strategy,
+principal-pipeline, principal-delivery</td>
+</tr>
+<tr>
+<td>Creator agents</td>
+<td>2</td>
+<td>thumbnail-reviewer, youtube-researcher</td>
+</tr>
+<tr>
+<td>Misc</td>
+<td>1</td>
+<td>wrap</td>
+</tr>
+</tbody>
+</table>
+<h2 id="immediate-flags">Immediate Flags</h2>
+<h3
+id="creator-content-block-21-skills-2-agents-routing-pollution-risk">1.
+Creator &amp; Content block (21 skills + 2 agents) — routing pollution
+risk</h3>
+<p>These belong to the AI Launchpad / creator-stack consumer. They are
+not P&amp;A principal skills. At 23 entries, they are the single largest
+bloc and will degrade routing accuracy for research and engineering
+skills if they share the same routing namespace. <strong>Priority:
+confirm consumer isolation. If they run on different agents/instances,
+risk is contained. If not, segregate.</strong></p>
+<h3 id="gemini-cluster-4-skills-high-trigger-overlap">2. Gemini cluster
+(4 skills) — high trigger overlap</h3>
+<p>gemini-api-dev, gemini-interactions-api, gemini-live-api-dev,
+vertex-ai-api-dev almost certainly share trigger phrases (“Gemini”,
+“call Gemini API”). A prompt like “write a Gemini API call” could hit
+any of the four. <strong>Priority: audit descriptions, tighten triggers,
+consider collapsing gemini-api-dev + gemini-interactions-api if they are
+70%+ overlapping.</strong></p>
+<h3 id="research-analysis-10-skills-over-populated">3. Research &amp;
+Analysis (10 skills) — over-populated</h3>
+<p>deep-research, research-wiki, research-refine, literature-review all
+cluster around “do thorough research”. Trigger discrimination is unclear
+without reading each description. <strong>Priority: description audit.
+Flag any pair with &gt;50% overlap.</strong></p>
+<h3 id="engineering-code-12-skills-at-limit">4. Engineering &amp; Code
+(12 skills) — at limit</h3>
+<p>Already at the 8-12 ceiling as a single category. Adding more without
+pruning will hurt routing. No action today, but this is the ceiling — no
+new engineering skills without retiring one.</p>
+<h3 id="principal-agent-stubs-5-skills-purpose-unclear">5. Principal
+Agent stubs (5 skills) — purpose unclear</h3>
+<p>principal-engineer, principal-architect, etc. as library skills is
+unexpected. These might be agent invocation wrappers. Need to understand
+what they do before categorizing. Flag for review.</p>
+<h2 id="what-is-not-flagged">What Is Not Flagged</h2>
+<ul>
+<li>Document &amp; File Operations (4): clean, distinct, no overlap
+risk</li>
+<li>Obsidian &amp; Vault (3): clean</li>
+<li>Session &amp; Memory Management (3): clean</li>
+<li>Multi-Agent &amp; Orchestration (4): acceptable, check brainstorming
+vs writing-plans triggers</li>
+<li>Skill Development &amp; Optimization (5): these are my tools,
+acceptable</li>
+</ul>
+<h2 id="next-actions">Next Actions</h2>
+<ol type="1">
+<li>Audit Gemini cluster descriptions — check trigger overlap, propose
+merge if &gt;70%</li>
+<li>Audit Research cluster descriptions — flag pairs with &gt;50%
+trigger overlap</li>
+<li>Confirm creator-stack isolation — do these skills run in a different
+agent namespace?</li>
+<li>Read principal agent stub files — understand purpose, recategorize
+or retire</li>
+<li>First invocation telemetry in 14 days will determine pruning
+candidates</li>
+</ol>
+<h2 id="catalog-count-at-baseline">Catalog Count at Baseline</h2>
+<p>85 skills. Target for P&amp;A core fleet: 8-12 per agent.
+Creator-stack is a separate consumer and skews the count significantly.
+Excluding creator + agent stubs: <strong>54 core P&amp;A skills</strong>
+— still 4-6x the per-agent target, but spread across multiple principals
+so routing risk depends on per-agent allocation, not total.</p>
+<hr />
+<h1 id="principal-plugin-mvp5-ingestion">Principal Plugin MVP5
+Ingestion</h1>
+<p><em>Source:
+<code>/Users/alex/Documents/Obsidian/claudeclaw/Library/grooming/2026-04-21-principal-plugin-mvp5-ingestion.md</code></em></p>
+<h1 id="grooming-note-principal-plugin-mvp-5-ingestion">Grooming Note:
+Principal Plugin MVP-5 Ingestion</h1>
+<h2 id="what-was-ingested">What Was Ingested</h2>
+<p>5 SKILL.md files from <code>afoxnyc3/principal-plugin</code> (private
+repo) added to pna-library catalog and installed to
+<code>~/.claude/skills/</code> as symlinks to
+<code>~/dev/projects/principal-plugin/skills/&lt;name&gt;/</code>.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Skill</th>
+<th>Phase</th>
+<th>Prerequisites</th>
+<th>Install Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>saas-decommission</td>
+<td>0 — Wedge</td>
+<td>none</td>
+<td>standalone</td>
+</tr>
+<tr>
+<td>problem-decomposition</td>
+<td>2 — Design (spine)</td>
+<td>none</td>
+<td>standalone</td>
+</tr>
+<tr>
+<td>agentic-workflow-solutioning</td>
+<td>2 — Design (taste)</td>
+<td>problem-decomposition</td>
+<td>standalone</td>
+</tr>
+<tr>
+<td>threat-model</td>
+<td>3 — Govern (moat)</td>
+<td>agentic-workflow-solutioning</td>
+<td>standalone</td>
+</tr>
+<tr>
+<td>engagement-retrospective</td>
+<td>4 — Deliver (compounding)</td>
+<td>none</td>
+<td>standalone</td>
+</tr>
+</tbody>
+</table>
+<p>Library count before ingestion: 88 skills. After: 93 skills.</p>
+<h2 id="collision-and-naming-audit">Collision and Naming Audit</h2>
+<p>Zero name collisions found across the 88-skill catalog prior to
+ingestion. The Principal domain (consulting methodology, MECE, STRIDE
+threat modeling, engagement lifecycle) has no overlap with existing
+categories: - Research &amp; Analysis cluster: different trigger signals
+(academic, paper-based) - Engineering cluster: code/build focus, not
+methodology-focused - Creator stack: content creation, not
+consulting</p>
+<p>No renames required. All 5 names are clean.</p>
+<h2 id="description-quality-review">Description Quality Review</h2>
+<p>The descriptions as authored are strong. Each leads with methodology
+context and includes <code>ALWAYS use this skill when</code> trigger
+language per Anthropic skill-creator guidance. Assessment by skill:</p>
+<ul>
+<li><strong>saas-decommission</strong>: Pushy trigger, clear firing
+condition (first qualifying call). Could tighten the “four lenses”
+enumeration in the description — currently all four aren’t named, which
+means skill-optimizer can’t distinguish from a generic “audit” trigger.
+Flag for next optimization pass.</li>
+<li><strong>problem-decomposition</strong>: Strong spine framing. MECE
+and 5-Ways reference give the router enough signal. The “spine of every
+engagement” language is distinctive.</li>
+<li><strong>agentic-workflow-solutioning</strong>: Best description of
+the five. The pattern list (single LLM call → skill pack) in the
+description is unique signal with no overlap risk.</li>
+<li><strong>threat-model</strong>: Excellent. “Skipping this skill is
+malpractice” is precise and memorable — exactly the kind of trigger
+language that fires reliably.</li>
+<li><strong>engagement-retrospective</strong>: Good. The “compounding
+loop” framing is distinctive. Minor: “at close of every Principal
+engagement” could add “engagement retro” or “post-mortem” as trigger
+synonyms for broader firing coverage.</li>
+</ul>
+<p><strong>Recommended description edits</strong> (to be opened as PR
+against principal-plugin, architect to review before merge): ☐
+saas-decommission: add four lens names to description (license
+reclamation, consolidation, AI replacement, strategic) ☐
+engagement-retrospective: add trigger synonyms “post-mortem”, “retro”,
+“wrap-up” to description field</p>
+<h2 id="eval-fixture-status">Eval Fixture Status</h2>
+<p>Binary-assertion fixtures created for all 5 skills under
+<code>skills/&lt;name&gt;/evals/fixtures.yaml</code>. 4 assertions per
+skill (20 total). All tagged <code>needs-dogfood-data</code>.</p>
+<p>Fixtures cover: - Structural output requirements (correct sections,
+Mermaid diagrams, file paths) - Failure mode avoidance (point estimates,
+missing guardrails, compliance omissions) - Hand-off discipline (next
+skill named at close) - Honesty enforcement (engagement-retrospective
+Part 5 cannot be blank or positive-only)</p>
+<p>Committed to <code>librarian/evals-baseline</code> branch on
+principal-plugin. PR link:
+https://github.com/afoxnyc3/principal-plugin/pull/new/librarian/evals-baseline</p>
+<p>Full skill-optimizer runs blocked on dogfood data. Once first live
+engagement uses each skill, pull real inputs and extend fixtures to
+tc-005+ per skill.</p>
+<h2 id="re-optimization-cadence">Re-Optimization Cadence</h2>
+<p>Default quarterly cadence applies. First optimization window:
+2026-07-21.</p>
+<p>Priority order when dogfood data is available: 1. saas-decommission —
+Phase 0 wedge, fires first, highest frequency expected 2.
+problem-decomposition — spine of every engagement, most reused 3.
+threat-model — most consequential if wrong (client goes to build without
+proper gate) 4. agentic-workflow-solutioning — most complex decision
+surface 5. engagement-retrospective — lowest optimization leverage until
+case base has 3+ entries</p>
+<h2 id="the-12-skill-backlog-librarian-vs-architect-recommendation">The
+12-Skill Backlog: Librarian vs Architect Recommendation</h2>
+<p>Principal plugin ROADMAP.md lists 12 remaining skills (Phases 1–4 not
+yet shipped):</p>
+<p><strong>Phase 1 — Discovery (3 skills):</strong> -
+opportunity-discovery - jtbd-discovery - data-readiness-5c</p>
+<p><strong>Phase 2 — Design (5 skills):</strong> - pattern-recognition
+(reads pna-case-base; depends on engagement-retrospective writing
+entries first) - systems-thinking - impact-effort-matrix - blast-radius
+- compliance-scan</p>
+<p><strong>Phase 3 — Govern (2 skills):</strong> - adoption-risk</p>
+<p><strong>Phase 4 — Deliver (4 skills):</strong> - live-agent-prototype
+- roi-calculator - ai-usage-policy</p>
+<p><strong>Recommendation:</strong></p>
+<p>Route Phase 1 (discovery) and Phase 4 (prototype, ROI, policy) skills
+to <strong>architect for SPEC first</strong>. These are
+methodology-heavy and benefit from a full SPEC.md before authoring.
+Reason: opportunity-discovery, jtbd-discovery, and live-agent-prototype
+involve multi-step structured methodologies (interview protocols,
+scoring matrices, prototype scaffolds) that need architectural design
+before skill authorship.</p>
+<p>Route Phase 2 design tools (systems-thinking, impact-effort-matrix)
+and Phase 3/4 compliance tools (blast-radius, compliance-scan,
+adoption-risk, ai-usage-policy, roi-calculator) directly to
+<strong>librarian for authorship</strong> once the Phase 1 discovery
+skills ship and provide input context. These are more bounded analysis
+tools with clear output formats that don’t need a separate SPEC
+pass.</p>
+<p>Exception: <strong>pattern-recognition</strong> should wait until
+pna-case-base has ≥3 case records from live engagement-retrospective
+runs. Authoring it now would produce a skill with no real pattern data
+to read. Hold.</p>
+<p><strong>Suggested next step for Alex:</strong> confirm whether Phase
+1 discovery skills get an architect SPEC pass or go straight to
+librarian for authorship. That decision unblocks the next ingestion
+batch.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><code>pna-library</code> commit: <code>dad494c</code> (library.yaml,
+5 new entries)</li>
+<li><code>principal-plugin</code> branch:
+<code>librarian/evals-baseline</code> commit <code>154caf7</code> (5
+eval fixture files)</li>
+<li>Symlinks: 5 created in <code>~/.claude/skills/</code>, all verified
+PASS</li>
+</ul>
+<hr />
+<h1 id="pre-mission-check-in-pattern">Pre-Mission Check-in Pattern</h1>
+<p><em>Source:
+<code>/Users/alex/Documents/Obsidian/claudeclaw/Library/patterns/pre-mission-checkin.md</code></em></p>
+<h1 id="pre-mission-librarian-check-in-pattern-spec">Pre-Mission
+Librarian Check-in — Pattern Spec</h1>
+<h2 id="the-problem">The Problem</h2>
+<p>Agents launch into missions without knowing what skills are available
+to them. They either re-invent workflows already encoded in SKILL.md
+files, or use inferior ad-hoc approaches when a purpose-built skill
+exists. The library is not consulted. Armor is not equipped.</p>
+<h2 id="the-vision">The Vision</h2>
+<p>Before any agent starts a mission, it checks in with the library: 1.
+Receives a curated list of skills relevant to the task 2. Confirms which
+are installed and ready 3. Loads them into its active context before
+proceeding</p>
+<p>Same principle as a soldier checking kit before deployment. You know
+what you’re carrying before the mission starts.</p>
+<h2 id="implementation-options">Implementation Options</h2>
+<h3
+id="option-a-clarke-injects-skill-manifest-into-every-mission-brief-lowest-friction">Option
+A — Clarke injects skill manifest into every mission brief (lowest
+friction)</h3>
+<p>Clarke’s mission brief template includes a
+<code>## Available Skills</code> section, auto-populated from
+library.yaml filtered by the agent’s domain and task type. No agent code
+change required. Works with current mission-cli.js dispatch.</p>
+<p><strong>Pros</strong>: No changes to agent CLAUDE.md files.
+Immediate. <strong>Cons</strong>: Clarke must maintain relevance mapping
+(which skills apply to which agents). Static — doesn’t adapt to task
+specifics.</p>
+<p><strong>Implementation</strong>: Amend Clarke’s CLAUDE.md briefing
+template. Add a per-principal skill manifest (pre-filtered list)
+injected into every mission prompt.</p>
+<h3 id="option-b-preflight-skill-at-session-start-most-general">Option B
+— preflight skill at session start (most general)</h3>
+<p>A new <code>preflight</code> skill each agent runs at session start.
+The skill: 1. Reads the incoming task/mission description 2. Queries
+library.yaml for skills matching keywords in the task 3. Returns a
+ranked list: “For this mission, consider loading: [skill-a, skill-b,
+skill-c]” 4. Agent loads them before proceeding</p>
+<p><strong>Pros</strong>: Task-aware, dynamic, works for any agent.
+<strong>Cons</strong>: Requires every agent’s CLAUDE.md to include a
+session-start step. Adds one round-trip before work begins.</p>
+<p><strong>Implementation</strong>: Author <code>preflight</code>
+SKILL.md. Add “Run /preflight before starting any mission” to each
+principal’s CLAUDE.md.</p>
+<h3
+id="option-c-sandbox-orchestrator-selects-skill-set-from-library.yaml-most-powerful">Option
+C — sandbox orchestrator selects skill set from library.yaml (most
+powerful)</h3>
+<p>When Alex ships the sandbox orchestrator (dev sandbox / E2B), it
+reads library.yaml and selects a skill loadout for each mission before
+spawning the agent. The agent is initialized with the correct skills
+already in context.</p>
+<p><strong>Pros</strong>: Fully automated. Agent never needs to ask — it
+just has the right tools. <strong>Cons</strong>: Requires sandbox
+orchestrator to exist (future work). Most complex.</p>
+<p><strong>Implementation</strong>: Sandbox orchestrator reads
+library.yaml, scores skills against mission description, passes selected
+skill content in the agent’s initial context window.</p>
+<h2 id="recommended-sequencing">Recommended Sequencing</h2>
+<ol type="1">
+<li><strong>Now</strong>: Option A — Clarke injects a static
+per-principal skill manifest into mission briefs. Zero new code.
+Immediate improvement.</li>
+<li><strong>Near-term</strong>: Option B — <code>preflight</code> skill
+authored, added to principal CLAUDE.mds as a session-start gate.</li>
+<li><strong>When sandbox orchestrator ships</strong>: Option C — fully
+automated, orchestrator-driven skill selection.</li>
+</ol>
+<h2 id="toolbox-concept">Toolbox Concept</h2>
+<p>Each principal should have a named toolbox — a curated 8-12 skill
+list that is always available for their domain. The toolbox is the
+baseline; the pre-flight check supplements it with task-specific
+additions.</p>
+<pre class="yaml"><code># example: ~/.claudeclaw/agents/principal_engineer/toolbox.yaml
+toolbox:
+  agent: principal_engineer
+  core:
+    - spec-driven-development
+    - planning-and-task-breakdown
+    - incremental-implementation
+    - test-driven-development
+    - verification-before-completion
+    - systematic-debugging
+    - git-workflow-and-versioning
+    - code-review-and-quality
+    - documentation-and-adrs
+    - finishing-a-development-branch
+  optional:
+    - security-and-hardening
+    - performance-optimization
+    - deprecation-and-migration</code></pre>
+<h2 id="next-actions-1">Next Actions</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Amend Clarke CLAUDE.md: inject
+per-principal skill manifest into mission brief template (Option
+A)</label></li>
+<li><label><input type="checkbox" />Author <code>preflight</code>
+SKILL.md — task-aware skill recommendation (Option B)</label></li>
+<li><label><input type="checkbox" />Define toolbox.yaml schema and
+create one per principal</label></li>
+<li><label><input type="checkbox" />When sandbox orchestrator ships:
+wire library.yaml into skill selection (Option C)</label></li>
+</ul>
+<h2 id="owner">Owner</h2>
+<p>principal_librarian (authorship + toolbox management)
+principal_architect (toolbox.yaml schema + orchestrator design) Clarke
+(mission brief amendment)</p>
+</body>
+</html>
