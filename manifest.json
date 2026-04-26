@@ -689,5 +689,18 @@
       "architecture",
       "security"
     ]
+  },
+  {
+    "type": "brainstorm",
+    "title": "Roadrunner CLI \u2014 Architecture Review & Hotfix Log",
+    "date": "2026-04-26",
+    "agent": "principal_engineer",
+    "path": "brainstorms/2026-04-26-roadrunner-cli--architecture-review--hotfix-log.html",
+    "tags": [
+      "roadrunner-cli",
+      "review",
+      "architecture",
+      "hotfix"
+    ]
   }
 ]

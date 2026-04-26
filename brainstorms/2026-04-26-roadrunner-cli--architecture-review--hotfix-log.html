@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_engineer" />
+  <meta name="dcterms.date" content="2026-04-26" />
+  <title>Roadrunner CLI — Architecture Review &amp; Hotfix Log</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Roadrunner CLI — Architecture Review &amp; Hotfix
+Log</h1>
+<p class="author">principal_engineer</p>
+<p class="date">2026-04-26</p>
+</header>
+<hr />
+<h1 id="architecture-review-2026-04-15">Architecture Review
+(2026-04-15)</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/architecture-review-2026-04-15.md</code></em></p>
+<h1
+id="roadrunner-cli-comprehensive-code-architecture-review">Roadrunner
+CLI — Comprehensive Code &amp; Architecture Review</h1>
+<blockquote>
+<p>Reviewed: 2026-04-15 | Files read: roadrunner.py, all hooks/*,
+tests/test_roadrunner.py, tasks/tasks.yaml, DESIGN.md, CLAUDE.md,
+README.md, all ADRs, settings.json, state files Research: EXA searches
+on agentic loop best practices (SitePoint 2026, Atlan 2026, Mindra 2026,
+LangGraph/CrewAI/AutoGen comparisons)</p>
+</blockquote>
+<hr />
+<h2 id="project-overview">Project Overview</h2>
+<p>Roadrunner is a <strong>deterministic agentic loop harness</strong>
+for Claude Code. It is not an agent framework — it is the <em>control
+plane around an agent</em>. Python (<code>roadrunner.py</code>, 620
+lines) owns task state, validation gating, and loop control. Claude Code
+owns implementation. Bash hooks (Stop, SessionStart, PreCompact,
+PostToolUse) wire Python’s decisions into Claude Code’s lifecycle
+events. The task queue lives in <code>tasks/tasks.yaml</code>; state
+persists to JSON sidecars; observability flows to JSONL traces, markdown
+changelogs, and per-task work logs.</p>
+<p><strong>Architectural style:</strong> Procedural single-file
+controller + shell hook glue + YAML task queue. No classes, no
+frameworks, no async. Deliberately minimal — two runtime dependencies
+(PyYAML, ruff).</p>
+<hr />
+<h2 id="numerical-rating-7.5-10">Numerical Rating: 7.5 / 10</h2>
+<p>This is a well-designed, purpose-built tool that solves a real
+problem (making Claude Code loops deterministic and observable) with
+remarkable economy. The 620-line controller is clean, idempotent, and
+well-tested (42 tests). The hook lifecycle is thoughtfully designed with
+safety valves (iteration caps, auto-block, recursion guards). Seven ADRs
+document real bugs found and fixed — evidence of genuine hardening.</p>
+<p>The deductions: shell=True in validation is a
+documented-but-unresolved trust boundary issue; state file writes are
+not atomic (contrast with the atomic task file writes); test coverage
+has meaningful gaps around error paths and integration scenarios; and
+the single-file architecture will hit a complexity ceiling if the
+project grows. But for its stated scope — a single-operator
+deterministic loop — this is solid, honest engineering.</p>
+<hr />
+<h2 id="swot-analysis">SWOT Analysis</h2>
+<h3 id="strengths">Strengths</h3>
+<p><strong>S1. Atomic task file writes</strong>
+(<code>roadrunner.py:61-70</code>) The <code>save_tasks()</code>
+function uses write-to-temp → <code>fsync</code> →
+<code>os.replace()</code> — the correct POSIX pattern for crash-safe
+file updates. This is the single most important data integrity measure
+in the system, and it’s done right. Many projects at this scale skip
+this entirely.</p>
+<p><strong>S2. Validation-gated completion</strong>
+(<code>roadrunner.py:366-386</code>) <code>cmd_complete</code> re-runs
+validation before marking a task done. The agent cannot self-certify —
+the validation commands are the source of truth. This is the key
+correctness invariant, and it’s enforced at the code level, not just the
+prompt level.</p>
+<p><strong>S3. Comprehensive observability for a 620-line tool</strong>
+Three observability layers: <code>logs/trace.jsonl</code> (structured,
+machine-readable), <code>logs/CHANGELOG.md</code> (human-readable audit
+trail), <code>logs/TASK-XXX.md</code> (per-task work logs with
+stdout/stderr). This is unusually thorough for a tool this size and
+makes post-mortem analysis practical.</p>
+<p><strong>S4. Idempotent check-stop design</strong>
+(<code>roadrunner.py:424-530</code>) <code>cmd_check_stop</code>
+re-reads all state from disk on every invocation. No in-memory state
+carries across hook calls. This means retries, crashes, and restarts are
+inherently safe — the system reconverges from disk state every
+iteration.</p>
+<p><strong>S5. Context survival across compaction</strong> The
+PreCompact → snapshot → SessionStart → inject cycle is a clever solution
+to Claude Code’s context window limits. The
+<code>.context_snapshot.json</code> persists task state to disk before
+compaction destroys conversation history, and the SessionStart hook
+injects it back. This enables genuinely long-running loops.</p>
+<p><strong>S6. Seven ADRs documenting real bugs found and fixed</strong>
+ADR-001 (line-anchored completion signal), ADR-003 (retry storm
+prevention), ADR-004 (atomic writes), ADR-007 (shell injection in
+post_write_hook). These aren’t speculative — they document real defects
+discovered during use and the specific fixes applied. This is
+production-grade rigor.</p>
+<p><strong>S7. Clean procedural design</strong> Small functions (10-30
+lines), single responsibility, <code>cmd_*</code> dispatch convention,
+consistent <code>_now()</code> helper, ASCII section banners. The code
+reads top-to-bottom without needing to chase class hierarchies or
+inheritance chains. Appropriate for the problem size.</p>
+<h3 id="weaknesses">Weaknesses</h3>
+<p><strong>W1. <code>shell=True</code> in
+<code>run_validation</code></strong>
+(<code>roadrunner.py:128-134</code>) Validation commands execute via
+<code>subprocess.run(cmd, shell=True)</code>. The README and DESIGN.md
+acknowledge this (“Treat it like a Makefile”), and for a single-operator
+tool this is a pragmatic choice. However: - No timeout on subprocess
+execution — a hanging command blocks the loop forever - No resource
+limits (memory, CPU) - <code>shlex.split()</code> +
+<code>shell=False</code> would eliminate shell injection while
+preserving most use cases</p>
+<p><strong>W2. Non-atomic state file writes</strong>
+(<code>roadrunner.py:172-183</code>) <code>write_state()</code> uses
+<code>Path.write_text()</code> directly — no temp file, no fsync.
+Compare with <code>save_tasks()</code> which does this correctly. A
+crash during state write could corrupt <code>.roadmap_state.json</code>.
+The system is designed to tolerate this (check-stop re-reads and
+reconverges), but the inconsistency is a code smell — if atomic writes
+matter for tasks.yaml, they matter here too.</p>
+<p><strong>W3. No subprocess timeout</strong>
+<code>run_validation()</code> has no <code>timeout</code> parameter on
+<code>subprocess.run()</code>. A validation command that hangs (e.g.,
+waiting for network, deadlocked process) will block the entire loop
+indefinitely with no recovery path. This is the single most likely
+production failure mode.</p>
+<p><strong>W4. Incomplete type hints</strong> Core logic functions are
+typed (<code>-&gt; tuple[bool, list[dict]]</code>), but CLI handlers
+lack parameter types (<code>cmd_status(args)</code> should be
+<code>cmd_status(args: argparse.Namespace)</code>). Return type on
+<code>main()</code> is missing. Coverage is ~60% — enough to be useful
+but not enough for mypy strict mode.</p>
+<p><strong>W5. Test coverage gaps</strong> 42 tests cover happy paths
+well, but significant gaps exist: - No tests for subprocess
+timeout/hanging commands - No tests for corrupt YAML/JSON files - No
+circular dependency detection (or tests for it) - No concurrent access
+testing - <code>TestCheckStop</code> has an unused
+<code>_run_check_stop</code> helper that references undefined
+<code>self._last_stdout</code> - No integration tests that exercise the
+full hook → Python → hook cycle</p>
+<p><strong>W6. No input sanitization on task IDs</strong>
+<code>get_task()</code> accepts any string as <code>task_id</code>.
+While task IDs come from <code>tasks.yaml</code> (operator-controlled),
+the reset marker writes to <code>.reset_{task_id}</code> — a task ID
+containing <code>../</code> could write outside the project directory.
+Low risk for single-operator use, but a latent path traversal.</p>
+<h3 id="opportunities">Opportunities</h3>
+<p><strong>O1. Add subprocess timeouts</strong> (Low effort, high
+impact) Add a <code>timeout</code> parameter to
+<code>subprocess.run()</code> in <code>run_validation()</code>. A
+sensible default (300s) with per-command override in
+<code>tasks.yaml</code> would eliminate the hanging-command failure
+mode. This is the single highest-ROI improvement.</p>
+<pre class="python"><code># Current
+result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=ROOT)
+# Improved
+timeout = task.get(&quot;validation_timeout&quot;, 300)
+result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=ROOT, timeout=timeout)</code></pre>
+<p><strong>O2. Adopt structured state with Pydantic or
+dataclasses</strong> (Medium effort) Current state is <code>dict</code>
+everywhere — <code>task: dict</code>, <code>state: dict</code>,
+<code>results: list[dict]</code>. Using <code>@dataclass</code> or
+<code>TypedDict</code> would: - Catch key typos at definition time -
+Enable IDE autocomplete - Make the implicit schema explicit - Cost zero
+runtime dependencies (stdlib dataclasses)</p>
+<p>Per current best practices (SitePoint 2026, LangGraph patterns):
+“typed state via TypedDict, conditional edges for loop control, and
+explicit termination” — Roadrunner already has the control flow right,
+but the state typing would bring it to parity.</p>
+<p><strong>O3. Circuit breaker for repeated validation failures</strong>
+(Low effort) The auto-block mechanism (5 attempts) is good, but it
+operates at the task level. A validation command that fails the same way
+3 times in a row is unlikely to succeed on attempt 4. A per-command
+circuit breaker would save tokens and time. Per Mindra (2026): “classify
+failures into transient vs. permanent, and only retry the transient
+ones.”</p>
+<p><strong>O4. Structured error taxonomy</strong> (Medium effort)
+Current error handling is binary: exit 0 or exit 1, with stderr/stdout
+capture. Categorizing failures (transient vs. permanent, infra
+vs. logic, timeout vs. assertion) would enable smarter retry logic. Per
+Atlan (2026): “Execution failures (~25%) are runtime defects… Tier 2
+execution failures are at least visible: they usually throw errors.”</p>
+<p><strong>O5. Integration test harness</strong> (Medium effort) The 42
+unit tests are solid, but no test exercises the full loop: hook fires →
+Python check-stop → JSON output → hook interprets → next iteration. A
+small integration test using <code>subprocess.run</code> to simulate the
+hook lifecycle would catch contract mismatches between bash and
+Python.</p>
+<p><strong>O6. Checkpoint/resume for multi-command validation</strong>
+(Low effort) If a task has 5 validation commands and #4 fails, all 5
+re-run on retry. Checkpointing passed commands and resuming from the
+first failure would reduce wasted compute. Per Mindra (2026): “Retrying
+expensive operations without checkpointing. If your agent completed
+steps 1 through 7 of a ten-step workflow…”</p>
+<h3 id="threats">Threats</h3>
+<p><strong>T1. Single-file scaling ceiling</strong> At 620 lines,
+<code>roadrunner.py</code> is manageable. At 1200+ lines, it won’t be.
+The flat procedural style works now but has no natural extension points.
+If features like parallel task execution, remote state backends, or
+multi-agent coordination are ever needed, the single-file design will
+need to be refactored. This is not urgent — it’s a known tradeoff.</p>
+<p><strong>T2. Shell hook fragility</strong> The system depends on bash
+hooks parsing JSON from stdin and calling Python correctly. This works
+but is: - Hard to test automatically (no hook integration tests exist) -
+Sensitive to shell quoting issues - Platform-dependent (bash on macOS
+may differ from Linux) - Invisible when it breaks (a broken hook
+silently stops the loop)</p>
+<p><strong>T3. No validation command sandboxing</strong> Validation
+commands run with the operator’s full privileges. A typo in
+<code>tasks.yaml</code> (<code>rm -rf /</code> instead of
+<code>rm -rf ./build</code>) is catastrophic. This is the accepted trust
+model, but as the tool is shared or templated, the blast radius
+grows.</p>
+<p><strong>T4. Context window dependency</strong> The system’s
+correctness depends on Claude Code correctly reading CLAUDE.md,
+following the task brief, and outputting ROADMAP_COMPLETE at the right
+time. If Claude Code’s behavior changes (prompt interpretation, hook
+contracts, stop behavior), the system could break silently. The
+hook-based architecture is tightly coupled to Claude Code’s current
+lifecycle API.</p>
+<p><strong>T5. No crash recovery for partial task completion</strong> If
+Claude Code crashes mid-task (after <code>start</code> but before
+<code>complete</code>), the task stays <code>in_progress</code>. The
+auto-block mechanism (5 resume attempts) handles this, but a task that
+was 90% complete will be re-attempted from scratch — there’s no partial
+progress checkpointing.</p>
+<hr />
+<h2 id="code-quality-assessment">Code Quality Assessment</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Rating</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Readability</strong></td>
+<td>8/10</td>
+<td>Clean procedural code, good naming, ASCII section headers. Easy to
+follow top-to-bottom.</td>
+</tr>
+<tr>
+<td><strong>Error handling</strong></td>
+<td>6/10</td>
+<td>JSON parse failures handled gracefully; file I/O errors not caught
+(will raise); no subprocess timeouts; no recovery from corrupt
+YAML.</td>
+</tr>
+<tr>
+<td><strong>Type hints</strong></td>
+<td>6/10</td>
+<td>Present on core functions, absent on CLI handlers. No mypy config.
+Union types use modern <code>X \| None</code> syntax (3.10+).</td>
+</tr>
+<tr>
+<td><strong>Logging/observability</strong></td>
+<td>9/10</td>
+<td>Excellent for project size. Three-layer system (trace, changelog,
+work logs). All lifecycle events traced.</td>
+</tr>
+<tr>
+<td><strong>Test coverage</strong></td>
+<td>7/10</td>
+<td>42 tests cover core logic well. Gaps in error paths, integration
+scenarios, and edge cases (circular deps, corrupt files, timeouts).</td>
+</tr>
+<tr>
+<td><strong>Python conventions</strong></td>
+<td>8/10</td>
+<td>PEP 8 compliant (ruff enforced). Pathlib throughout (no os.path).
+UTC timestamps. Modern syntax (3.10+).</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>6/10</td>
+<td>shell=True is documented but unmitigated. Post-write hook injection
+fixed (ADR-007). No task ID sanitization. No subprocess resource
+limits.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="architecture-assessment">Architecture Assessment</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Rating</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Loop design</strong></td>
+<td>9/10</td>
+<td>Deterministic, idempotent, well-guarded. Iteration caps, auto-block,
+recursion prevention. Best-in-class for the scope.</td>
+</tr>
+<tr>
+<td><strong>State management</strong></td>
+<td>7/10</td>
+<td>Tasks file atomic, state file not. Dict-based (no typed schema).
+Idempotent reconvergence compensates for most failure modes.</td>
+</tr>
+<tr>
+<td><strong>Tool integration</strong></td>
+<td>7/10</td>
+<td>Clean subprocess interface. No timeouts, no sandboxing, no
+structured error taxonomy.</td>
+</tr>
+<tr>
+<td><strong>Context management</strong></td>
+<td>8/10</td>
+<td>Snapshot/restore cycle for compaction is well-designed. CLAUDE.md
+brief is clear and actionable.</td>
+</tr>
+<tr>
+<td><strong>Retry/failure handling</strong></td>
+<td>7/10</td>
+<td>Auto-block after N attempts is good. No distinction between
+transient/permanent failures. No per-command circuit breaker.</td>
+</tr>
+<tr>
+<td><strong>Separation of concerns</strong></td>
+<td>9/10</td>
+<td>Python owns state/control, Claude owns implementation, hooks own
+lifecycle wiring. Clean boundaries.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Comparison to leading frameworks:</strong> Roadrunner is not
+competing with LangGraph/CrewAI/AutoGen — those are <em>agent
+frameworks</em> that help you build agents. Roadrunner is a
+<em>harness</em> that makes an existing agent (Claude Code)
+deterministic. The closest analogy is LangGraph’s checkpointing and
+state graph, but Roadrunner achieves similar guarantees (typed state,
+deterministic transitions, persistence, resumability) with ~600 lines of
+Python and zero framework dependencies. The tradeoff is that it’s
+purpose-built for Claude Code’s specific hook API rather than being
+general-purpose.</p>
+<hr />
+<h2 id="prioritized-recommendations">Prioritized Recommendations</h2>
+<h3
+id="priority-1-add-subprocess-timeouts-low-effort-critical-impact">Priority
+1: Add subprocess timeouts (Low effort, Critical impact)</h3>
+<p><strong>What:</strong> Add <code>timeout=300</code> (configurable) to
+<code>subprocess.run()</code> in <code>run_validation()</code>. Catch
+<code>subprocess.TimeoutExpired</code> and log it as a validation
+failure. <strong>Why:</strong> A hanging validation command is the most
+likely production failure mode. Every fault-tolerance guide (Mindra
+2026, Atlan 2026) lists unbounded execution as a top anti-pattern. This
+is a one-line fix with outsized impact. <strong>File:</strong>
+<code>roadrunner.py:128-134</code></p>
+<h3
+id="priority-2-make-state-writes-atomic-low-effort-medium-impact">Priority
+2: Make state writes atomic (Low effort, Medium impact)</h3>
+<p><strong>What:</strong> Apply the same temp-file + fsync + os.replace
+pattern from <code>save_tasks()</code> to <code>write_state()</code>.
+<strong>Why:</strong> Internal consistency — if atomic writes matter for
+tasks.yaml (ADR-004), they matter for state. A corrupted state file
+during auto-block could lose the attempt counter, causing retry storms.
+<strong>File:</strong> <code>roadrunner.py:172-183</code></p>
+<h3
+id="priority-3-sanitize-task-ids-low-effort-low-medium-impact">Priority
+3: Sanitize task IDs (Low effort, Low-Medium impact)</h3>
+<p><strong>What:</strong> Add a regex check in
+<code>validate_task_schema()</code>: task IDs must match
+<code>^[A-Z]+-\d+$</code> (or similar). Reject IDs containing
+<code>/</code>, <code>..</code>, or shell metacharacters.
+<strong>Why:</strong> Prevents path traversal via
+<code>.reset_{task_id}</code> and <code>logs/{task_id}.md</code>.
+Defense in depth. <strong>File:</strong>
+<code>roadrunner.py:37-49</code></p>
+<h3
+id="priority-4-add-integration-tests-for-hook-lifecycle-medium-effort-high-impact">Priority
+4: Add integration tests for hook lifecycle (Medium effort, High
+impact)</h3>
+<p><strong>What:</strong> A test that simulates: stdin JSON →
+<code>cmd_check_stop</code> → stdout JSON → verify decision. Then a
+second test that runs <code>stop_hook.sh</code> via subprocess and
+verifies the full bash→Python→JSON cycle. <strong>Why:</strong> The hook
+contract (bash parses JSON, calls Python, interprets output) is the
+system’s most fragile boundary and has zero automated tests. Every ADR
+except ADR-006 was a bug at this boundary. <strong>File:</strong> New
+test class in <code>tests/test_roadrunner.py</code></p>
+<h3
+id="priority-5-type-the-state-with-dataclasses-medium-effort-medium-impact">Priority
+5: Type the state with dataclasses (Medium effort, Medium impact)</h3>
+<p><strong>What:</strong> Replace <code>task: dict</code> /
+<code>state: dict</code> with <code>@dataclass</code> or
+<code>TypedDict</code>. Define <code>Task</code>,
+<code>RoadmapState</code>, <code>ValidationResult</code> as explicit
+types. <strong>Why:</strong> Catches key typos, enables IDE support,
+makes the implicit schema explicit. Aligns with LangGraph’s “typed
+state” pattern (the current best practice for deterministic agents).
+Zero new dependencies. <strong>File:</strong> <code>roadrunner.py</code>
+(top of file)</p>
+<h3
+id="priority-6-add-per-command-circuit-breaker-low-effort-low-impact">Priority
+6: Add per-command circuit breaker (Low effort, Low impact)</h3>
+<p><strong>What:</strong> Track validation command failure history in
+state. If the same command fails 3 consecutive times with the same
+stderr, skip it and mark the task as blocked with a “permanent failure”
+note. <strong>Why:</strong> Saves tokens and time on non-transient
+failures. Current auto-block operates at task granularity only.
+<strong>File:</strong> <code>roadrunner.py:114-163</code>,
+<code>.roadmap_state.json</code> schema extension</p>
+<hr />
+<h2 id="validation-of-this-review">Validation of This Review</h2>
+<ul>
+<li><strong>Source files read:</strong> roadrunner.py (full), all 4
+hooks + _session_start.py, tests/test_roadrunner.py (full),
+tasks/tasks.yaml, DESIGN.md, README.md, CLAUDE.md, settings.json,
+.roadmap_state.json, .context_snapshot.json, all 7 ADRs listed</li>
+<li><strong>Research grounded in:</strong> EXA searches on agentic loop
+best practices (SitePoint 2026 definitive guide, Atlan 2026
+anti-patterns taxonomy, Mindra 2026 fault-tolerance patterns,
+LangGraph/CrewAI/AutoGen comparisons from DataCamp, Medium, Latenode),
+Anthropic’s MCP code execution patterns</li>
+<li><strong>Insufficient context to assess:</strong> Runtime performance
+under real Claude Code sessions (would require observing a live loop);
+hook behavior differences across macOS/Linux bash versions; actual token
+cost of the snapshot/restore cycle</li>
+</ul>
+<hr />
+<h1 id="code-review-audit">Code Review Audit</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/code-review-audit.md</code></em></p>
+<h1 id="roadrunner-cli-code-review-audit-remediation-status">Roadrunner
+CLI — Code Review Audit &amp; Remediation Status</h1>
+<blockquote>
+<p>Audited: 2026-04-15 against commit <code>e83a337</code> Sources: Code
+Review #2 (external), Codex Adversarial Review (external), authoritative
+Claude Code hooks reference
+(https://docs.claude.com/en/docs/claude-code/hooks)</p>
+</blockquote>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>Commit <code>e83a337</code> (“fix: harden controller against
+review-identified correctness and security defects”) resolved 12 of 16
+actionable findings from the two reviews. The remaining 4 items are: the
+TaskCompleted hook is wired to the wrong Claude Code event, the
+PostToolUse matcher includes a non-existent tool name, the PreCompact
+hook emits dead-code JSON, and DESIGN.md is stale.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Fixed</th>
+<th>Outstanding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0 correctness</td>
+<td>2/2</td>
+<td>0</td>
+</tr>
+<tr>
+<td>P1 docs alignment</td>
+<td>1/4</td>
+<td>3</td>
+</tr>
+<tr>
+<td>P2 security/hooks</td>
+<td>1/1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>P3 reliability</td>
+<td>4/4</td>
+<td>0</td>
+</tr>
+<tr>
+<td>P4 test coverage</td>
+<td>1/1</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>9/12 review items + 3 bonus</strong></td>
+<td><strong>4 outstanding</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="resolved-items">Resolved Items</h2>
+<h3 id="stop-hook-treats-in-progress-task-as-roadmap-complete">1. Stop
+hook treats in-progress task as roadmap complete</h3>
+<p><strong>Source:</strong> Codex Review [critical],
+roadrunner.py:355-363 <strong>Status: FIXED</strong> at
+<code>roadrunner.py:482-508</code></p>
+<p>Before: <code>cmd_check_stop</code> only called
+<code>next_eligible_task()</code>, which returns None for any
+non-<code>todo</code> task. After <code>cmd_start</code> flips to
+<code>in_progress</code>, the hook emitted “All tasks complete”
+mid-task.</p>
+<p>After: New <code>active_task()</code> function (line 94-95) checks
+for <code>in_progress</code> tasks first.
+<code>cmd_check_stop:482-508</code> emits a
+<code>RESUME IN-PROGRESS TASK</code> brief when one is found. The “all
+done” path (line 526-537) now scans for <em>any</em> non-done status,
+not just eligible tasks. Additionally, a per-task attempt counter (line
+484-505) auto-blocks after 5 failed attempts — this was an “opportunity”
+item the reviews suggested but didn’t demand.</p>
+<p><strong>Test coverage:</strong>
+<code>TestCheckStop.test_resumes_in_progress</code> (line 351),
+<code>test_auto_block_after_max_attempts</code> (line 381).</p>
+<h3 id="roadmap_complete-substring-match">2. ROADMAP_COMPLETE substring
+match</h3>
+<p><strong>Source:</strong> Both reviews, roadrunner.py:347
+<strong>Status: FIXED</strong> at <code>roadrunner.py:98-108</code></p>
+<p>Before: <code>if "ROADMAP_COMPLETE" in last_msg</code> — triggers on
+any quoted occurrence.</p>
+<p>After: <code>is_completion_signal()</code> uses a compiled regex
+<code>^\s*ROADMAP_COMPLETE\s*$</code> and checks only the <em>last
+non-empty line</em> of the message. Additionally,
+<code>_build_task_brief</code> (line 556) splits the sentinel string as
+<code>"ROADMAP" "_COMPLETE"</code> to avoid embedding a matchable
+literal in the brief itself.</p>
+<p><strong>Test coverage:</strong> <code>TestCompletionSignal</code>
+class — 9 cases including <code>test_substring_no_match</code>,
+<code>test_mid_message_no_match</code>,
+<code>test_no_bare_sentinel_line</code> on the brief.</p>
+<h3 id="relative-hook-commands-in-settings.json">3. Relative hook
+commands in settings.json</h3>
+<p><strong>Source:</strong> Codex Review [high], .claude/settings.json
+<strong>Status: FIXED</strong> at
+<code>.claude/settings.json:8,19,30,42</code></p>
+<p>Before: <code>bash hooks/stop_hook.sh</code> (bare relative path).
+After: <code>bash "$CLAUDE_PROJECT_DIR"/hooks/stop_hook.sh</code> —
+matches the recommended pattern in the official Claude Code hooks
+reference under “Reference scripts by path.”</p>
+<h3 id="shell-injection-in-post_write_hook.sh">4. Shell injection in
+post_write_hook.sh</h3>
+<p><strong>Source:</strong> Code Review #2, hooks/post_write_hook.sh:40
+<strong>Status: FIXED</strong> at
+<code>hooks/post_write_hook.sh:40</code></p>
+<p>Before:
+<code>python3 -c "import yaml; yaml.safe_load(open('$FILE_PATH'))"</code>
+— path with <code>'</code> breaks out. After:
+<code>python3 -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1]))' "$FILE_PATH"</code>
+— path passed via argv.</p>
+<h3 id="non-atomic-save_tasks">5. Non-atomic save_tasks</h3>
+<p><strong>Source:</strong> Code Review #2, roadrunner.py:37-42
+<strong>Status: FIXED</strong> at <code>roadrunner.py:61-70</code></p>
+<p>Now writes to <code>.yaml.tmp</code>, calls <code>f.flush()</code> +
+<code>os.fsync(f.fileno())</code>, then <code>os.replace()</code>.
+Standard atomic write pattern confirmed by multiple 2025-2026 Python
+references.</p>
+<p><strong>Test coverage:</strong>
+<code>TestAtomicSave.test_save_roundtrip</code>,
+<code>test_no_tmp_left</code>.</p>
+<h3 id="iteration-counter-only-increments-on-start">6. Iteration counter
+only increments on start</h3>
+<p><strong>Source:</strong> Both reviews, roadrunner.py:242 / DESIGN.md
+§3 <strong>Status: FIXED</strong> at <code>roadrunner.py:446</code></p>
+<p>Increment moved from <code>cmd_start</code> (which now only records
+<code>current_task_id</code>) into <code>cmd_check_stop:446</code> —
+increments once per Stop-hook invocation after the
+<code>stop_hook_active</code> short-circuit.</p>
+<p><strong>Test coverage:</strong>
+<code>TestCheckStop.test_iteration_increments_on_check_stop</code> (line
+396), <code>test_iteration_cap</code> (line 373).</p>
+<h3 id="cmd_block-silent-exit-on-missing-task">7. cmd_block silent exit
+on missing task</h3>
+<p><strong>Source:</strong> Code Review #2, roadrunner.py:288-289
+<strong>Status: FIXED</strong> at <code>roadrunner.py:399-401</code></p>
+<p>Now prints <code>f"Task {args.task_id} not found."</code> before
+<code>sys.exit(1)</code>.</p>
+<h3 id="justfile-uses-python-hooks-use-python3">8. justfile uses python,
+hooks use python3</h3>
+<p><strong>Source:</strong> Both reviews, DESIGN.md §3 <strong>Status:
+FIXED</strong> in <code>justfile</code> — all commands now use
+<code>python3</code>.</p>
+<h3 id="debug-log-at-tmprr_tc_debug.log">9. Debug log at
+/tmp/rr_tc_debug.log</h3>
+<p><strong>Source:</strong> Code Review #2, task_completed_hook.sh:21
+<strong>Status: PARTIALLY FIXED</strong> at
+<code>hooks/task_completed_hook.sh:21-24</code></p>
+<p>Moved from world-readable <code>/tmp/rr_tc_debug.log</code> to
+project-local <code>logs/.taskcompleted_payloads.log</code>. Still
+logging payloads — intentionally, to verify the TaskCompleted payload
+schema. Acceptable as a temporary diagnostic; should be removed once the
+schema is confirmed (see Outstanding #1).</p>
+<h3 id="schema-validation-on-tasks.yaml-load-bonus">10. Schema
+validation on tasks.yaml load (bonus)</h3>
+<p><strong>Source:</strong> Code Review #2 Opportunities, not a required
+fix <strong>Status: IMPLEMENTED</strong> at
+<code>roadrunner.py:34-58</code></p>
+<p><code>validate_task_schema()</code> checks for required fields
+(<code>id</code>, <code>status</code>, <code>title</code>) and validates
+<code>validation_commands</code> and <code>depends_on</code> are lists.
+Not jsonschema/Pydantic — lightweight and appropriate.</p>
+<h3 id="structured-trace-logging-bonus">11. Structured trace logging
+(bonus)</h3>
+<p><strong>Source:</strong> Code Review #2 Opportunities #8
+<strong>Status: IMPLEMENTED</strong> at
+<code>roadrunner.py:214-238</code></p>
+<p><code>trace_event()</code> writes JSONL to
+<code>logs/trace.jsonl</code> with <code>ts</code>, <code>event</code>,
+<code>task_id</code>, <code>iteration</code>, optional
+<code>command</code>, <code>exit_code</code>, <code>duration_ms</code>.
+Called from <code>run_validation</code>, <code>cmd_start</code>,
+<code>cmd_complete</code>, <code>cmd_block</code>,
+<code>cmd_check_stop</code>.</p>
+<h3 id="per-task-attempt-counter-auto-block-bonus">12. Per-task attempt
+counter + auto-block (bonus)</h3>
+<p><strong>Source:</strong> Code Review #2 Opportunities #9
+<strong>Status: IMPLEMENTED</strong> at
+<code>roadrunner.py:169-198, 484-505</code></p>
+<p><code>increment_attempts()</code> tracks per-task attempts in
+<code>.roadmap_state.json</code>. <code>cmd_check_stop</code>
+auto-blocks after <code>MAX_TASK_ATTEMPTS</code> (5) failed stop-hook
+cycles. Mitigates the retry-storm pattern.</p>
+<hr />
+<h2 id="outstanding-items">Outstanding Items</h2>
+<h3
+id="o1.-taskcompleted-hook-is-wired-to-the-wrong-claude-code-event">O1.
+TaskCompleted hook is wired to the wrong Claude Code event</h3>
+<p><strong>Source:</strong> Codex Review [high], Code Review #2
+(TaskCompleted payload unverified) <strong>Severity: Medium</strong>
+(not load-bearing, but misleading) <strong>Files:</strong>
+<code>hooks/task_completed_hook.sh</code>,
+<code>.claude/settings.json:14-23</code>,
+<code>DESIGN.md §2.2</code></p>
+<p>Per the authoritative Claude Code hooks reference:</p>
+<blockquote>
+<p><code>TaskCompleted</code> — “Runs when a task is being marked as
+completed. This fires in two situations: when any agent explicitly marks
+a task as completed through the TaskUpdate tool, or when an agent team
+teammate finishes its turn with in-progress tasks.”</p>
+</blockquote>
+<p>The payload schema is:</p>
+<pre class="json"><code>{
+  &quot;task_id&quot;: &quot;task-001&quot;,        // Claude&#39;s internal ID, NOT roadmap&#39;s TASK-001
+  &quot;task_subject&quot;: &quot;Implement user authentication&quot;,
+  &quot;task_description&quot;: &quot;Add login and signup endpoints&quot;,
+  &quot;teammate_name&quot;: &quot;implementer&quot;,
+  &quot;team_name&quot;: &quot;my-project&quot;
+}</code></pre>
+<p>This event fires when the Claude Code <code>TaskUpdate</code> tool
+marks an internal agent-team task as complete — NOT when
+<code>python3 roadrunner.py complete TASK-XXX</code> runs. Roadrunner’s
+actual validation gate is <code>cmd_complete:380</code>
+(<code>run_validation</code>), which works correctly.</p>
+<p>The commit improved the hook to scan for <code>TASK-\d{3,}</code> via
+regex, which could theoretically match if Claude mentions “TASK-002” in
+a <code>task_subject</code> or <code>task_description</code>. But this
+is fragile and accidental coupling.</p>
+<p><strong>Options:</strong> - <strong>Delete the hook</strong>
+(recommended): Remove from settings.json and delete the file. Document
+in DESIGN.md that validation happens in <code>cmd_complete</code>, not a
+hook. This is the cleanest path. - <strong>Repurpose it</strong>: If you
+plan to use Claude Code agent-teams mode with roadrunner, redesign the
+hook to map <code>task_subject</code> → roadmap ID explicitly.</p>
+<h3
+id="o2.-posttooluse-matcher-includes-multiedit-non-existent-tool">O2.
+PostToolUse matcher includes <code>MultiEdit</code> (non-existent
+tool)</h3>
+<p><strong>Source:</strong> New finding (not in either review)
+<strong>Severity: Low</strong> (harmless — <code>MultiEdit</code> never
+matches, <code>Write|Edit</code> still work) <strong>File:</strong>
+<code>.claude/settings.json:38</code></p>
+<p>Current: <code>"matcher": "Write|Edit|MultiEdit"</code> The current
+Claude Code tool set (per official docs) lists <code>Bash</code>,
+<code>Edit</code>, <code>Write</code>, <code>Read</code>,
+<code>Glob</code>, <code>Grep</code>, <code>Agent</code>,
+<code>WebFetch</code>, <code>WebSearch</code>,
+<code>AskUserQuestion</code>, <code>ExitPlanMode</code>.
+<code>MultiEdit</code> is not present.</p>
+<p><strong>Fix:</strong> Change to
+<code>"matcher": "Write|Edit"</code>.</p>
+<h3 id="o3.-precompact-additionalcontext-json-output-is-dead-code">O3.
+PreCompact <code>additionalContext</code> JSON output is dead code</h3>
+<p><strong>Source:</strong> New finding (not in either review)
+<strong>Severity: Low</strong> (dead code, not a bug)
+<strong>File:</strong> <code>roadrunner.py:297-303</code></p>
+<p><code>write_context_snapshot()</code> prints:</p>
+<pre class="python"><code>print(json.dumps({&quot;additionalContext&quot;: f&quot;Roadmap state snapshot...&quot;}))</code></pre>
+<p>Per the official docs, <strong>PreCompact has no
+<code>additionalContext</code> output field</strong>. The events that
+support <code>additionalContext</code> in their output are:
+<code>SessionStart</code>, <code>UserPromptSubmit</code>,
+<code>PostToolUse</code>, <code>PostToolUseFailure</code>,
+<code>SubagentStart</code>, and <code>Notification</code>. PreCompact
+only supports <code>decision: "block"</code> / exit code 2 to block
+compaction.</p>
+<p>The file write (<code>.context_snapshot.json</code>, line 296) still
+works and is the actual load-bearing mechanism — CLAUDE.md references it
+and <code>InstructionsLoaded</code> fires on compact with
+<code>load_reason: "compact"</code>.</p>
+<p><strong>Fix:</strong> Remove the <code>print(json.dumps(...))</code>
+call. Keep the file write.</p>
+<h3 id="o4.-design.md-is-stale-after-the-hardening-commit">O4. DESIGN.md
+is stale after the hardening commit</h3>
+<p><strong>Source:</strong> Cross-referencing current docs against code
+<strong>Severity: Low</strong> (documentation drift)
+<strong>File:</strong> <code>DESIGN.md</code></p>
+<p>Specific items: - <strong>§1.1 step 3</strong> (line 33): Says
+<code>python roadrunner.py</code> — should be <code>python3</code>. -
+<strong>§2.1 bullet 1</strong> (line 91): Says “ROADMAP_COMPLETE in last
+message” — should describe the regex line-anchored match. -
+<strong>§2.2</strong> (lines 99-122): Describes TaskCompleted with an
+incorrect payload example (<code>{"task_id": "TASK-003"}</code>). The
+actual payload from Claude Code uses lowercase <code>task_id</code> like
+<code>"task-001"</code> with separate <code>task_subject</code>,
+<code>task_description</code> etc. fields. See O1 above. -
+<strong>§2.3</strong> (line 132): Claims PreCompact outputs
+<code>additionalContext</code> — this is dead code per O3. - <strong>§3
+“Known Risk Areas”</strong> (lines 176-260): Several items are now
+resolved (iteration counter, non-atomic writes, python vs python3) but
+still listed as open risks. - <strong>§4 “Recommended Fixes Before First
+Run”</strong>: References old file paths and contains fixes that have
+been applied. - <strong>§6 “Open Questions”</strong> (lines 388-392):
+Questions 1 and 3 are answered.</p>
+<p><strong>Fix:</strong> Update DESIGN.md to reflect the current state
+of the code and the verified Claude Code hook schemas.</p>
+<hr />
+<h2
+id="items-from-reviews-that-were-correctly-assessed-and-do-not-need-action">Items
+From Reviews That Were Correctly Assessed and Do Not Need Action</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>shell=True</code> over YAML-defined commands (CR#2)</td>
+<td>Correct: trust boundary, not a bug. Now documented in DESIGN.md §3
+“Trust Boundary” section.</td>
+</tr>
+<tr>
+<td>Stop-hook loop guard correct (CR#2)</td>
+<td>Confirmed: <code>stop_hook_active</code> check at
+roadrunner.py:442.</td>
+</tr>
+<tr>
+<td>Validation as gate (CR#2)</td>
+<td>Confirmed: <code>cmd_complete:380</code> re-runs
+<code>run_validation</code>.</td>
+</tr>
+<tr>
+<td>Per-task audit trail (CR#2)</td>
+<td>Confirmed: logs/TASK-XXX.md + CHANGELOG + trace.jsonl.</td>
+</tr>
+<tr>
+<td>Zero automated tests (CR#2)</td>
+<td>Now resolved: <code>tests/test_roadrunner.py</code> (~468 LOC).</td>
+</tr>
+<tr>
+<td>No ruff config (CR#2)</td>
+<td>True but acceptable: <code>ruff</code> in requirements.txt, code
+happens to be clean. No CI to run it.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="scorecard-review-accuracy">Scorecard: Review Accuracy</h2>
+<h3 id="code-review-2-7.510-rating">Code Review #2 (7.5/10 rating)</h3>
+<ul>
+<li><strong>11 weakness claims</strong>: 10 verified accurate, 1
+partially accurate (TaskCompleted described as “silently inoperative” —
+actually wired to wrong event entirely)</li>
+<li><strong>7 opportunity claims</strong>: 4 implemented in the
+hardening commit (schema validation, trace logging, attempt counter,
+line-anchored ROADMAP_COMPLETE)</li>
+<li><strong>Strengths</strong>: All verified accurate.</li>
+<li><strong>Rating fairness</strong>: 7.5 was appropriate pre-commit.
+Post-commit <code>e83a337</code>, the project is closer to 8.5-9.
+Outstanding items are all low-severity.</li>
+</ul>
+<h3 id="codex-adversarial-review-310-rating-no-ship">Codex Adversarial
+Review (3/10 rating, “no-ship”)</h3>
+<ul>
+<li><strong>Finding 1 (critical: in-progress treated as
+complete)</strong>: Verified accurate. Now fixed.</li>
+<li><strong>Finding 2 (high: relative hook paths)</strong>: Verified
+accurate. Now fixed.</li>
+<li><strong>Finding 3 (high: ROADMAP_COMPLETE substring)</strong>:
+Verified accurate (duplicate of CR#2). Now fixed.</li>
+<li><strong>Finding 4 (high: TaskCompleted wired to wrong
+event)</strong>: Verified accurate — and more correct than CR#2’s
+characterization. Still outstanding.</li>
+<li><strong>3/10 rating</strong>: Was arguably harsh but defensible
+given finding #1 was a genuine correctness bug in the core loop.
+Post-fix, the same review would likely rate 6-7/10 with only O1-O4
+remaining.</li>
+</ul>
+<hr />
+<h1 id="hotfix-log">Hotfix Log</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/hotfix-log.md</code></em></p>
+<h1 id="hotfix-log-1">Hotfix Log</h1>
+<p>Append-only ledger of observation-driven hotfix commits. See <a
+href="adr/011-roadmap-vs-hotfix-commit-convention.md">ADR-011</a> for
+the dual-track convention separating roadmap work from hotfixes.</p>
+<p>Each entry records the symptom that surfaced during a live run, the
+root cause, the fix, and whether a follow-up roadmap task is warranted.
+Newest first.</p>
+<hr />
+<h2 id="dd8-instructional-sessionstart-that-auto-resumes">2026-04-23 —
+<code>6328dd8</code> — instructional SessionStart that auto-resumes</h2>
+<p><strong>Original subject:</strong>
+<code>feat: instructional SessionStart that auto-resumes (ROAD-028)</code></p>
+<ul>
+<li><strong>Symptom.</strong> SessionStart hook emitted ambient status
+text (“Current task: X”), so the agent treated it as background context
+and did not act on turn one. Operators had to type “Begin” or similar to
+kick the loop forward.</li>
+<li><strong>Root cause.</strong> <code>cmd_session_start</code> injected
+status, not instruction. The agent had no directive to start work, and
+the snapshot it read could lag the live state (especially after the
+ROAD-023 fix cleared <code>current_task_id</code>).</li>
+<li><strong>Fix.</strong> Rewrote <code>cmd_session_start</code> to read
+<code>tasks.yaml</code> directly (not the snapshot) and emit
+instructional <code>additionalContext</code> of the form “Your first
+action: <code>roadrunner start &lt;ID&gt;</code>” plus the task brief.
+Added a decision tree: missing tasks file → silent; in_progress task →
+resume brief; eligible next → start directive; blocked-only → blocked
+list; all done → ROADMAP_COMPLETE prompt.</li>
+<li><strong>Tests.</strong> +5 (replacing 3 obsolete), 124 passing
+total. Covers absent file, eligible next, in_progress, all done,
+blocked.</li>
+<li><strong>Follow-up roadmap task warranted?</strong> No. The fix is
+self-contained. Behavior is already covered by direct unit tests.</li>
+</ul>
+<hr />
+<h2
+id="f640fb9-auto-push-after-merge-via-push_on_complete-config">2026-04-23
+— <code>f640fb9</code> — auto-push after merge via
+<code>push_on_complete</code> config</h2>
+<p><strong>Original subject:</strong>
+<code>feat: auto-push after merge via push_on_complete config (ROAD-031)</code></p>
+<ul>
+<li><strong>Symptom.</strong> After successful task-branch merges,
+nothing was pushed to origin. Operators had to manually
+<code>git push</code> between sessions, defeating the “trust the result
+when you wake up” pitch.</li>
+<li><strong>Root cause.</strong> No push step existed in the merge path.
+The decision had previously been deferred under the assumption a DevOps
+agent would own remote operations.</li>
+<li><strong>Fix.</strong> Added top-level <code>push_on_complete</code>
+key in <code>tasks.yaml</code> with four modes: <code>base</code> (push
+base branch only — new init default), <code>task</code> (push task
+branch before deletion), <code>both</code>, <code>none</code> (legacy
+default for existing projects without the key). Push failures are
+non-fatal: trace event + stderr warning, but the task stays marked done
+locally so transient network issues don’t invalidate work that passed
+validation.</li>
+<li><strong>Tests.</strong> +5, 122 passing. Real bare-repo origin in
+fixtures, not mocks. Covers default unset, each of the four modes, and
+push failure with no remote.</li>
+<li><strong>Follow-up roadmap task warranted?</strong> No. The
+capability is contained and the contract (non-fatal failure) is
+documented in <code>_INIT_TASKS_TEMPLATE</code>.</li>
+</ul>
+<hr />
+<h2 id="ecaf5-scope-aware-roadrunner-commit-command">2026-04-23 —
+<code>81ecaf5</code> — scope-aware <code>roadrunner commit</code>
+command</h2>
+<p><strong>Original subject:</strong>
+<code>feat(commit): scope-aware commit command (ROAD-021)</code></p>
+<ul>
+<li><strong>Symptom.</strong> Observed in <code>entra-triage</code>
+commit <code>b21c768</code>: a
+<code>git add -A &amp;&amp; git commit</code> swept unrelated README and
+ROADMAP edits into ENTRA-001’s commit alongside the entity work. The
+“one commit per task” contract was broken in a way that’s almost
+impossible to spot in review.</li>
+<li><strong>Root cause.</strong> The original commit path used
+<code>git add -A</code>, which is unscoped by definition. Any dirty file
+in the worktree at commit time gets included, regardless of which task
+it belongs to.</li>
+<li><strong>Fix.</strong> New
+<code>roadrunner commit TASK-ID [--notes] [--type]</code> subcommand.
+Stages only files in the task’s <code>files_expected</code> or in the
+roadrunner overlay (<code>logs/</code>, <code>tasks/tasks.yaml*</code>,
+<code>.reset_*</code>). Refuses with a named-file error if any
+out-of-scope dirty file is present, and lists three resolution paths
+(add to <code>files_expected</code>, stash, discard). Auto-generates the
+commit subject as <code>{type}({task_id}): {task.title}</code>. Default
+<code>--type feat</code>; conventional types only.</li>
+<li><strong>Tests.</strong> +7, 117 passing. Covers in-scope happy path,
+out-of-scope refusal with named offender, empty-tree no-op,
+<code>--type refactor</code>, invalid type, <code>--notes</code> body,
+unknown task ID.</li>
+<li><strong>Follow-up roadmap task warranted?</strong> No. Replaces the
+unsafe pattern entirely; CLAUDE.md init template was updated in the same
+commit to teach the new contract.</li>
+</ul>
+<hr />
+<h2
+id="afa2c60-state-branch-correctness-two-bugs-in-one-commit">2026-04-23
+— <code>afa2c60</code> — state + branch correctness (two bugs in one
+commit)</h2>
+<p><strong>Original subject:</strong>
+<code>fix: state + branch correctness (ROAD-023 + ROAD-025)</code></p>
+<p>This commit batched two pilot-surfaced bugs that were both worth
+shipping the same night.</p>
+<h3 id="road-023-cmd_complete-did-not-clear-current_task_id">ROAD-023 —
+<code>cmd_complete</code> did not clear
+<code>current_task_id</code></h3>
+<ul>
+<li><strong>Symptom.</strong> After completing a task,
+<code>state.current_task_id</code> kept pointing at the just-completed
+ID. SessionStart and <code>check-stop</code> then read that stale value
+and emitted “resume this done task” briefs on subsequent fires, leading
+to confused loop restarts.</li>
+<li><strong>Root cause.</strong> <code>cmd_complete</code> did not write
+<code>current_task_id=None</code> when finalizing.</li>
+<li><strong>Fix.</strong> <code>cmd_complete</code> now writes state
+with <code>current_task_id=None</code> while preserving
+<code>iteration</code>, <code>attempts_per_task</code>, and
+<code>base_branch</code>.</li>
+<li><strong>Tests.</strong> <code>TestCompleteClearsState</code> —
+verifies state.current_task_id is None after cmd_complete while
+iteration and attempts survive.</li>
+</ul>
+<h3
+id="road-025-task-branches-forked-from-head-not-project_base">ROAD-025 —
+task branches forked from HEAD, not project_base</h3>
+<ul>
+<li><strong>Symptom.</strong> Observed in <code>entra-triage</code>:
+after ENTRA-010 merged to main, ENTRA-011..040 chained on each other
+instead of each forking from main, producing a 6-branch stack that
+requires manual unstacking to get to origin/main.</li>
+<li><strong>Root cause.</strong> <code>cmd_start</code> used
+<code>_current_branch()</code> as the branch base, so calling
+<code>start</code> while HEAD was still on a previous task branch
+stacked the new branch on top of the old one.</li>
+<li><strong>Fix.</strong> New <code>load_project_config()</code> and
+<code>get_project_base()</code> helpers. <code>get_project_base()</code>
+returns the configured <code>project_base</code> (top-level key in
+<code>tasks.yaml</code>), falling back to <code>_current_branch()</code>
+or <code>"main"</code> for back-compat. <code>cmd_start</code> calls it
+and passes the result to
+<code>create_task_branch(base_branch=...)</code>.
+<code>create_task_branch</code> checks out the base before forking,
+guaranteeing fan-out instead of stacking. Init template scaffolds
+<code>project_base: main</code> so new projects get the correct behavior
+by default.</li>
+<li><strong>Tests.</strong> <code>TestProjectBase</code> — verifies
+<code>get_project_base</code> reads the key, falls back cleanly without
+it, and that <code>create_task_branch</code> with an explicit base forks
+from that base rather than from current HEAD.</li>
+</ul>
+<p><strong>Combined tests.</strong> +4, 110 passing total.</p>
+<p><strong>Follow-up roadmap task warranted?</strong> No for either.
+Both are straight bugfixes covered by direct unit tests. The 6-branch
+stack in entra-triage is a separate cleanup item owned downstream.</p>
+<hr />
+<h2 id="conventions">Conventions</h2>
+<ul>
+<li>One section per hotfix commit (or per logical hotfix when
+batched).</li>
+<li>Original subject quoted verbatim so <code>git log</code> and the log
+are correlatable.</li>
+<li>Symptom / Root cause / Fix / Tests / Follow-up fields, in that
+order.</li>
+<li>Newest entries on top.</li>
+<li>No edits to existing entries — append only. Corrections go in a new
+entry referencing the original SHA.</li>
+</ul>
+</body>
+</html>
