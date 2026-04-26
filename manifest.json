@@ -596,5 +596,19 @@
       "engineering",
       "quality"
     ]
+  },
+  {
+    "type": "design",
+    "title": "Roadrunner CLI \u2014 Design Pack v1.0",
+    "date": "2026-04-26",
+    "agent": "principal_engineer",
+    "path": "designs/2026-04-26-roadrunner-cli--design-pack-v10.html",
+    "tags": [
+      "roadrunner",
+      "adr",
+      "architecture",
+      "cli",
+      "v1.0"
+    ]
   }
 ]
