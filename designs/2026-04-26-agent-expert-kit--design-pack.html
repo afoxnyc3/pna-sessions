@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_architect" />
+  <meta name="dcterms.date" content="2026-04-26" />
+  <title>Agent Expert Kit — Design Pack</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Agent Expert Kit — Design Pack</h1>
+<p class="author">principal_architect</p>
+<p class="date">2026-04-26</p>
+</header>
+<hr />
+<h1 id="readme">README</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/agent-expert-kit/README.md</code></em></p>
+<h1 id="agent-expert-kit">agent-expert-kit</h1>
+<p><strong>Status</strong>: planning <strong>Owner</strong>:
+principal_architect (hand off to engineer when SPEC approved)
+<strong>Target home</strong>: <code>afoxnyc3/pna-library</code> as a
+skill</p>
+<h2 id="what">What</h2>
+<p>Scaffold the Disler “agent expert” triad for a domain:
+<code>expertise.yaml</code> (mental model) + <code>question.md</code>
+(read-only Q&amp;A) + <code>self-improve.md</code> (re-sync to code).
+Seeds the YAML from current code on first run. Validates.</p>
+<h2 id="why">Why</h2>
+<p>Agents forget. Expertise files turn domains into persistent,
+self-correcting mental models. First skill in a six-skill family that
+together replaces ad-hoc “remember this” prompts with a disciplined
+memory layer.</p>
+<h2 id="who">Who</h2>
+<p>Alex / Principal &amp; Agent. Consumers: Clarke’s principals,
+research_a/b, creator-stack.</p>
+<h2 id="status">Status</h2>
+<p>Planning. See: - <code>SPEC.md</code> — technical specification -
+<code>ROADMAP.md</code> — phased delivery plan - <code>TASKS.md</code> —
+atomic tasks for engineer - <code>ARCHITECTURE.md</code> — component and
+flow diagrams - <code>docs/adr/</code> — decisions</p>
+<hr />
+<h1 id="spec">SPEC</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/agent-expert-kit/SPEC.md</code></em></p>
+<h1 id="agent-expert-kit-spec">agent-expert-kit — Spec</h1>
+<h2 id="problem">Problem</h2>
+<p>Claude agents have no persistent memory of a domain across sessions.
+Re-explaining architecture, schemas, conventions wastes tokens and leaks
+inconsistency. Existing CLAUDE.md files describe <em>how an agent
+works</em>, not <em>what it knows</em>. There is no durable, versioned
+layer for domain knowledge that stays in sync with the code.</p>
+<h2 id="proposed-solution">Proposed Solution</h2>
+<p>A pna-library skill that scaffolds the Disler “agent expert” triad
+for any domain. One invocation produces three files in a canonical
+layout, seeded from current code, YAML-validated, and wired to a cadence
+for re-sync. The result: a machine-readable mental model the agent reads
+before acting and revises after.</p>
+<h2 id="non-goals">Non-Goals</h2>
+<ul>
+<li>Not a general documentation generator. Output is structured YAML
+keyed to an agent’s Q&amp;A workflow, not human-facing docs.</li>
+<li>Not a replacement for CLAUDE.md. Persona/behaviour stays in
+CLAUDE.md. This is the <em>knowledge</em> layer.</li>
+<li>Not multi-repo. Scope is one repo per domain for v1. Cross-repo
+domains are v2.</li>
+<li>Not auto-syncing. Re-sync is an explicit command
+(<code>self-improve-expertise</code>), not a file watcher or git hook in
+v1.</li>
+<li>Not generating YAML from nothing. The skill expects source files as
+input for seeding; will not fabricate architecture.</li>
+</ul>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Invoked with a domain slug + scope
+globs, produces three files at the target path with no
+errors.</label></li>
+<li><label><input type="checkbox" />Seeded <code>expertise.yaml</code>
+is valid YAML (passes <code>yaml.safe_load</code>).</label></li>
+<li><label><input type="checkbox" />Seeded <code>expertise.yaml</code>
+is under 1000 lines.</label></li>
+<li><label><input type="checkbox" />Seeded <code>expertise.yaml</code>
+includes: <code>overview</code>, <code>core_implementation</code>, and
+one additional top-level section derived from scope
+(e.g. <code>schema_structure</code>,
+<code>key_operations</code>).</label></li>
+<li><label><input type="checkbox" />Generated <code>question.md</code>
+declares <code>EXPERTISE_PATH</code> pointing at the sibling yaml and
+follows the read-validate-respond workflow.</label></li>
+<li><label><input type="checkbox" />Generated
+<code>self-improve.md</code> enforces MAX_LINES=1000 and ends with a
+<code>yaml.safe_load</code> compile check.</label></li>
+<li><label><input type="checkbox" />Re-running the skill against an
+existing triad prompts before overwriting.</label></li>
+<li><label><input type="checkbox" />Integration with
+<code>library</code> skill: triad is registered and discoverable via
+<code>library list experts</code>.</label></li>
+<li><label><input type="checkbox" />Works against at least two real
+domains in P&amp;A stack (e.g. <code>claudeclaw-missions</code>,
+<code>creator-stack</code>) without hand-edits.</label></li>
+</ul>
+<h2 id="tech-stack">Tech Stack</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skill format</td>
+<td>Markdown skill file (SKILL.md + templates/) in pna-library</td>
+<td>Matches existing library; single distribution mechanism via
+symlinks.</td>
+</tr>
+<tr>
+<td>Templating</td>
+<td>Plain Markdown/YAML with <code>$VAR</code> substitution + small
+Python helper</td>
+<td>No Jinja dependency. Aligns with agent-experts repo style. Python
+used elsewhere in hooks.</td>
+</tr>
+<tr>
+<td>YAML validation</td>
+<td>PyYAML (<code>yaml.safe_load</code>)</td>
+<td>Already required by <code>self-improve.md</code>. Zero new
+deps.</td>
+</tr>
+<tr>
+<td>Scope seeding</td>
+<td><code>Glob</code> + <code>Read</code> tools (Claude-native) for file
+collection; Claude completion for YAML extraction</td>
+<td>No external doc-scraper. Keeps skill portable.</td>
+</tr>
+<tr>
+<td>Target integration</td>
+<td><code>library</code> skill and <code>skill_roster.yaml</code>
+symlink pattern</td>
+<td>Existing distribution path; no parallel system.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="architecture">Architecture</h2>
+<p>See <code>ARCHITECTURE.md</code>. High-level:</p>
+<ul>
+<li><strong>Scaffolder</strong> (skill entry) takes inputs and writes
+three files from templates.</li>
+<li><strong>Seeder</strong> reads scope files, produces initial YAML
+body via structured prompt.</li>
+<li><strong>Validator</strong> runs trim-to-cap loop and compile
+check.</li>
+<li><strong>Registrar</strong> updates <code>skill_roster.yaml</code> so
+the triad becomes discoverable.</li>
+</ul>
+<h2 id="risks">Risks</h2>
+<ol type="1">
+<li><strong>LLM-produced YAML is malformed</strong> — Likelihood: M,
+Impact: M — Mitigation: compile-check gate + up to 2 auto-retry with
+error message injected into regeneration prompt.</li>
+<li><strong>1000-line cap is too tight for large domains</strong> —
+Likelihood: M, Impact: L — Mitigation: cap is configurable via
+<code>MAX_LINES</code> variable; document precedent for raising
+selectively.</li>
+<li><strong>Seeded YAML hallucinates architecture not present in
+code</strong> — Likelihood: M, Impact: H — Mitigation: every seeded
+claim must cite a file path in the scope; post-seed pass rejects
+unsourced rows.</li>
+<li><strong>Symlink conflicts when re-scaffolding</strong> — Likelihood:
+L, Impact: L — Mitigation: prompt before overwrite; keep a
+<code>.bak</code> of prior expertise.yaml on regenerate.</li>
+<li><strong>Domain definition drift</strong> (two agents scaffold
+overlapping “creator” domains) — Likelihood: M, Impact: M — Mitigation:
+registrar checks for slug collision and suggests merge or rename.</li>
+</ol>
+<h2 id="open-questions">Open Questions</h2>
+<ul>
+<li>Default expertise location: per-agent
+(<code>~/.claudeclaw/agents/&lt;id&gt;/experts/</code>) or shared
+(<code>~/.pna/experts/</code>)? <strong>Default applied</strong>: shared
+at <code>~/.pna/experts/&lt;domain&gt;/</code>, symlinked into each
+consuming agent’s skill path. Rationale: research_a/b A/B only works if
+both see the same mental model.</li>
+<li>Re-sync cadence: on-demand (v1 default), cron-scheduled (v2),
+post-commit hook (v3).</li>
+<li>Should <code>question.md</code> support multi-domain queries
+(fanning across experts)? <strong>Default applied</strong>: no in v1.
+One question = one domain. Fan-out handled by a separate
+<code>expertise-ensemble</code> skill if/when needed.</li>
+</ul>
+<hr />
+<h1 id="architecture-1">ARCHITECTURE</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/agent-expert-kit/ARCHITECTURE.md</code></em></p>
+<h1 id="architecture-agent-expert-kit">Architecture —
+agent-expert-kit</h1>
+<h2 id="system-context">System Context</h2>
+<pre class="mermaid"><code>graph TB
+    User[Agent or Alex] --&gt;|invoke with domain + scope| Skill[agent-expert-kit SKILL.md]
+    Skill --&gt; Scaffolder[Scaffolder]
+    Scaffolder --&gt; Templates[Templates dir]
+    Scaffolder --&gt; Seeder[Seeder prompt]
+    Seeder --&gt;|reads| Code[(Repo source files)]
+    Seeder --&gt; YAML[expertise.yaml]
+    Scaffolder --&gt; Validator[Validator + trim loop]
+    Validator --&gt; YAML
+    Scaffolder --&gt; Registrar[Registrar]
+    Registrar --&gt; Roster[(library.yaml · experts: key)]
+    Scaffolder --&gt; Target[~/.pna/experts/domain/]
+    Target --&gt; Consumers[Agents, research_a/b, Clarke]</code></pre>
+<h2 id="file-layout">File Layout</h2>
+<pre><code>~/.pna/experts/&lt;domain&gt;/
+├── expertise.yaml      # mental model, canonical
+├── question.md         # read-only Q&amp;A slash command
+├── self-improve.md     # rewrite workflow
+└── .last-sync.md       # drift report (added by self-improve-expertise in Phase 3)</code></pre>
+<p>Symlinked from each consuming agent’s skill path as needed.</p>
+<h2 id="scaffold-flow">Scaffold Flow</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant U as User
+    participant S as agent-expert-kit
+    participant F as Filesystem
+    participant L as LLM (seeder)
+    participant V as Validator
+
+    U-&gt;&gt;S: invoke(domain, scope_globs)
+    S-&gt;&gt;F: check ~/.pna/experts/&lt;domain&gt; exists?
+    alt exists
+        S-&gt;&gt;U: prompt overwrite? keep .bak?
+    end
+    S-&gt;&gt;F: read scope files
+    S-&gt;&gt;L: seed expertise.yaml from files
+    L--&gt;&gt;S: YAML body
+    S-&gt;&gt;F: write expertise.yaml, question.md, self-improve.md
+    S-&gt;&gt;V: validate (yaml.safe_load + line count)
+    alt over line cap
+        S-&gt;&gt;L: trim pass
+        L--&gt;&gt;S: shortened YAML
+        S-&gt;&gt;V: revalidate
+    end
+    V--&gt;&gt;S: pass
+    S-&gt;&gt;F: append to library.yaml under experts: key
+    S--&gt;&gt;U: report with paths and next-step hint</code></pre>
+<h2 id="self-improve-flow-phase-3">Self-Improve Flow (Phase 3)</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant U as User
+    participant SI as self-improve-expertise
+    participant G as Git
+    participant Y as expertise.yaml
+    participant L as LLM
+    participant V as Validator
+
+    U-&gt;&gt;SI: invoke(domain, [since=ref])
+    SI-&gt;&gt;G: git diff (optional scope filter)
+    SI-&gt;&gt;Y: read current
+    SI-&gt;&gt;L: compare code vs YAML, identify drift
+    L--&gt;&gt;SI: drift list
+    SI-&gt;&gt;L: update YAML to match
+    L--&gt;&gt;SI: revised YAML
+    SI-&gt;&gt;V: compile check + line cap trim
+    V--&gt;&gt;SI: pass
+    SI-&gt;&gt;Y: write
+    SI--&gt;&gt;U: drift report (.last-sync.md)</code></pre>
+<h2 id="component-responsibilities">Component Responsibilities</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Owns</th>
+<th>Does not own</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scaffolder</td>
+<td>orchestrating the three writes, overwrite safety</td>
+<td>YAML content generation</td>
+</tr>
+<tr>
+<td>Seeder</td>
+<td>producing YAML body keyed to scope files</td>
+<td>validation, file I/O</td>
+</tr>
+<tr>
+<td>Validator</td>
+<td>compile-check, line cap enforcement, trim prompts</td>
+<td>content correctness (that’s seeder’s job via file citations)</td>
+</tr>
+<tr>
+<td>Registrar</td>
+<td>appending to <code>library.yaml</code> under <code>experts:</code>
+key, detecting slug collisions</td>
+<td>content, validation</td>
+</tr>
+<tr>
+<td>self-improve-expertise (Phase 3)</td>
+<td>drift detection + YAML rewrite, produces drift report</td>
+<td>initial scaffolding</td>
+</tr>
+</tbody>
+</table>
+<h2 id="skill-family-map">Skill Family Map</h2>
+<pre class="mermaid"><code>graph LR
+    Kit[agent-expert-kit] --&gt;|creates triads consumed by| Q[question.md runtime]
+    Kit --&gt;|creates triads consumed by| SI[self-improve-expertise]
+    SI --&gt;|re-syncs triads for| Q
+    PBI[plan-build-improve] --&gt;|calls| Planner[/plan/]
+    PBI --&gt;|calls| PB[parallel-build]
+    PBI --&gt;|calls| SI
+    Audit[expertise-audit] --&gt;|read-only diff of| Q
+    MP[meta-prompt] --&gt;|writes| Planner
+    MA[meta-agent existing] --&gt;|writes| Subagents[sub-agents used by PBI]</code></pre>
+<h2 id="integration-with-existing-skills">Integration with Existing
+Skills</h2>
+<ul>
+<li><strong>till-done</strong>: called by
+<code>plan-build-improve</code> between phases as the verification
+gate.</li>
+<li><strong>library</strong>: registrar writes to
+<code>library.yaml</code> under a new top-level <code>experts:</code>
+key; <code>skill_roster.yaml</code> is deepagents routing config and is
+out of scope. The <code>library list experts</code> subcommand (T2.1b)
+reads this key. No parallel system.</li>
+<li><strong>skill-optimizer</strong>: target for optimizing SKILL.md
+once Phase 1 ships. Build an eval harness from Phase 4 dogfood
+domains.</li>
+<li><strong>meta-optimize</strong>: prune the skill family quarterly;
+re-rank against usage.</li>
+</ul>
+<h2 id="non-architecture-explicit">Non-Architecture (explicit)</h2>
+<ul>
+<li>No daemon. No file watcher. No cron in v1. Sync is
+user-invoked.</li>
+<li>No cross-repo awareness. One domain = one repo in v1.</li>
+<li>No web UI. All invocation through Claude Code / principal
+agents.</li>
+</ul>
+<hr />
+<h1 id="roadmap">ROADMAP</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/agent-expert-kit/ROADMAP.md</code></em></p>
+<h1 id="roadmap-agent-expert-kit">Roadmap — agent-expert-kit</h1>
+<h2 id="phase-0-planning-this-doc">Phase 0 — Planning (this doc)</h2>
+<p>Exit: SPEC / ROADMAP / TASKS / ARCHITECTURE accepted by Alex.</p>
+<h2 id="phase-1-minimum-viable-scaffolder">Phase 1 — Minimum viable
+scaffolder</h2>
+<p>Goals: produce a working SKILL.md plus templates that generate the
+triad from inputs, seed expertise.yaml from one scope path, run the
+compile check. Exit criteria: - Skill file lives in pna-library -
+Against <code>claudeclaw-missions</code> as a test domain, produces
+valid triad in under 60s - All acceptance criteria 1-6 pass
+Dependencies: PyYAML available in agent runtime (already is).</p>
+<h2 id="phase-2-registrar-and-re-run-safety">Phase 2 — Registrar and
+re-run safety</h2>
+<p>Goals: wire output into <code>library</code> /
+<code>skill_roster.yaml</code>, add overwrite prompt and
+<code>.bak</code> behaviour. Exit criteria: - Triad discoverable via
+<code>library list experts</code> - Re-running against existing triad
+preserves old copy - Acceptance criteria 7-8 pass</p>
+<h2 id="phase-3-sister-skill-self-improve-expertise">Phase 3 — Sister
+skill: self-improve-expertise</h2>
+<p>Goals: extract the self-improve logic from templates into a reusable
+skill that runs against any existing triad. Exit criteria: -
+<code>self-improve-expertise &lt;domain&gt;</code> re-syncs a real triad
+against code changes - Sets up the seam for later cron scheduling</p>
+<h2 id="phase-4-multi-domain-validation">Phase 4 — Multi-domain
+validation</h2>
+<p>Goals: prove portability by scaffolding 2+ real P&amp;A domains
+(claudeclaw-missions, creator-stack), dogfood via research_a/b. Exit
+criteria: - Both domains scaffolded without hand-edits - research_a and
+research_b both consume at least one expertise file in their next run -
+Acceptance criterion 9 passes</p>
+<h2 id="phase-5-plan-build-improve-chain">Phase 5 — Plan → Build →
+Improve chain</h2>
+<p>Goals: ship <code>plan-build-improve</code> orchestrator skill that
+uses the triad. Unlocks the rest of the family. Exit criteria:
+end-to-end chain produces a feature plus updated expertise file from a
+one-line prompt.</p>
+<hr />
+<h1 id="tasks">TASKS</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/agent-expert-kit/TASKS.md</code></em></p>
+<h1 id="tasks-agent-expert-kit">Tasks — agent-expert-kit</h1>
+<h2 id="phase-1-minimum-viable-scaffolder-1">Phase 1 — Minimum viable
+scaffolder</h2>
+<h3 id="t1.1-write-skill.md-entrypoint">T1.1 Write SKILL.md
+entrypoint</h3>
+<ul>
+<li>Labels: setup, phase-1</li>
+<li>Acceptance: <code>SKILL.md</code> exists at
+<code>pna-library/skills/agent-expert-kit/SKILL.md</code>, has YAML
+frontmatter (name, description with WHEN triggers, argument-hint),
+routes to the scaffolder workflow.</li>
+<li>Est: XS</li>
+<li>Status: done (branch <code>feat/T1.1-skill-entrypoint</code>)</li>
+</ul>
+<h3 id="t1.2-author-expertise.yaml-template">T1.2 Author expertise.yaml
+template</h3>
+<ul>
+<li>Labels: templates, phase-1</li>
+<li>Acceptance: <code>templates/expertise.yaml.tmpl</code> has top-level
+keys <code>overview</code>, <code>core_implementation</code>, and one
+conditional section; uses <code>$DOMAIN</code>,
+<code>$DESCRIPTION</code>, <code>$SCOPE_FILES</code> substitution
+markers; under 120 lines.</li>
+<li>Est: S</li>
+<li>Status: done (branch <code>feat/T1.2-expertise-template</code>)</li>
+</ul>
+<h3 id="t1.3-author-question.md-template">T1.3 Author question.md
+template</h3>
+<ul>
+<li>Labels: templates, phase-1</li>
+<li>Acceptance: <code>templates/question.md.tmpl</code> declares
+<code>USER_QUESTION: $1</code> and <code>EXPERTISE_PATH</code> pointing
+at sibling yaml; includes the 3-step read-validate-respond workflow
+lifted from agent-experts.</li>
+<li>Est: XS</li>
+<li>Status: done (branch <code>feat/T1.3-question-template</code>)</li>
+</ul>
+<h3 id="t1.4-author-self-improve.md-template">T1.4 Author
+self-improve.md template</h3>
+<ul>
+<li>Labels: templates, phase-1</li>
+<li>Acceptance: <code>templates/self-improve.md.tmpl</code> contains the
+7-step workflow (git diff → read → validate → identify → update →
+enforce cap → compile check); <code>MAX_LINES=1000</code> configurable;
+ends with <code>yaml.safe_load</code> gate.</li>
+<li>Est: S</li>
+<li>Status: done (branch
+<code>feat/T1.4-self-improve-template</code>)</li>
+</ul>
+<h3 id="t1.5-build-seeder-prompt">T1.5 Build seeder prompt</h3>
+<ul>
+<li>Labels: seeding, phase-1</li>
+<li>Acceptance: a prompt block inside SKILL.md that, given a list of
+scope files, produces a YAML body fitting the expertise.yaml schema with
+every non-trivial claim citing a file path.</li>
+<li>Est: M</li>
+<li>Status: done (branch <code>feat/T1.5-seeder-prompt</code>)</li>
+</ul>
+<h3 id="t1.6-build-compile-check-and-trim-loop">T1.6 Build compile-check
+and trim loop</h3>
+<ul>
+<li>Labels: validation, phase-1</li>
+<li>Acceptance: a Python snippet inside SKILL.md runs
+<code>yaml.safe_load</code> and, if line count &gt; 1000, prompts for a
+trim pass; loops up to 3 times; fails loud otherwise.</li>
+<li>Est: S</li>
+<li>Status: done (branch <code>feat/T1.6-validator</code>)</li>
+</ul>
+<h3 id="t1.7-end-to-end-test-against-claudeclaw-missions">T1.7
+End-to-end test against claudeclaw-missions</h3>
+<ul>
+<li>Labels: test, phase-1</li>
+<li>Acceptance: running the skill with
+<code>domain=claudeclaw-missions scope=src/missions/**</code> produces a
+valid triad; manual read confirms the YAML maps to real files.</li>
+<li>Est: S</li>
+<li>Status: done (branch <code>feat/T1.7-end-to-end</code>)</li>
+</ul>
+<h2 id="phase-2-registrar-and-re-run-safety-1">Phase 2 — Registrar and
+re-run safety</h2>
+<h3 id="t2.1a-add-registrar-hook-write-to-library.yaml">T2.1a Add
+registrar hook — write to library.yaml</h3>
+<ul>
+<li>Labels: integration, phase-2</li>
+<li>Acceptance: after scaffolding, the skill appends the triad to
+<code>~/dev/pna-library/library.yaml</code> under a new top-level
+<code>experts:</code> key with fields <code>name</code>,
+<code>domain</code>, <code>path</code>; file remains valid YAML after
+insertion; slugs are unique (no duplicates).</li>
+<li>Est: S</li>
+<li>Amendment (2026-04-21): registrar writes to
+<code>library.yaml</code> NOT <code>skill_roster.yaml</code>.
+<code>skill_roster.yaml</code> at
+<code>~/dev/projects/rnd/deepagents/config/</code> is deepagents routing
+config — out of scope for this integration. T2.1 split into T2.1a +
+T2.1b.</li>
+<li>Status: done (branch
+<code>feat/phase2-registrar-overwrite-collision</code>, commits
+<code>f5f66c0</code> + <code>7338e66</code>)</li>
+</ul>
+<h3 id="t2.1b-extend-library-skill-add-list-experts-subcommand">T2.1b
+Extend library skill — add <code>list experts</code> subcommand</h3>
+<ul>
+<li>Labels: integration, phase-2</li>
+<li>Dependency: T2.1a</li>
+<li>Acceptance: <code>library list experts</code> reads the
+<code>experts:</code> key from <code>library.yaml</code> and prints a
+table of registered domains (name, path, last-sync if present);
+gracefully prints “No experts registered” when the key is absent or
+empty.</li>
+<li>Est: S</li>
+<li>Status: done (pna-library branch
+<code>feat/T2.1b-library-list-experts</code>, commit
+<code>caaadb0</code>). Cookbook at
+<code>cookbook/list-experts.md</code>; SKILL.md + justfile updated.</li>
+</ul>
+<h3 id="t2.2-overwrite-protection">T2.2 Overwrite protection</h3>
+<ul>
+<li>Labels: safety, phase-2</li>
+<li>Acceptance: re-running against an existing triad prompts before
+overwrite; on confirm, prior <code>expertise.yaml</code> is saved as
+<code>expertise.yaml.bak</code> with timestamp suffix.</li>
+<li>Est: XS</li>
+<li>Status: done (branch
+<code>feat/phase2-registrar-overwrite-collision</code>, commit
+<code>7338e66</code>)</li>
+</ul>
+<h3 id="t2.3-slug-collision-check">T2.3 Slug collision check</h3>
+<ul>
+<li>Labels: safety, phase-2</li>
+<li>Acceptance: if the domain slug already exists in
+<code>library.yaml</code> under <code>experts:</code>, skill halts and
+surfaces the collision with suggested rename.</li>
+<li>Est: XS</li>
+<li>Status: done (branch
+<code>feat/phase2-registrar-overwrite-collision</code>, commits
+<code>f5f66c0</code> + <code>7338e66</code>)</li>
+</ul>
+<h2 id="phase-3-self-improve-expertise-sister-skill">Phase 3 —
+self-improve-expertise sister skill</h2>
+<h3 id="t3.1-extract-self-improve-into-standalone-skill">T3.1 Extract
+self-improve into standalone skill</h3>
+<ul>
+<li>Labels: skill, phase-3</li>
+<li>Acceptance:
+<code>pna-library/skills/self-improve-expertise/SKILL.md</code> accepts
+a domain slug, locates the triad, runs the workflow end to end; leaves a
+drift report at
+<code>~/.pna/experts/&lt;domain&gt;/.last-sync.md</code>.</li>
+<li>Est: M</li>
+<li>Status: done (branch
+<code>feat/T3.1-self-improve-expertise</code>)</li>
+</ul>
+<h3 id="t3.2-git-diff-scoped-mode">T3.2 Git-diff-scoped mode</h3>
+<ul>
+<li>Labels: perf, phase-3</li>
+<li>Acceptance: <code>--since=&lt;ref&gt;</code> flag limits validation
+to files changed since the given git ref; skips unchanged sections.</li>
+<li>Est: S</li>
+<li>Status: done (branch <code>feat/T3.2-since-flag</code>)</li>
+</ul>
+<h2 id="phase-4-multi-domain-validation-1">Phase 4 — Multi-domain
+validation</h2>
+<h3 id="t4.1-scaffold-creator-stack-expertise">T4.1 Scaffold
+creator-stack expertise</h3>
+<ul>
+<li>Labels: dogfood, phase-4</li>
+<li>Acceptance: triad exists at
+<code>~/.pna/experts/creator-stack/</code>; consumed by creator-stack
+skill in its next run; measurable quality delta vs pre-expertise
+output.</li>
+<li>Est: M</li>
+<li>Status: done (branch
+<code>feat/phase4-multi-domain-validation</code>)</li>
+<li>Notes: triad at <code>~/.pna/experts/creator-stack/</code>
+(expertise.yaml 21537B, question.md 1971B, self-improve.md 4331B).
+Seeded via <code>scripts/scaffold.py:scaffold()</code> with
+hand-authored <code>seed_body_text</code> covering foundation-skills +
+thin-orchestrators architecture across 21 skills + 2 agents. Registered
+to <code>~/dev/pna-library/library.yaml</code> under
+<code>experts:</code> key. Quality delta is a runtime test; measured in
+next creator-stack session.</li>
+</ul>
+<h3 id="t4.2-scaffold-claudeclaw-missions-expertise">T4.2 Scaffold
+claudeclaw-missions expertise</h3>
+<ul>
+<li>Labels: dogfood, phase-4</li>
+<li>Acceptance: triad exists; Clarke can answer a mission-routing
+question by reading it; principal_architect uses it before scaffolding
+the next project.</li>
+<li>Est: M</li>
+<li>Status: done (branch
+<code>feat/phase4-multi-domain-validation</code>)</li>
+<li>Notes: pre-existing triad at
+<code>~/.pna/experts/claudeclaw-missions/</code> (174-line
+expertise.yaml, well-cited, created 2026-04-21) registered via
+<code>register_expert()</code> directly. library.yaml
+<code>experts:</code> key now contains both entries.</li>
+</ul>
+<h3 id="t4.3-wire-into-research_a-and-research_b">T4.3 Wire into
+research_a and research_b</h3>
+<ul>
+<li>Labels: integration, phase-4</li>
+<li>Acceptance: both research agents load the relevant expertise file
+for their target domain at session start; A/B comparison includes “did
+expertise improve output” as a scored dimension.</li>
+<li>Est: M</li>
+<li>Status: done (branch
+<code>feat/phase4-multi-domain-validation</code>)</li>
+<li>Notes: Step 0 “Expertise Consultation” block added to
+research_a/CLAUDE.md (agent-design, untracked in rnd outer repo),
+research_b/CLAUDE.md (agent-design, untracked), and
+research-agent-sdk/research_prompt.md (separate repo, sits alongside
+unrelated WIP on tools.py/tests). “Expertise Consulted” section added to
+the Standard Research Schema + quality bar item in all three. Dimension
+6 “Expertise Utilization (0-10)” added to
+<code>~/.claudeclaw/agents/principal_research/CLAUDE.md</code> rubric;
+total shifted from /50 to /60. See Open items in handoff notes for where
+those edits still need to land in VCS.</li>
+</ul>
+<h2 id="phase-5-chain-orchestrator">Phase 5 — Chain orchestrator</h2>
+<h3 id="t5.1-plan-build-improve-skill-scaffold">T5.1 plan-build-improve
+skill scaffold</h3>
+<ul>
+<li>Labels: skill, phase-5</li>
+<li>Acceptance:
+<code>pna-library/skills/plan-build-improve/SKILL.md</code> chains
+planner → parallel-build → self-improve-expertise via Task subagents
+with fresh context per step; produces a compiled report.</li>
+<li>Est: L</li>
+</ul>
+</body>
+</html>

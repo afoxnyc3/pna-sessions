@@ -665,5 +665,17 @@
       "knowledge-base",
       "principal-plugin"
     ]
+  },
+  {
+    "type": "design",
+    "title": "Agent Expert Kit \u2014 Design Pack",
+    "date": "2026-04-26",
+    "agent": "principal_architect",
+    "path": "designs/2026-04-26-agent-expert-kit--design-pack.html",
+    "tags": [
+      "agent-expert-kit",
+      "architecture",
+      "scaffolding"
+    ]
   }
 ]
