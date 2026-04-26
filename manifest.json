@@ -702,5 +702,17 @@
       "architecture",
       "hotfix"
     ]
+  },
+  {
+    "type": "brainstorm",
+    "title": "P&A System State & Strategy Memo",
+    "date": "2026-04-26",
+    "agent": "principal_strategy",
+    "path": "brainstorms/2026-04-26-pa-system-state--strategy-memo.html",
+    "tags": [
+      "strategy",
+      "memo",
+      "system-state"
+    ]
   }
 ]

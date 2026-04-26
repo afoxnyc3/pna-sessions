@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_strategy" />
+  <meta name="dcterms.date" content="2026-04-19" />
+  <title>P&amp;A System State &amp; Strategy Memo</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">P&amp;A System State &amp; Strategy Memo</h1>
+<p class="author">principal_strategy</p>
+<p class="date">2026-04-19</p>
+</header>
+<hr />
+<h1 id="strategy-memo-2026-04-19">Strategy Memo (2026-04-19)</h1>
+<p><em>Source:
+<code>/Users/alex/Documents/Obsidian/claudeclaw/Strategy/memos/2026-04-19-system-state-and-strategy.md</code></em></p>
+<h1 id="system-state-strategic-brief-2026-04-19">System State +
+Strategic Brief — 2026-04-19</h1>
+<p>Synthesised from the formal session summary notes written by Clarke,
+Architect, and Engineer
+(<code>Delivery/session-summaries/2026-04-19-*.md</code>), cross-checked
+against hive_mind DB entries and mission results. Sources are
+first-party — written by each agent immediately after their session. No
+inference gap.</p>
+<p>Session cost breakdown: Clarke $21.52 (26 turns, ~106k tokens),
+Architect $11.65 (13 turns, ~43k tokens), Engineer $2.65 (6 turns, ~11k
+tokens). Total: $35.82.</p>
+<hr />
+<h2 id="what-each-agent-did">1. What Each Agent Did</h2>
+<h3 id="clarke-chief-of-staff-infrastructure-sprint">Clarke (Chief of
+Staff) — Infrastructure sprint</h3>
+<p>Clarke ran an infrastructure-heavy session focused entirely on
+building the skill pipeline and scaffolding the multi-agent development
+environment. Nothing was used in production — everything was set up for
+future use.</p>
+<p><strong>Skill pipeline:</strong> 30 skills installed from three
+external repos — feynman (15: deep-research, literature-review,
+alpha-research, peer-review, paper-code-audit, autoresearch,
+paper-writing, eli5, replication, session-log, session-search, jobs,
+preview, watch, source-comparison), ARIS (6), Anthropic agent-skills (9
+via Addy Osmani). Four Gemini skills promoted from
+<code>google-gemini/gemini-skills</code>: gemini-api-dev,
+gemini-interactions-api, gemini-live-api-dev, vertex-ai-api-dev.</p>
+<p><strong>deepagents scaffold:</strong> Assessed the
+<code>langchain-ai/deepagents</code> SDK, confirmed Anthropic-key
+compatible, scaffolded <code>~/dev/projects/rnd/deepagents/</code> with
+4 subagents (pipeline, strategy, architect, engineer). ANTHROPIC_API_KEY
+wired into <code>~/.zshrc</code>. Skills scoped per agent to control
+token bloat.</p>
+<p><strong>agent-session-summary skill:</strong> Created
+<code>~/.claude/skills/agent-session-summary/</code> with a SKILL.md and
+template.md. This is what Clarke used to generate the structured session
+notes now in <code>Delivery/session-summaries/</code>.</p>
+<p><strong>Clarke’s own assessment:</strong> “Session was infra-heavy:
+setting up the skill pipeline, not using it. The rnd/deepagents scaffold
+is live but untested end-to-end.”</p>
+<hr />
+<h3 id="architect-observability-hardening-sprint">Architect —
+Observability + hardening sprint</h3>
+<p>Architect ran a research-heavy session: reviewed three external repos
+(ARIS, oh-my-codex, claude-code-hooks-multi-agent-observability) and
+extracted patterns that were immediately applied to the local stack.
+This was the highest-leverage session of the day.</p>
+<p><strong>Observability hook layer</strong> (new, at
+<code>~/.claude/hooks/</code>): - <code>send_event.py</code> — 7 event
+types written to <code>agent_events</code> table (auto-created via
+<code>CREATE TABLE IF NOT EXISTS</code>). Optional Haiku summarization
+per event. Never exits non-zero (fail-safe design). Covers:
+SessionStart, SessionEnd, ToolUse, ToolResult, UserMessage,
+AssistantMessage, Error. - <code>pre_tool_use.py</code> — global guard
+blocking <code>rm -rf</code> patterns and direct <code>.env</code> file
+access. Applied to all agents via <code>~/.claude/settings.json</code>.
+- <code>stop_validator.py</code> — gated by
+<code>CLAUDECLAW_AGENT_ID</code>. Architect sessions require SPEC +
+TASKS + ARCHITECTURE files with a Mermaid diagram before stopping.
+Engineer sessions require a clean working tree and at least 1 commit.
+Other agents pass through unchecked.</p>
+<p><strong>Design decisions worth noting:</strong> Hooks live in
+<code>~/.claude/</code> (not claudeclaw source) — this keeps them clear
+of the claudeclaw-os upgrade path. The <code>AGENT_MAX_TURNS=100</code>
+env var must be set before the upgrade; the new claudeclaw-os defaults
+to 30 turns (was unlimited).</p>
+<p><strong>skill-optimizer hardening:</strong> Applied 6 ARIS eval
+integrity rules to <code>skill-optimizer/skill.md</code> and
+<code>agent_instructions.md</code>. Added <code>loop_state.json</code>
+write pattern to <code>runner.py</code> for session resumption.</p>
+<p><strong>bounded-shell skill:</strong> Created from oh-my-codex
+patterns. Four output tiers, quick patterns per command type. Committed
+to skills git repo at <code>bc273e8</code>.</p>
+<p><strong>Skills git repo:</strong> Initialised
+<code>~/.claude/skills/</code> as a git repo on <code>main</code>. 12
+custom skills and 26 symlinks tracked. <code>results/</code> and
+<code>prompts/candidates/</code> excluded from tracking. No remote
+yet.</p>
+<p><strong>claudeclaw-os upgrade:</strong> Reviewed
+<code>earlyaidopters/claudeclaw-os</code> repo. Confirmed at HEAD, 0
+commits behind. Upgrade is safe. Greenlit.</p>
+<p><strong>Architect’s own assessment:</strong> “The disler
+observability work is the highest-leverage output this session. Stop
+validators enforce quality gates on two principals without Clarke having
+to babysit.”</p>
+<hr />
+<h3 id="engineer-skillclaw-paper-review-targeted-skill-edits">Engineer —
+SkillClaw paper review + targeted skill edits</h3>
+<p>Engineer ran a short, focused session (6 turns, $2.65). Read the
+SkillClaw paper (arXiv:2604.08377v1) and applied two specific patterns
+to the skill-optimizer. No code shipped.</p>
+<p><strong>SkillClaw paper summary:</strong> Collective skill evolution
+framework for LLM agents across multi-user ecosystems. Key mechanisms:
+diagnostic gate (determine whether failure is skill-level, agent-level,
+or environment-level before editing), conservative editing (treat
+current skill as source of truth, make surgical additions not rewrites),
+session summarization for trajectory data, G(∅) baseline pattern.</p>
+<p><strong>What was applied to skill-optimizer:</strong> -
+<code>skill.md</code>: Core Principle #6 (Diagnose before editing) and
+Core Principle #7 (Targeted edits, not rewrites) -
+<code>agent_instructions.md</code>: Step 1b “Diagnose Who Failed” gate
+inserted between failure pattern reading and hypothesis formation.
+Conservative editing rules block in Step 3.</p>
+<p><strong>What was correctly deferred:</strong> -
+<code>optimize_description</code> as a distinct action — no routing
+failures observed yet, no evidence to build it - Session summarization +
+G(∅) — requires real trajectory data, not synthetic binary
+assertions</p>
+<p><strong>Engineer’s own assessment:</strong> “The diagnostic gate is
+the most important addition: it prevents the most common autoresearch
+failure mode (degrading a correct skill in response to an agent
+execution failure).”</p>
+<hr />
+<h2 id="cross-agent-analysis">2. Cross-Agent Analysis</h2>
+<h3 id="whats-coherent-across-the-sessions">What’s coherent across the
+sessions</h3>
+<p>All three agents worked on the same underlying problem from different
+angles: <strong>making the autoresearch loop for skill optimization
+reliable and verifiable.</strong> Clarke built the supply chain (skills
+installed, scaffold live). Architect hardened the quality gates
+(observability hooks, stop validators, eval integrity rules). Engineer
+sharpened the optimizer itself (diagnostic gate, conservative editing).
+These were independent sessions but they compose correctly.</p>
+<p>The skill-optimizer is now the most hardened skill in the stack,
+touching contributions from all three agents in a single day.</p>
+<h3 id="the-deepagents-claudeclaw-split">The deepagents / claudeclaw
+split</h3>
+<p>There are currently two parallel multi-agent architectures:</p>
+<ol type="1">
+<li><strong>claudeclaw</strong> — production. Telegram bots, SQLite
+persistence, scheduled tasks, launchd services. The principals
+(pipeline, delivery, strategy, architect, engineer) run here. Mission
+queue, hive_mind, audit log — all in the claudeclaw DB.</li>
+<li><strong>deepagents (rnd)</strong> — experimental.
+langchain-ai/deepagents SDK, Anthropic key, 4 subagents scoped by
+discipline. No persistence, no Telegram, no scheduling. Lives in
+<code>~/dev/projects/rnd/deepagents/</code>.</li>
+</ol>
+<p>These are not in conflict yet. The risk is if both get developed
+simultaneously and the experimental one never gets assessed for
+promotion to production. Clarke’s session note flags deepagents as “live
+but untested end-to-end.” It needs at least one full mission run before
+it earns a slot in the strategy.</p>
+<h3
+id="the-pre_tool_use.py-false-positive-immediate-operational-risk">The
+<code>pre_tool_use.py</code> false positive — immediate operational
+risk</h3>
+<p>During this synthesis session, <code>pre_tool_use.py</code> blocked
+<code>node --env-file=.env</code> as a <code>.env</code> access
+violation. That flag is the standard pattern for loading env vars
+without exposing secrets — exactly the right pattern. The regex is
+catching the string <code>.env</code> anywhere in a command, not
+distinguishing between reading the file directly and using it as a node
+CLI flag.</p>
+<p>This is not a theoretical risk. It blocked real work in this session.
+It needs the regex tightened before the next principal agent run.
+Architect already flagged it but scoped it as “false positive risk on
+quoted strings / echo statements” — the actual failure mode is broader
+than that characterization.</p>
+<h3 id="where-the-stack-is-in-the-agent-to-production-thesis">Where the
+stack is in the “Agent to Production” thesis</h3>
+<p>The thesis: most companies can’t deploy AI prototypes because the gap
+is agentic loop infrastructure, observability, and skill tuning — not
+the model itself.</p>
+<p><strong>Evidence for the thesis from today’s sessions:</strong> - The
+observability hook layer (send_event.py + stop_validator.py) is exactly
+the kind of production instrumentation that prototypes lack. Architect
+built it in one session from three external pattern sources. - The
+skill-optimizer + diagnostic gate directly addresses the “why does the
+agent work in dev and break in production” problem. - The bounded-shell
+skill (context-preserving command execution) is a production-hygiene
+pattern absent from most prototypes.</p>
+<p><strong>What’s still missing for the thesis to be
+client-ready:</strong> - No external customer signal. Every build is
+internal. - The observability layer is unverified (agent_events table
+not yet confirmed live). - Roadrunner (the loop engine most relevant to
+“Agent to Production”) still has the hook path bug and no
+pyproject.toml. - The deepagents scaffold is untested.</p>
+<hr />
+<h2 id="recommendations">3. Recommendations</h2>
+<h3 id="fix-now-blocking">Fix now (blocking)</h3>
+<p><strong>1. Tighten <code>pre_tool_use.py</code> regex
+immediately.</strong> It is blocking legitimate work. The fix: change
+the <code>.env</code> pattern from a substring match to a
+file-operation-specific match (e.g., flag <code>cat .env</code>,
+<code>source .env</code>, <code>&lt; .env</code> but not
+<code>--env-file=.env</code> or <code>process.env</code>). This is an
+Architect task, 15 minutes. Until fixed, any command using
+<code>--env-file=.env</code> will be blocked, which breaks the
+mission-cli workflow.</p>
+<p><strong>2. Run the morning build before anything else.</strong>
+<code>git pull &amp;&amp; npm install &amp;&amp; npm run build</code> in
+<code>~/dev/claudeclaw</code>. Add <code>AGENT_MAX_TURNS=100</code> to
+<code>.env</code>. Restart all services with
+<code>launchctl kickstart</code>. This also starts the claudeclaw-os
+upgrade path. Everything downstream (skill registry, smart model
+routing, agent_events verification) is gated on this.</p>
+<h3 id="do-today">Do today</h3>
+<p><strong>3. Verify agent_events table after the morning
+build.</strong> Run one principal agent session and query:
+<code>sqlite3 store/claudeclaw.db "SELECT * FROM agent_events ORDER BY created_at DESC LIMIT 10;"</code>.
+If rows appear, observability is live. If not, check whether
+<code>~/.claude/settings.json</code> hooks are being read by the
+claudeclaw agent runtime vs the standalone Claude Code CLI.</p>
+<p><strong>4. Fix the roadrunner hook path bug.</strong> Four
+occurrences in <code>.claude/settings.json</code>. Change
+<code>.claude/hooks/stop_hook.sh</code> to
+<code>hooks/stop_hook.sh</code>. Also <code>pip3 install pyyaml</code>.
+30 minutes including a smoke test.</p>
+<p><strong>5. Push <code>~/.claude/skills/</code> to private
+GitHub.</strong> Alex needs to create the remote. Clarke adds the remote
+URL and pushes. The git repo is already initialised. 80+ skills, no
+offsite backup — this is a real durability risk.</p>
+<h3 id="do-this-week">Do this week</h3>
+<p><strong>6. Run one end-to-end deepagents session.</strong> The
+scaffold is live but the multi-agent loop has never been tested. Queue a
+small mission through the deepagents supervisor and observe whether the
+subagent executes and returns a result. If it works, document the
+pattern. If it doesn’t, diagnose before investing more time in it.</p>
+<p><strong>7. Run the skill-optimizer against one real skill.</strong>
+Engineer applied the diagnostic gate changes but the loop has never been
+run with the new rules in place. Pick a skill with clear binary
+assertions (suggested: <code>defuddle</code> or
+<code>obsidian-cli</code>) and run one full optimizer cycle. Goal:
+confirm the diagnostic gate fires correctly and conservative editing
+doesn’t strip valid content.</p>
+<p><strong>8. Wire up the commute briefing.</strong> Strategy scoped
+this at ~1h 45m. Shell script design is complete. One confirm step
+(icalBuddy + Calendar.app sync), then register the cron. Delivers daily
+operational value from Monday.</p>
+<p><strong>9. Resolve the deepagents vs claudeclaw strategy.</strong>
+These are two multi-agent architectures running in parallel. That’s fine
+for now but needs a decision point: is deepagents a permanent parallel
+environment for experimentation, or is it a candidate to
+replace/supplement claudeclaw? Document the decision in an ADR before
+both get further investment.</p>
+<h3 id="before-any-client-conversation">Before any client
+conversation</h3>
+<p><strong>10. Fix the observability layer verification gap.</strong>
+The hook layer is the centerpiece of the “Agent to Production” pitch. It
+cannot be in “unverified” status when talking to a client. Complete
+items 2 and 3 above, then write a one-paragraph “what we ship and why it
+works” statement.</p>
+<p><strong>11. Write the “Agent to Production” offer memo.</strong> One
+page: the problem, the offering, what’s included in an engagement, what
+the client gets at the end, the price. Strategy needs Alex’s pricing
+direction before drafting. Once the observability layer is verified and
+roadrunner is packaged (pyproject.toml), the tech story is credible
+enough to test with outreach.</p>
+<hr />
+<h2 id="risk-register">4. Risk Register</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Severity</th>
+<th>Owner</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pre_tool_use.py</code> blocks <code>--env-file=.env</code>
+(false positive)</td>
+<td>High</td>
+<td>Architect</td>
+<td>Confirmed — fix before next principal run</td>
+</tr>
+<tr>
+<td>Morning build not run — services may be on old code</td>
+<td>High</td>
+<td>Alex</td>
+<td>Open</td>
+</tr>
+<tr>
+<td><code>agent_events</code> table unverified — observability layer
+untested</td>
+<td>High</td>
+<td>Architect</td>
+<td>Open — needs one live run</td>
+</tr>
+<tr>
+<td>Roadrunner hook paths wrong — will fail on first use</td>
+<td>High</td>
+<td>Engineer</td>
+<td>Open — known, trivial fix</td>
+</tr>
+<tr>
+<td>Skills git repo has no remote — 80+ skills with no backup</td>
+<td>Medium</td>
+<td>Clarke</td>
+<td>Open — waiting on Alex for remote URL</td>
+</tr>
+<tr>
+<td>deepagents scaffold untested end-to-end</td>
+<td>Medium</td>
+<td>Clarke</td>
+<td>Open</td>
+</tr>
+<tr>
+<td>SkillClaw diagnostic gate untested in real loop</td>
+<td>Medium</td>
+<td>Engineer</td>
+<td>Open</td>
+</tr>
+<tr>
+<td><code>AGENT_MAX_TURNS=100</code> not yet set — upgrade defaults to
+30 turns</td>
+<td>Medium</td>
+<td>Alex</td>
+<td>Open — must set before morning build</td>
+</tr>
+<tr>
+<td>No external customer signal for “Agent to Production” thesis</td>
+<td>High</td>
+<td>Strategy</td>
+<td>Structural — by design at this stage</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="open-questions-for-alex">5. Open Questions for Alex</h2>
+<p>These need a decision before the relevant work can proceed:</p>
+<ul>
+<li><strong>Skills GitHub remote:</strong> Create the private repo and
+provide the remote URL. Clarke pushes immediately.</li>
+<li><strong>deepagents vs claudeclaw:</strong> Permanent parallel
+environments, or is deepagents a candidate for promotion/replacement?
+Sets investment direction.</li>
+<li><strong>“Agent to Production” pricing anchor:</strong> Day-rate,
+project-based, or retainer? Needed before Strategy drafts the offer
+memo.</li>
+<li><strong>Roadrunner T20/T21 (FastAPI):</strong> Keep in scope or
+defer? Repolens CLI is fully functional without it.</li>
+<li><strong>SkillClaw loop target skill:</strong> Which skill would most
+benefit from an optimizer run right now?</li>
+</ul>
+<hr />
+<h2 id="todays-session-costs">6. Today’s Session Costs</h2>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Turns</th>
+<th>Cost</th>
+<th>Tokens out</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clarke</td>
+<td>26</td>
+<td>$21.52</td>
+<td>~106k</td>
+</tr>
+<tr>
+<td>Architect</td>
+<td>13</td>
+<td>$11.65</td>
+<td>~43k</td>
+</tr>
+<tr>
+<td>Engineer</td>
+<td>6</td>
+<td>$2.65</td>
+<td>~11k</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>45</strong></td>
+<td><strong>$35.82</strong></td>
+<td><strong>~160k</strong></td>
+</tr>
+</tbody>
+</table>
+<p>High Clarke cost relative to output volume is consistent with the
+infra-heavy session nature — scaffolding and skill installation
+generates many small tool calls.</p>
+<hr />
+<p><em>Written by principal_strategy — 2026-04-19. Sources:
+<code>Delivery/session-summaries/2026-04-19-{clarke,architect,engineer}.md</code>,
+hive_mind DB entries, mission results (a6ef8d42, 3d9e7bf2, afffb1f1),
+Clarke conversation log. Confidence: high on system state (first-party
+session notes). Low on competitive positioning (no external data
+gathered today).</em></p>
+</body>
+</html>
