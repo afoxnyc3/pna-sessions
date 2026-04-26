@@ -1,0 +1,3102 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_engineer" />
+  <meta name="dcterms.date" content="2026-04-26" />
+  <title>Roadrunner CLI Design Pack v1.0</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Roadrunner CLI Design Pack v1.0</h1>
+<p class="author">principal_engineer</p>
+<p class="date">2026-04-26</p>
+</header>
+<hr />
+<h1 id="readme">README</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/README.md</code></em></p>
+<p align="center">
+<img src="docs/assets/banner.png" alt="Roadrunner CLI — Deterministic Agentic Loop for Claude Code" width="800" />
+</p>
+<h1 align="center">
+Roadrunner CLI
+</h1>
+<p align="center">
+<b>A deterministic agentic loop for Claude Code.</b><br/> Python owns
+control. Claude owns execution. Hooks enforce completion.
+</p>
+<p align="center">
+<a href="https://github.com/afoxnyc3/roadrunner-cli/actions/workflows/ci.yml"><img src="https://github.com/afoxnyc3/roadrunner-cli/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+<img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue" alt="Python" />
+<img src="https://img.shields.io/badge/tests-passing-brightgreen" alt="Tests" />
+<img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey" alt="Platform" />
+</p>
+<hr />
+<h2 id="the-problem-it-solves">The Problem It Solves</h2>
+<p>Large-language-model agents are good at <em>doing</em> work. They are
+notoriously bad at <em>stopping</em> work. Tell Claude Code to implement
+ten tasks and — without external structure — the session will drift,
+skip steps, declare success without running tests, or loop indefinitely
+on the same failing attempt. The surface area of “an agent that won’t
+stop making mistakes” is the single biggest reason long-running
+autonomous coding loops get abandoned.</p>
+<p>Roadrunner solves this by refusing to let the agent decide when it’s
+done. A task is done when its <code>validation_commands</code> exit zero
+— not when Claude says so. Roadmap progress happens in a fixed order
+with explicit dependencies. Every state transition is atomic, logged,
+and recoverable. If the agent loses context mid-task, it resumes from
+the on-disk state instead of starting over. If it fails the same task
+five times in a row, the loop auto-blocks the task and moves on. If the
+roadmap is genuinely finished, a single sentinel line —
+<code>ROADMAP_COMPLETE</code> — halts the loop cleanly.</p>
+<p>The result is a harness you can launch in the morning, walk away
+from, and come back to a completed project with a full audit trail,
+instead of a hallucinated half-implementation.</p>
+<h2 id="how-it-works">How It Works</h2>
+<p>Roadrunner splits responsibility three ways. The split is the whole
+idea.</p>
+<ul>
+<li><strong>Python owns control.</strong> A small Python package —
+<code>roadrunner.cli</code>, <code>roadrunner.state</code>,
+<code>roadrunner.session</code> — is the source of truth for what
+happens next. It selects the next eligible task, runs validation, writes
+state atomically, decides whether the loop should continue. Claude never
+decides the order of work; Claude’s only job is implementing whatever
+Python hands it.</li>
+<li><strong>Claude Code owns execution.</strong> Inside the boundary of
+one task, Claude does what it does best: reads code, edits files, writes
+tests, debugs. The operating contract is narrow — stay inside the task’s
+<code>files_expected</code>, don’t touch anything outside scope, run
+validation before claiming completion.</li>
+<li><strong>Hooks enforce completion.</strong> Claude Code’s lifecycle
+hooks — Stop, SessionStart, PreCompact, PostToolUse — bridge the two
+worlds. The Stop hook is the critical one: after every response, it runs
+<code>roadrunner check-stop</code>, and if the roadmap isn’t finished it
+blocks the stop and injects the next task brief. Claude can’t quit the
+loop by accident.</li>
+</ul>
+<p>The task queue itself lives in <code>tasks/tasks.yaml</code>. Each
+task declares its goal, acceptance criteria, validation commands,
+expected files, and dependencies on other tasks. The file is
+schema-validated on every load, written atomically with
+<code>fsync</code> and <code>os.replace</code>, and backed up through a
+rolling chain of five <code>.bak</code> files so a bad edit is always
+recoverable.</p>
+<p>State that needs to survive context compaction lives in
+<code>.context_snapshot.json</code>. When Claude Code is about to
+compact the conversation, the PreCompact hook dumps the current roadmap
+state to disk. When the new session starts, the SessionStart hook reads
+that snapshot back and injects it as context. The loop can survive an
+arbitrary number of compactions.</p>
+<h2 id="why-use-it">Why Use It</h2>
+<p>Roadrunner is for one specific scenario: <strong>you want an
+autonomous coding agent to finish a multi-step project while you sleep,
+and you want to trust the result when you wake up.</strong></p>
+<p>Concrete differentiators versus an unstructured Claude Code
+session:</p>
+<ul>
+<li><strong>Validation is the gate, not the agent’s assessment.</strong>
+A task is not “done” until
+<code>pytest tests/foo.py &amp;&amp; ruff check src/</code> exits zero.
+Claude cannot self-certify.</li>
+<li><strong>Every run is resumable.</strong> Crash the process mid-task,
+kill the terminal, let the machine sleep — the next hook fire reads
+state from disk and picks up exactly where it left off.</li>
+<li><strong>Retry storms are capped.</strong> After five failed resume
+attempts on the same task, the task is auto-blocked and the loop moves
+on instead of burning tokens on a broken premise.</li>
+<li><strong>Three-layer observability.</strong>
+<code>logs/trace.jsonl</code> gives you machine-readable per-event
+telemetry. <code>logs/CHANGELOG.md</code> is a human-readable audit
+trail. <code>logs/TASK-XXX.md</code> is a per-task work log with full
+validation output. Post-mortem analysis is always possible.</li>
+<li><strong>Loss-resistant state.</strong> Tasks file has rolling
+backups. State file has atomic writes and a <code>fcntl</code> advisory
+lock so concurrent hook fires can’t corrupt the iteration counter. The
+snapshot format is versioned for forward-compat safety.</li>
+<li><strong>No framework tax.</strong> One runtime dependency (PyYAML);
+pytest and ruff are dev-only. No LangChain, no CrewAI, no vector
+database. The whole package is three Python files (<code>cli</code>,
+<code>state</code>, <code>session</code>) plus a few shell hook shims —
+readable in an afternoon, modifiable without ceremony.</li>
+</ul>
+<p>Versus alternatives — LangGraph, CrewAI, AutoGen — Roadrunner is not
+an agent <em>framework</em>. It is a <em>harness</em> that makes an
+existing agent (Claude Code) deterministic. If you already love Claude
+Code and want the loop to be boring and reliable, Roadrunner fits. If
+you’re building a general-purpose multi-agent system from scratch, look
+elsewhere.</p>
+<h2 id="a-practical-use-case">A Practical Use Case</h2>
+<p>You’ve decided to port a Python service to TypeScript. The work
+breaks down into roughly fifteen discrete migrations — models, API
+handlers, tests, configuration, deploy scripts — each of which has a
+clear acceptance test (the corresponding Node test suite passes) and
+clear dependencies (you can’t port the handlers until the models are
+done).</p>
+<p>Without Roadrunner: you either do the fifteen tasks by hand over two
+weeks, or you ask Claude Code to “port the service” and spend the next
+session steering it back on track every time it wanders into an adjacent
+refactor.</p>
+<p>With Roadrunner: you write <code>tasks/tasks.yaml</code> with fifteen
+entries, each declaring its files, acceptance criteria, and validation
+commands. You run <code>claude</code> once. Roadrunner feeds Claude
+TASK-001, waits for validation to pass, feeds TASK-002, and so on. You
+go to bed. When you wake up, you have a completed migration, a per-task
+work log, a trace of every decision, and a git branch per task for
+review. Tasks that genuinely got stuck are marked <code>blocked</code>
+with their error output captured — those are the only ones that need
+your attention.</p>
+<p>The same pattern applies to any sequential project that can be
+decomposed into validatable steps: a documentation rewrite with tests
+that check for broken links, a dependency bump with compatibility tests,
+a security hardening pass with lint rules as the acceptance criteria, a
+multi-service refactor with an integration test suite as the validation
+gate.</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>The fastest path is <code>pip install</code> +
+<code>roadrunner init</code> in your target directory:</p>
+<pre class="bash"><code># 1. Install
+pip install roadrunner-cli
+
+# 2. Scaffold a new project (writes tasks/tasks.yaml, hooks/, .claude/, CLAUDE.md)
+roadrunner init my-project
+cd my-project
+
+# 3. Sanity check
+roadrunner health</code></pre>
+<p>You’ll see something like
+<code>healthy — 1/1 done, 0 eligible, 0 blocked</code> against the
+bootstrap demo task. To run a real project, edit
+<code>tasks/tasks.yaml</code> to describe your work and tailor
+<code>CLAUDE.md</code> to the operating contract you want.</p>
+<p>For a complete worked example, see <a
+href="docs/examples/hello-roadrunner/"><code>docs/examples/hello-roadrunner/</code></a>
+— a three-task demo (function → CLI → tests) you can copy and run
+end-to-end.</p>
+<h3 id="from-source">From source</h3>
+<pre class="bash"><code>git clone https://github.com/afoxnyc3/roadrunner-cli.git
+cd roadrunner-cli
+pip install -e &#39;.[dev]&#39;    # editable install + pytest + ruff + build
+just hooks                 # chmod +x hooks/*.sh
+roadrunner health</code></pre>
+<h2 id="how-to-use-it-end-to-end">How To Use It End-to-End</h2>
+<blockquote>
+<p>See <a href="docs/WORKFLOW.md">docs/WORKFLOW.md</a> for end-to-end
+workflow diagrams covering the five stages, per-task cycle, Stop hook
+decision tree, and a worked example task DAG.</p>
+</blockquote>
+<p><strong>Step 1. Describe the work.</strong> Each task in
+<code>tasks/tasks.yaml</code> looks like this:</p>
+<pre class="yaml"><code>- id: TASK-001
+  title: &quot;Port the user model to TypeScript&quot;
+  status: todo
+  depends_on: []
+  goal: &quot;src/models/user.ts exports the same schema as py/models/user.py&quot;
+  acceptance_criteria:
+    - &quot;src/models/user.ts exists&quot;
+    - &quot;npm test -- user.test.ts passes&quot;
+  validation_commands:
+    - &quot;test -f src/models/user.ts&quot;
+    - &quot;npm test -- user.test.ts&quot;
+  validation_timeout: 300
+  files_expected:
+    - &quot;src/models/user.ts&quot;
+    - &quot;src/models/user.test.ts&quot;</code></pre>
+<p>Task IDs must match <code>[A-Z]+-\d+</code>. Missing required fields
+cause a clear load-time error.</p>
+<p><strong>Step 2. Launch Claude Code.</strong> From the project
+root:</p>
+<pre class="bash"><code>claude</code></pre>
+<p>The SessionStart hook injects any stored snapshot. The Stop hook —
+which runs after every Claude response — consults
+<code>roadrunner check-stop</code>, which answers “is the roadmap done?”
+If not, it injects the next task brief as <code>additionalContext</code>
+and Claude keeps working.</p>
+<p><strong>Step 3. Watch it or walk away.</strong> Set the iteration cap
+if you want headroom:</p>
+<pre class="bash"><code>ROADMAP_MAX_ITERATIONS=100 claude</code></pre>
+<p>The loop halts when (a) Claude outputs <code>ROADMAP_COMPLETE</code>
+on its own line because every task is done, (b) the iteration cap is
+reached, or (c) you hit Ctrl-C.</p>
+<p><strong>Step 4. Review the output.</strong> Every task produces a
+work log:</p>
+<pre><code>logs/CHANGELOG.md             # project-level audit trail
+logs/TASK-001.md              # per-task work log with validation output
+logs/trace.jsonl              # structured JSON trace, one line per event</code></pre>
+<p>Tasks that auto-blocked show up in <code>roadrunner status</code>
+with a <code>blocked</code> status and a note explaining why. Unblock by
+fixing the underlying issue and setting the status back to
+<code>todo</code>.</p>
+<h2 id="how-to-test-it-safely">How To Test It Safely</h2>
+<p>Before pointing Roadrunner at a real project, exercise the shipped
+demo to get a feel for the loop:</p>
+<pre class="bash"><code># Run the full test suite (a few seconds)
+python3 -m pytest tests/ -v
+
+# Dry-run validation on one of the demo tasks
+roadrunner status
+roadrunner validate TASK-001
+
+# Inspect what the Stop hook would say at this moment
+echo &#39;{}&#39; | roadrunner check-stop --max-iterations 50 | jq .
+
+# Write a context snapshot and preview what the SessionStart hook emits
+roadrunner snapshot
+roadrunner session-start</code></pre>
+<p>The test suite covers state-file corruption, concurrent hook fires,
+merge-conflict recovery, log rotation, schema version skew, UTF-8
+round-tripping, and a shell-injection canary. CI runs the matrix across
+Python 3.10 / 3.11 / 3.12 on every push, plus ruff, mypy, and shellcheck
+on the hooks.</p>
+<h2 id="running-overnight">Running Overnight</h2>
+<p>Once the demo is understood, pointing at your own roadmap is the same
+flow:</p>
+<pre class="bash"><code>export ROADMAP_MAX_ITERATIONS=100
+claude</code></pre>
+<p>Claude works through the roadmap, validating each task before marking
+it done, writing logs, and continuing until
+<code>ROADMAP_COMPLETE</code> is output or the iteration cap is hit.
+Tasks that fail validation five times in a row are auto-blocked.</p>
+<h2 id="architecture">Architecture</h2>
+<pre><code>tasks/tasks.yaml              &lt;- the queue (schema-validated, atomically written, rolling .bak)
+src/roadrunner/cli.py         &lt;- controller: validation, logging, stop-check, snapshot, session-start
+src/roadrunner/state.py       &lt;- atomic state I/O with advisory locking and schema versioning
+src/roadrunner/session.py     &lt;- per-session summary observability
+.claude/settings.json         &lt;- hook registrations: Stop, SessionStart, PreCompact, PostCompact, PostToolUse
+hooks/stop_hook.sh            &lt;- loop enforcement: block or allow Claude to stop
+hooks/session_start_hook.sh   &lt;- context injection: delegates to `roadrunner session-start`
+hooks/precompact_hook.sh      &lt;- context snapshot: delegates to `roadrunner snapshot`
+hooks/postcompact_hook.sh     &lt;- snapshot verification: delegates to `roadrunner post-compact`
+hooks/post_write_hook.sh      &lt;- lint feedback: ruff on .py, yaml parse on .yaml
+CLAUDE.md                     &lt;- agent brief: operating contract for Claude Code
+docs/architecture.md          &lt;- full design + ADR index
+CONTRIBUTING.md               &lt;- dev setup, PR workflow, recipes for new commands and hooks
+CHANGELOG.md                  &lt;- release-facing changelog (per-task audit trail in logs/CHANGELOG.md)
+docs/configuration.md         &lt;- every tunable, every schema, env vars, state file layout
+docs/release.md               &lt;- PyPI Trusted Publishing setup + per-release checklist
+docs/examples/                &lt;- hello-roadrunner end-to-end worked example
+docs/adr/                     &lt;- 11 ADRs documenting real decisions and fixes
+docs/hotfix-log.md            &lt;- append-only ledger of observation-driven hotfixes</code></pre>
+<h2 id="operator-commands">Operator Commands</h2>
+<p>After <code>pip install roadrunner-cli</code> the
+<code>roadrunner</code> console script is on your PATH. From a source
+checkout without an install, swap <code>roadrunner</code> for
+<code>python -m roadrunner</code> (or run <code>pip install -e .</code>
+first and use the console script).</p>
+<pre class="bash"><code># Project lifecycle
+roadrunner init &lt;dir&gt;            # scaffold a new project (tasks/, hooks/, .claude/, CLAUDE.md)
+roadrunner analyze               # validate tasks.yaml: cycles, missing deps, critical path
+
+# Task lifecycle
+roadrunner status                # see all task states
+roadrunner next                  # see what runs next
+roadrunner start TASK-001        # mark in_progress, create roadrunner/TASK-001 branch
+roadrunner validate TASK-001     # run validation commands
+roadrunner complete TASK-001 --notes &quot;did the thing&quot;
+roadrunner commit TASK-001       # scope-aware commit (only files in files_expected + overlay)
+roadrunner block TASK-001 --notes &quot;why it&#39;s stuck&quot;
+roadrunner reset TASK-001 --summary &quot;boundary marker&quot;
+
+# Observability + control
+roadrunner watch [--interval N]  # live read-only monitor; redraws every N seconds
+roadrunner health                # system check
+roadrunner reset-iteration       # reset the session iteration counter (--soft default, --hard nukes lifetime)
+
+# Hook entry points (called by Claude Code; you rarely run these by hand)
+roadrunner snapshot              # PreCompact hook — write .context_snapshot.json
+roadrunner post-compact          # PostCompact hook — verify the snapshot survived
+roadrunner session-start         # SessionStart hook — emit additionalContext JSON
+roadrunner check-stop            # Stop hook — decide whether the loop continues</code></pre>
+<p>Or via <code>just</code>:</p>
+<pre class="bash"><code>just ci      # full local gate: pytest + ruff
+just test    # pytest only
+just lint    # ruff only
+just status  # roadmap status
+just health  # system check
+just hooks   # chmod +x hooks/*.sh</code></pre>
+<h2 id="task-anatomy">Task Anatomy</h2>
+<pre class="yaml"><code>- id: TASK-001
+  title: &quot;Human-readable name&quot;
+  status: todo                    # todo | in_progress | done | blocked
+  depends_on: []                  # task IDs that must be done first
+  goal: &quot;What success looks like&quot;
+  acceptance_criteria:
+    - &quot;Specific, testable condition&quot;
+  validation_commands:
+    - &quot;pytest tests/test_feature.py&quot;
+    - &quot;ruff check src/&quot;
+  validation_timeout: 300          # seconds per command (default: 300)
+  documentation_targets:
+    - &quot;CHANGELOG.md&quot;
+    - &quot;logs/TASK-001.md&quot;
+  files_expected:
+    - &quot;src/feature.py&quot;
+  notes: &quot;Operator annotations&quot;</code></pre>
+<p>Task IDs must match <code>[A-Z]+-\d+</code>. Tasks are
+schema-validated on load — missing required fields raise an error
+immediately and the loop refuses to proceed.</p>
+<h2 id="how-the-stop-hook-decides">How the Stop Hook Decides</h2>
+<pre><code>Claude finishes responding
+        ↓
+Stop hook fires → reads stop_hook_active
+        ↓
+stop_hook_active=true? ────→ exit 0 (allow stop; prevents infinite loop)
+        ↓
+Iteration limit reached? ──→ hard stop with message
+        ↓
+ROADMAP_COMPLETE on last line? ─→ exit 0 (all done, audit trail closed)
+        ↓
+Task in_progress?   ────────→ resume brief (auto-block after 5 attempts)
+        ↓
+Next eligible todo? ────────→ task brief
+        ↓
+Tasks blocked?     ─────────→ investigation prompt
+        ↓
+All done?          ─────────→ prompt Claude to output ROADMAP_COMPLETE</code></pre>
+<h2 id="observability">Observability</h2>
+<p>Every task produces:</p>
+<ul>
+<li><code>logs/TASK-XXX.md</code> — per-task work log with validation
+output</li>
+<li><code>logs/CHANGELOG.md</code> — project-level audit trail</li>
+<li><code>logs/trace.jsonl</code> — structured JSON trace, one line per
+lifecycle event</li>
+<li><code>.roadmap_state.json</code> — current task, iteration count,
+per-task attempt counter, schema version</li>
+<li><code>.context_snapshot.json</code> — roadmap state for context
+recovery after compaction</li>
+<li><code>.reset_TASK-XXX</code> — boundary marker per completed
+task</li>
+</ul>
+<h3 id="retention">Retention</h3>
+<p><code>trace.jsonl</code> and <code>CHANGELOG.md</code> are rotated at
+the task boundary (on <code>reset</code>): over 10 MB they rename with a
+microsecond-precision UTC stamp and gzip in place. Rotated archives
+older than 7 days are deleted. Per-task work logs
+(<code>logs/TASK-XXX.md</code>) are not rotated — they are authoritative
+history and stay small. Tune via <code>LOG_ROTATE_BYTES</code> and
+<code>LOG_RETAIN_DAYS</code> in <code>src/roadrunner/cli.py</code>.</p>
+<h2 id="using-in-another-project">Using In Another Project</h2>
+<pre class="bash"><code>pip install roadrunner-cli
+roadrunner init my-other-project</code></pre>
+<p>That writes <code>tasks/tasks.yaml</code>, <code>hooks/</code>,
+<code>.claude/settings.json</code>, and a starter <code>CLAUDE.md</code>
+into <code>my-other-project/</code>. Edit the tasks file to describe
+your work and you’re ready to launch <code>claude</code>. See <a
+href="docs/examples/hello-roadrunner/"><code>docs/examples/hello-roadrunner/</code></a>
+for a complete worked example, <a
+href="docs/architecture.md">docs/architecture.md</a> for architecture
+and the ADR index, and <a
+href="docs/configuration.md">docs/configuration.md</a> for every
+tunable.</p>
+<h2 id="trust-boundary">Trust Boundary</h2>
+<p><code>tasks.yaml</code> is executable configuration —
+<code>validation_commands</code> run via <code>shell=True</code> with
+your full privileges. Treat it like a Makefile: only commit tasks whose
+shell commands you would type yourself. Subprocess timeouts (default 300
+s, tunable per task) remove the hanging-command failure mode. The full
+trust model is documented in <a
+href="docs/architecture.md">docs/architecture.md</a>.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="hooks-appear-to-misbehave-json-parse-errors">Hooks appear to
+misbehave / JSON parse errors</h3>
+<p>Claude Code hooks read structured JSON from stdin. If your
+<code>~/.zshrc</code> or <code>~/.bashrc</code> prints output
+unconditionally — for example, an <code>echo</code> that runs on every
+shell start, or a tool like <code>direnv</code> / <code>nvm</code> that
+reports activity — that output is prepended to the JSON payload the hook
+sees, and hook parsing breaks.</p>
+<p>Wrap any such output in an interactive-shell guard so it only runs
+for a human terminal, not for hook subshells:</p>
+<pre class="bash"><code># in ~/.zshrc or ~/.bashrc
+if [[ $- == *i* ]]; then
+  echo &quot;hello developer&quot;   # only runs for interactive sessions
+fi</code></pre>
+<p>Signs you’re hitting this: the Stop hook silently allows the loop to
+end, or <code>logs/trace.jsonl</code> stops receiving
+<code>check_stop</code> events.</p>
+<h3 id="claude-code-refuses-pytest-ruff-in-auto-mode">Claude Code
+refuses pytest / ruff in auto mode</h3>
+<p><code>auto mode</code> routes every Bash command through a safety
+classifier. When the classifier is unavailable the commands block. The
+fix that ships in <code>.claude/settings.json</code> adds an allowlist
+for the specific commands this project runs (pytest, ruff,
+<code>just ci</code>, etc.) so they bypass the classifier entirely.</p>
+<h2 id="design-decisions">Design &amp; Decisions</h2>
+<ul>
+<li><a href="docs/architecture.md">docs/architecture.md</a> — full
+architecture, data-file schema, hook contracts, risk areas.</li>
+<li><a href="docs/adr/">docs/adr/</a> — eleven ADRs documenting real
+defects found and fixes applied, from the line-anchored completion
+signal through the roadmap-vs-hotfix commit convention.</li>
+<li><a href="docs/hotfix-log.md">docs/hotfix-log.md</a> — append-only
+ledger of observation-driven hotfixes (see <a
+href="docs/adr/011-roadmap-vs-hotfix-commit-convention.md">ADR-011</a>
+for the convention).</li>
+</ul>
+<hr />
+<h1 id="architecture-1">Architecture</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/architecture.md</code></em></p>
+<h1 id="roadrunner-cli-design-document">Roadrunner CLI — Design
+Document</h1>
+<blockquote>
+<p>Last updated: 2026-04-16</p>
+</blockquote>
+<hr />
+<h2 id="architecture-overview">1. Architecture Overview</h2>
+<p>Roadrunner is a deterministic agentic loop. Python owns control flow.
+Claude owns implementation. Hooks enforce completion. No task advances
+without validation. No loop exits without an explicit signal.</p>
+<pre><code>┌───────────────────────────────────────────────────────────┐
+│                    Claude Code Session                    │
+│                                                           │
+│  SessionStart Hook     Hook fires         Hook fires     │
+│  (inject snapshot)         │                  │          │
+│       │            Stop Hook         PreCompact          │
+│       ▼                │              Hook               │
+│  CLAUDE.md (brief)     │                  │              │
+│       │                │                  ▼              │
+│       ▼                │          write_context_snapshot │
+│  roadrunner next       │                                 │
+│  roadrunner start      │                                 │
+│  &lt;implement task&gt;      │                                 │
+│  roadrunner validate   │                                 │
+│  roadrunner complete   │                                 │
+│       │                │                                 │
+│       └────────────────┘                                 │
+└───────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="control-flow-step-by-step">1.1 Control flow, step by step</h3>
+<ol type="1">
+<li>Claude Code starts with <code>CLAUDE.md</code> in scope. Agent reads
+its brief.</li>
+<li>Claude runs <code>roadrunner next</code> to identify the current
+task.</li>
+<li>Claude runs <code>roadrunner start TASK-XXX</code> — sets status to
+<code>in_progress</code>, records current task in state.</li>
+<li>Claude implements the task within the scope defined in
+<code>files_expected</code>.</li>
+<li>Claude runs <code>roadrunner validate TASK-XXX</code> — executes all
+<code>validation_commands</code>, exits 0 or 1.</li>
+<li>If validation fails, Claude fixes and retries.</li>
+<li>Claude runs <code>roadrunner complete TASK-XXX --notes "..."</code>
+— re-runs validation, sets status to <code>done</code> if passing,
+writes work log.</li>
+<li>Claude finishes its response turn. Stop hook fires.</li>
+<li>Stop hook calls <code>roadrunner check-stop</code> via stdin
+pipe.</li>
+<li><code>check-stop</code> increments the iteration counter, reads
+<code>tasks.yaml</code> and <code>.roadmap_state.json</code>.</li>
+<li>If a task is <code>in_progress</code>: emits
+<code>{"decision": "block", "reason": "&lt;resume brief&gt;"}</code> —
+Claude resumes.</li>
+<li>If a new <code>todo</code> task is eligible: emits
+<code>{"decision": "block", "reason": "&lt;task brief&gt;"}</code> —
+Claude continues.</li>
+<li>If all tasks done: <code>check-stop</code> prompts Claude to emit
+<code>ROADMAP_COMPLETE</code>.</li>
+<li>Claude emits <code>ROADMAP_COMPLETE</code> on its own line. Stop
+hook detects it via line-anchored regex, exits 0 (allows stop). Loop
+ends.</li>
+<li>If iteration limit hit: hard stop with message.</li>
+<li>If a task has been resumed 5+ times without completion: auto-blocked
+with changelog entry.</li>
+</ol>
+<h3 id="state-files">1.2 State files</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tasks/tasks.yaml</code></td>
+<td>Source of truth for task status and definitions. Schema-validated on
+every load. Written atomically via tempfile + <code>os.replace</code>.
+Rolling backups kept at <code>tasks/tasks.yaml.bak[.1..5]</code>.</td>
+</tr>
+<tr>
+<td><code>.roadmap_state.json</code></td>
+<td>Current task ID, iteration count, per-task attempt counter. Carries
+<code>schema_version</code> (ADR-009). Serialized read→write is guarded
+by a <code>fcntl.flock</code> on <code>.roadmap_state.lock</code>
+(ADR-009).</td>
+</tr>
+<tr>
+<td><code>.context_snapshot.json</code></td>
+<td>Written by PreCompact; read by SessionStart. Carries
+<code>schema_version</code> (ADR-009).</td>
+</tr>
+<tr>
+<td><code>logs/CHANGELOG.md</code></td>
+<td>Append-only audit trail of status changes. Rotated at the task
+boundary when &gt; 10 MB.</td>
+</tr>
+<tr>
+<td><code>logs/TASK-XXX.md</code></td>
+<td>Per-task work log with validation output</td>
+</tr>
+<tr>
+<td><code>logs/trace.jsonl</code></td>
+<td>Structured JSON trace log — one line per lifecycle event. Rotated
+and retained for 7 days.</td>
+</tr>
+<tr>
+<td><code>.reset_TASK-XXX</code></td>
+<td>Boundary marker written on task completion</td>
+</tr>
+<tr>
+<td><code>.roadmap_state.lock</code></td>
+<td>fcntl advisory lockfile; enforces single-writer on the state file
+during concurrent Stop-hook fires.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="hook-contracts">2. Hook Contracts</h2>
+<h3 id="stop-hook-hooksstop_hook.sh">2.1 Stop Hook
+(<code>hooks/stop_hook.sh</code>)</h3>
+<p><strong>Fires when:</strong> Claude Code finishes a response
+turn.</p>
+<p><strong>Input (stdin):</strong> JSON object from Claude Code
+runtime.</p>
+<pre class="json"><code>{
+  &quot;stop_hook_active&quot;: false,
+  &quot;last_assistant_message&quot;: &quot;...the model&#39;s last response...&quot;
+}</code></pre>
+<p><strong>Output (stdout):</strong> JSON control object. Two distinct
+shapes for two distinct outcomes — they are not interchangeable.</p>
+<pre class="json"><code>// Soft block: force Claude to continue with the reason as injected context.
+// Used for every case where the loop should keep running (resume brief,
+// next-task brief, blocked-task report, &quot;all done, emit ROADMAP_COMPLETE&quot;).
+{&quot;decision&quot;: &quot;block&quot;, &quot;reason&quot;: &quot;Continue working. Task TASK-002...&quot;}
+
+// Hard stop: terminate the Claude Code session entirely with stopReason
+// displayed to the user. Used only for the iteration cap.
+{&quot;continue&quot;: false, &quot;stopReason&quot;: &quot;Max iterations (50) reached. Roadmap loop halted.&quot;}</code></pre>
+<p>Per the Claude Code hooks reference: <code>{"continue": false}</code>
+overrides any <code>decision: "block"</code> and forces a hard halt.
+Never emit both in the same payload.</p>
+<p><strong>Exit codes:</strong> - <code>exit 0</code> — default. JSON on
+stdout is how the hook communicates its decision. - <code>exit 2</code>
+— legacy force-continue (stderr surfaces to Claude). Prefer JSON.</p>
+<p>The hook emits <code>exit 0</code> plus no JSON in three cases:
+<code>stop_hook_active=true</code>, <code>ROADMAP_COMPLETE</code> signal
+received, and iteration cap reached (after printing the
+<code>{"continue": false, ...}</code> payload).</p>
+<p><strong>Infinite loop guard:</strong> If
+<code>stop_hook_active</code> is true in the input, exit 0 immediately.
+This prevents the hook from calling itself recursively.</p>
+<p><strong>Logic (delegated to
+<code>roadrunner check-stop</code>):</strong> 1.
+<code>stop_hook_active</code> → exit 0 2. Increment iteration counter,
+check against max 3. <code>ROADMAP_COMPLETE</code> on last non-empty
+line of last message → exit 0 4. In-progress task exists → emit resume
+brief (increment attempt counter; auto-block if &gt;= max attempts) 5.
+Eligible todo task → emit task brief 6. Blocked tasks exist → report
+with unblock instruction 7. Non-done tasks remain → report anomaly 8.
+All done → prompt for <code>ROADMAP_COMPLETE</code></p>
+<hr />
+<h3 id="sessionstart-hook-hookssession_start_hook.sh">2.2 SessionStart
+Hook (<code>hooks/session_start_hook.sh</code>)</h3>
+<p><strong>Fires when:</strong> Claude Code session begins or resumes
+(including after compaction restarts).</p>
+<p><strong>Input (stdin):</strong> JSON object from Claude Code runtime
+(common fields only).</p>
+<p><strong>Output (stdout):</strong> JSON with
+<code>additionalContext</code> containing roadmap state summary (if
+<code>.context_snapshot.json</code> exists).</p>
+<pre class="json"><code>{
+  &quot;hookSpecificOutput&quot;: {
+    &quot;hookEventName&quot;: &quot;SessionStart&quot;,
+    &quot;additionalContext&quot;: &quot;Roadmap snapshot: Current task: TASK-003 | Iteration: 7 | Status: TASK-001=done, TASK-002=done, TASK-003=in_progress&quot;
+  }
+}</code></pre>
+<p><strong>Exit codes:</strong> - <code>exit 0</code> always —
+informational, never blocks.</p>
+<p><strong>Logic (delegated to
+<code>roadrunner session-start</code>):</strong> 1. Check if
+<code>.context_snapshot.json</code> exists. If not, exit 0 silently. 2.
+Parse snapshot, build a summary string from <code>current_task</code>,
+<code>next_eligible</code>, <code>iteration</code>, and
+<code>status_summary</code>. 3. Emit JSON with
+<code>additionalContext</code> so Claude starts the session with roadmap
+awareness.</p>
+<p><strong>Note:</strong> <code>additionalContext</code> is a supported
+output field for <code>SessionStart</code> hooks per Claude Code docs.
+This replaces the previous approach of emitting
+<code>additionalContext</code> from the PreCompact hook (which does not
+support that field).</p>
+<p><strong>Hook → Python delegation pattern:</strong> Both
+<code>session_start_hook.sh</code> and <code>precompact_hook.sh</code>
+delegate to <code>roadrunner</code> subcommands
+(<code>session-start</code> and <code>snapshot</code>). There is no
+separate <code>_session_start.py</code> helper — every CLI entry point
+lives in <code>roadrunner.cli</code> (ADR-010). The
+<code>.context_snapshot.json</code> schema carries a
+<code>schema_version</code> field (ADR-009) so a future format change is
+detectable at read time.</p>
+<hr />
+<h3 id="precompact-hook-hooksprecompact_hook.sh">2.3 PreCompact Hook
+(<code>hooks/precompact_hook.sh</code>)</h3>
+<p><strong>Fires when:</strong> Claude Code is about to compact the
+conversation.</p>
+<p><strong>Input (stdin):</strong> JSON with <code>trigger</code>
+(<code>manual</code> or <code>auto</code>) and
+<code>custom_instructions</code>.</p>
+<p><strong>Output:</strong> None. PreCompact supports only
+<code>decision: "block"</code> — it does <strong>not</strong> support
+<code>additionalContext</code>.</p>
+<p><strong>Side effect:</strong> Writes
+<code>.context_snapshot.json</code> to disk. The SessionStart hook
+(§2.2) reads this file to inject state into the next session.</p>
+<p><strong><code>.context_snapshot.json</code> schema (v1):</strong></p>
+<pre class="json"><code>{
+  &quot;schema_version&quot;: 1,
+  &quot;snapshot_at&quot;: &quot;2026-04-15T09:00:00Z&quot;,
+  &quot;current_task&quot;: &quot;TASK-003&quot;,
+  &quot;iteration&quot;: 7,
+  &quot;next_eligible&quot;: &quot;TASK-004&quot;,
+  &quot;status_summary&quot;: {
+    &quot;TASK-001&quot;: &quot;done&quot;,
+    &quot;TASK-002&quot;: &quot;done&quot;,
+    &quot;TASK-003&quot;: &quot;done&quot;,
+    &quot;TASK-004&quot;: &quot;todo&quot;
+  }
+}</code></pre>
+<hr />
+<h3 id="posttooluse-hook-hookspost_write_hook.sh">2.4 PostToolUse Hook
+(<code>hooks/post_write_hook.sh</code>)</h3>
+<p><strong>Fires when:</strong> Claude uses Write or Edit tools (async).
+Matcher: <code>"Write|Edit"</code>.</p>
+<p><strong>Input (stdin):</strong> JSON object with
+<code>tool_input.file_path</code>.</p>
+<p><strong>Output:</strong> Lint feedback passed back to Claude on next
+turn.</p>
+<p><strong>Logic:</strong> - <code>.py</code> files →
+<code>ruff check</code> (failures suppressed with <code>|| true</code>)
+- <code>.yaml</code>/<code>.yml</code> files →
+<code>python3 -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1]))' "$FILE_PATH"</code>
+(path passed via argv, not interpolated)</p>
+<p><strong>Behavior:</strong> Claude continues immediately. This hook is
+informational, not blocking.</p>
+<hr />
+<h2 id="risk-areas-and-mitigations">3. Risk Areas and Mitigations</h2>
+<h3 id="status-legend">Status Legend</h3>
+<ul>
+<li>✅ <strong>FIXED</strong> — addressed in the hardening pass
+(2026-04-16)</li>
+<li>⚠️ <strong>MITIGATED</strong> — risk reduced but not fully
+eliminated</li>
+<li>🔶 <strong>OPEN</strong> — known limitation, accepted for current
+scope</li>
+</ul>
+<hr />
+<h3 id="fixed-hook-path-mismatch-was-critical">✅ FIXED: Hook path
+mismatch (was CRITICAL)</h3>
+<p><strong>Original risk:</strong> <code>settings.json</code> used
+relative paths (<code>bash hooks/stop_hook.sh</code>) that break if
+Claude changes working directory.</p>
+<p><strong>Fix:</strong> All hook commands now use
+<code>"$CLAUDE_PROJECT_DIR"/hooks/&lt;name&gt;.sh</code> (ADR-005).
+Verified working from arbitrary cwd.</p>
+<hr />
+<h3 id="fixed-roadmap_complete-substring-match-was-high">✅ FIXED:
+ROADMAP_COMPLETE substring match (was HIGH)</h3>
+<p><strong>Original risk:</strong> Any assistant message containing the
+literal string triggered loop termination.</p>
+<p><strong>Fix:</strong> Line-anchored regex on the last non-empty line
+only (ADR-001). Task brief no longer emits the sentinel as a matchable
+line. 9 test cases cover edge cases.</p>
+<hr />
+<h3
+id="fixed-check-stop-treated-in-progress-as-all-done-was-critical">✅
+FIXED: check-stop treated in-progress as “all done” (was CRITICAL)</h3>
+<p><strong>Original risk:</strong> After <code>cmd_start</code>, the
+active task became invisible to <code>next_eligible_task()</code>. If
+Claude responded before calling <code>complete</code>, the hook declared
+all work finished.</p>
+<p><strong>Fix:</strong> <code>cmd_check_stop</code> now checks for
+<code>in_progress</code> tasks first and emits a resume brief (ADR-002).
+Only declares completion when no <code>todo</code>,
+<code>in_progress</code>, or <code>blocked</code> tasks remain.</p>
+<hr />
+<h3 id="fixed-shell-injection-in-post_write_hook.sh-was-high">✅ FIXED:
+Shell injection in post_write_hook.sh (was HIGH)</h3>
+<p><strong>Original risk:</strong> <code>$FILE_PATH</code> interpolated
+into a single-quoted Python string. A path containing <code>'</code>
+could execute arbitrary Python.</p>
+<p><strong>Fix:</strong> Path passed via <code>sys.argv[1]</code>
+instead of f-string interpolation. Verified with injection canary
+test.</p>
+<hr />
+<h3 id="fixed-iteration-counter-only-incremented-on-start-was-medium">✅
+FIXED: Iteration counter only incremented on start (was MEDIUM)</h3>
+<p><strong>Original risk:</strong> If Claude skipped <code>start</code>,
+the iteration counter never advanced and the max-iterations cap was
+disabled.</p>
+<p><strong>Fix:</strong> Iteration counter now increments in
+<code>cmd_check_stop</code>, which fires every turn regardless of
+whether <code>start</code> was called.</p>
+<hr />
+<h3 id="fixed-non-atomic-save_tasks-was-medium">✅ FIXED: Non-atomic
+save_tasks (was MEDIUM)</h3>
+<p><strong>Original risk:</strong> SIGINT mid-write could corrupt
+<code>tasks.yaml</code>.</p>
+<p><strong>Fix:</strong> Writes to <code>.tmp</code> file,
+<code>fsync</code>, then <code>os.replace</code> (ADR-004).</p>
+<hr />
+<h3 id="fixed-python-vs-python3-mismatch-was-medium">✅ FIXED: python vs
+python3 mismatch (was MEDIUM)</h3>
+<p><strong>Original risk:</strong> <code>justfile</code> used
+<code>python</code>, hooks used <code>python3</code>.</p>
+<p><strong>Fix:</strong> All invocations standardized on
+<code>python3</code> across justfile, CLAUDE.md, and hooks.</p>
+<hr />
+<h3 id="fixed-cmd_block-silent-exit-was-low">✅ FIXED: cmd_block silent
+exit (was LOW)</h3>
+<p><strong>Original risk:</strong> <code>cmd_block</code> exited with
+code 1 but no error message on missing task.</p>
+<p><strong>Fix:</strong> Now prints <code>Task {id} not found.</code>
+before exiting.</p>
+<hr />
+<h3 id="fixed-taskcompleted-hook-was-dead-code-was-high">✅ FIXED:
+TaskCompleted hook was dead code (was HIGH)</h3>
+<p><strong>Original risk:</strong> Hook tried to extract roadmap task
+IDs from the <code>TaskCompleted</code> payload, but the payload uses
+Claude’s internal <code>task_id</code>, not roadmap IDs.</p>
+<p><strong>Root cause (verified against docs):</strong>
+<code>TaskCompleted</code> only fires on <code>TaskUpdate</code> tool
+calls (agent teams feature) or when a teammate finishes its turn.
+Roadrunner uses neither — it uses <code>roadrunner complete</code>. The
+hook never fired.</p>
+<p><strong>Fix:</strong> Removed the hook entirely (ADR-007). Validation
+gating is already handled by <code>cmd_complete</code> in Python, which
+re-runs <code>run_validation</code> before flipping status. Replaced
+with a <code>SessionStart</code> hook for context injection.</p>
+<hr />
+<h3 id="mitigated-retry-storms-was-unaddressed">⚠️ MITIGATED: Retry
+storms (was UNADDRESSED)</h3>
+<p><strong>Mitigation:</strong> Per-task attempt counter with auto-block
+after 5 attempts (ADR-003). Configurable via
+<code>--max-attempts</code>.</p>
+<p><strong>Remaining risk:</strong> A task that legitimately needs many
+iterations will be auto-blocked. Operator must manually unblock and
+retry.</p>
+<hr />
+<h3 id="fixed-no-automated-tests-for-hooks-was-open">✅ FIXED: No
+automated tests for hooks (was OPEN)</h3>
+<p>Hook integration tests added in <code>tests/test_hooks.py</code>.
+Tests pipe mock JSON payloads through actual bash scripts via
+<code>subprocess.run</code> and verify exit codes, stdout JSON, and
+stderr feedback. Covers Stop, SessionStart, PreCompact, and PostToolUse
+hooks including a shell injection safety canary.</p>
+<hr />
+<h3 id="open-single-author-single-machine-assumptions">🔶 OPEN:
+Single-author, single-machine assumptions</h3>
+<p>File locking, concurrent invocations, and multi-project parallel runs
+are not supported. Acceptable for the current single-operator scope.</p>
+<hr />
+<h3 id="fixed-validation-commands-had-no-timeout-was-open">✅ FIXED:
+Validation commands had no timeout (was OPEN)</h3>
+<p><strong>Original risk:</strong> A validation command that hangs
+(network wait, deadlock) blocks the entire loop indefinitely with no
+recovery.</p>
+<p><strong>Fix:</strong> <code>run_validation()</code> now passes
+<code>timeout</code> to <code>subprocess.run()</code> (default 300s).
+Per-task override via <code>validation_timeout</code> field in
+<code>tasks.yaml</code>. <code>TimeoutExpired</code> is caught and
+reported as a validation failure with <code>timed_out: True</code> in
+results (ADR-008).</p>
+<hr />
+<h3 id="fixed-no-task-id-sanitization-was-open">✅ FIXED: No task ID
+sanitization (was OPEN)</h3>
+<p><strong>Original risk:</strong> Task IDs flowed unsanitized into file
+paths (<code>.reset_{task_id}</code>, <code>logs/{task_id}.md</code>)
+and git branch names. A task ID containing <code>../</code> could write
+outside the project directory.</p>
+<p><strong>Fix:</strong> <code>validate_task_schema()</code> now
+enforces <code>^[A-Z]+-\d+$</code> format via regex. Invalid IDs are
+rejected at load time (ADR-008).</p>
+<hr />
+<h3 id="fixed-non-atomic-state-file-writes-was-open">✅ FIXED:
+Non-atomic state file writes (was OPEN)</h3>
+<p><strong>Original risk:</strong> <code>write_state()</code> used
+<code>Path.write_text()</code> directly. A crash during state write
+could corrupt <code>.roadmap_state.json</code>.</p>
+<p><strong>Fix:</strong> <code>write_state()</code> now uses the same
+temp-file + fsync + <code>os.replace()</code> pattern as
+<code>save_tasks()</code> (ADR-004 updated).</p>
+<hr />
+<h3 id="open-git-merge-conflict-on-task-completion">🔶 OPEN: Git merge
+conflict on task completion</h3>
+<p><strong>Risk:</strong> When <code>cmd_complete</code> merges
+<code>roadrunner/TASK-XXX</code> back into the base branch, a conflict
+between the task branch and work landed on the base branch during the
+task causes the merge to fail.</p>
+<p><strong>Behavior today:</strong> <code>merge_task_branch()</code>
+detects the non-zero return code, runs <code>git merge --abort</code> to
+return the working tree to a clean state, records a
+<code>git_merge_error</code> event in <code>logs/trace.jsonl</code>, and
+returns <code>False</code>. The task is still marked <code>done</code>
+in <code>tasks.yaml</code> because validation passed — the branch is
+left intact for manual resolution and the loop continues.</p>
+<p><strong>Operator resolution:</strong></p>
+<pre class="bash"><code># Inspect the conflicting branch
+git checkout roadrunner/TASK-XXX
+git rebase main                      # or: git merge main
+# resolve conflicts, then
+git rebase --continue                # or: git merge --continue
+
+# Merge back and clean up
+git checkout main
+git merge roadrunner/TASK-XXX
+git branch -d roadrunner/TASK-XXX</code></pre>
+<p><strong>Why accepted:</strong> The task’s validation already passed
+on the isolated branch. Auto-resolving conflicts would risk corrupting
+the change. Test coverage:
+<code>TestGitBranching::test_merge_conflict_reports_failure</code>.</p>
+<hr />
+<h3 id="trust-boundary-tasks.yaml-and-validation_commands">Trust
+Boundary: tasks.yaml and validation_commands</h3>
+<p><code>tasks.yaml</code> is a <strong>trust boundary</strong>. The
+<code>validation_commands</code> list is executed via
+<code>subprocess.run(cmd, shell=True)</code> — any command defined there
+runs with the operator’s full privileges. This is by design for a
+single-operator tool: the operator authors the tasks, the operator
+trusts the commands. Validation commands are subject to a configurable
+timeout (default 300s) to prevent hanging commands from blocking the
+loop indefinitely.</p>
+<p><strong>Implications:</strong></p>
+<ul>
+<li>A malicious or careless <code>validation_commands</code> entry
+(e.g., <code>rm -rf /</code>) will execute without sandboxing.</li>
+<li>If this project is ever shared or used in a multi-tenant context,
+<code>tasks.yaml</code> must be treated as executable configuration —
+review it the way you’d review a Makefile or CI pipeline.</li>
+<li>Task IDs are validated against <code>^[A-Z]+-\d+$</code> to prevent
+path traversal. This check runs on every <code>load_tasks()</code>
+call.</li>
+<li>The same applies to <code>acceptance_criteria</code> or
+<code>goal</code> fields: they don’t execute, but they shape Claude’s
+behavior via the task brief. Prompt injection through task definitions
+is a theoretical concern in shared environments.</li>
+</ul>
+<p><strong>Single-operator assumption:</strong> Roadrunner assumes the
+person writing <code>tasks.yaml</code> is the same person running it. No
+access control, no sandboxing, no approval flow. This is appropriate for
+local development and overnight single-machine runs. It is not
+appropriate for shared infrastructure.</p>
+<hr />
+<h2 id="setup-for-a-new-project">4. Setup for a New Project</h2>
+<h3 id="copy-in-procedure">4.1 Copy-in procedure</h3>
+<pre class="bash"><code># From target project root
+cp /path/to/roadrunner-cli/roadrunner.py .
+cp -r /path/to/roadrunner-cli/hooks ./hooks
+cp -r /path/to/roadrunner-cli/.claude ./.claude
+mkdir -p tasks logs
+# Create your tasks/tasks.yaml
+# Create your CLAUDE.md (use roadrunner-cli/CLAUDE.md as template)
+pip3 install -r requirements.txt
+roadrunner health</code></pre>
+<h3 id="smoke-test-hooks-before-first-live-run">4.2 Smoke test hooks
+before first live run</h3>
+<pre class="bash"><code># Stop hook — should return {&quot;decision&quot;: &quot;block&quot;, &quot;reason&quot;: &quot;...&quot;} or allow stop
+echo &#39;{&quot;stop_hook_active&quot;: false, &quot;last_assistant_message&quot;: &quot;some text&quot;}&#39; | bash &quot;$CLAUDE_PROJECT_DIR&quot;/hooks/stop_hook.sh
+
+# Infinite loop guard — should exit 0 silently
+echo &#39;{&quot;stop_hook_active&quot;: true}&#39; | bash &quot;$CLAUDE_PROJECT_DIR&quot;/hooks/stop_hook.sh; echo &quot;exit: $?&quot;
+
+# ROADMAP_COMPLETE detection (must be last line)
+printf &#39;%s&#39; &#39;{&quot;stop_hook_active&quot;: false, &quot;last_assistant_message&quot;: &quot;done\n\nROADMAP_COMPLETE&quot;}&#39; | bash &quot;$CLAUDE_PROJECT_DIR&quot;/hooks/stop_hook.sh; echo &quot;exit: $?&quot;
+
+# Snapshot
+roadrunner snapshot &amp;&amp; cat .context_snapshot.json
+
+# Health
+roadrunner health</code></pre>
+<h3 id="post-first-run-verification">4.3 Post-first-run
+verification</h3>
+<p>After the first real Claude Code session with hooks active:</p>
+<ol type="1">
+<li>Review <code>logs/trace.jsonl</code> to verify structured logging is
+capturing events.</li>
+<li>Check that the SessionStart hook injected roadmap state (look for
+“Roadmap snapshot” in the session transcript).</li>
+<li>Confirm <code>.context_snapshot.json</code> was written by the
+PreCompact hook (if compaction occurred).</li>
+</ol>
+<hr />
+<h2 id="embedding-model-copy-in-vs-external-runner">5. Embedding Model:
+Copy-In vs External Runner</h2>
+<p><strong>Recommendation: Copy-in, versioned.</strong></p>
+<h3 id="option-a-external-runner-symlinkpath-reference">Option A:
+External runner (symlink/PATH reference)</h3>
+<p>Claude Code in a target project calls roadrunner.py from a shared
+location. Each target project has its own <code>tasks.yaml</code>.</p>
+<p>Pros: single source of truth for roadrunner.py. Cons: absolute path
+in CLAUDE.md and settings.json means portability breaks. If the runner
+is updated, all active projects get the change immediately — risky
+during a live run. PATH setup required.</p>
+<h3 id="option-b-copy-in-recommended">Option B: Copy-in
+(recommended)</h3>
+<p>Copy <code>roadrunner.py</code>, the <code>hooks/</code> directory,
+and <code>.claude/settings.json</code> into the target project. Target
+project provides its own <code>tasks.yaml</code>.</p>
+<p>Pros: fully self-contained, no external dependencies, no version skew
+risk mid-run, works offline. Cons: roadrunner.py changes need to be
+propagated manually to each project.</p>
+<h3 id="future-pip-installable">Future: pip installable</h3>
+<p>When roadrunner stabilizes, package as <code>roadrunner-cli</code> on
+PyPI. Target projects <code>pip install roadrunner-cli</code> and call
+via <code>roadrunner &lt;command&gt;</code>. Hooks remain in the target
+repo. Runner logic is versioned and shared; task definitions and hooks
+are per-project.</p>
+<hr />
+<h2 id="architecture-decision-records">6. Architecture Decision
+Records</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>ADR</th>
+<th>Title</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a
+href="adr/001-line-anchored-completion-signal.md">ADR-001</a></td>
+<td>Line-Anchored Completion Signal</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td><a
+href="adr/002-check-stop-in-progress-awareness.md">ADR-002</a></td>
+<td>Check-Stop In-Progress Task Awareness</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td><a href="adr/003-retry-storm-prevention.md">ADR-003</a></td>
+<td>Per-Task Attempt Counter and Auto-Block</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td><a
+href="adr/004-atomic-writes-and-data-integrity.md">ADR-004</a></td>
+<td>Atomic File Writes for State Integrity</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td><a href="adr/005-absolute-hook-paths.md">ADR-005</a></td>
+<td>Absolute Hook Paths via $CLAUDE_PROJECT_DIR</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td><a href="adr/006-structured-trace-logging.md">ADR-006</a></td>
+<td>Structured JSON Trace Logging</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td><a href="adr/007-dead-hook-cleanup.md">ADR-007</a></td>
+<td>Dead Hook Cleanup (TaskCompleted, MultiEdit, PreCompact
+additionalContext)</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td><a
+href="adr/008-validation-timeout-and-task-id-sanitization.md">ADR-008</a></td>
+<td>Validation Timeout and Task ID Sanitization</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td><a
+href="adr/009-state-schema-versioning-and-concurrency-lock.md">ADR-009</a></td>
+<td>State Schema Versioning and Concurrency Lock</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td><a
+href="adr/010-hook-python-entrypoint-unification.md">ADR-010</a></td>
+<td>Hook → Python Entry Point Unification</td>
+<td>Accepted</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="open-questions">7. Open Questions</h2>
+<ol type="1">
+<li>Does the <code>SessionStart</code> hook’s
+<code>additionalContext</code> reliably appear in Claude’s context on
+session resume? (Verify by observing Claude’s behavior after a
+compaction or session restart)</li>
+<li>Does the <code>PostCompact</code> event’s
+<code>compact_summary</code> field contain useful information for
+roadmap continuity? (Could supplement the snapshot approach)</li>
+</ol>
+<hr />
+<h1 id="configuration">Configuration</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/configuration.md</code></em></p>
+<h1 id="roadrunner-configuration">Roadrunner Configuration</h1>
+<p>This document covers every knob Roadrunner exposes: module-level
+tunables, environment variables, the <code>tasks.yaml</code> schema, and
+the two on-disk state files (<code>.roadmap_state.json</code> and
+<code>.context_snapshot.json</code>).</p>
+<h2 id="tunables">Tunables</h2>
+<p>All tunables live at the top of <code>src/roadrunner/cli.py</code> so
+operators have a single place to adjust retention and safety knobs.
+Change them in source — there is no runtime override for these (use the
+env var path documented below for the iteration cap).</p>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 9%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DEFAULT_VALIDATION_TIMEOUT</code></td>
+<td><code>300</code> seconds</td>
+<td>Per-validation-command timeout. Overridable per task via the
+<code>validation_timeout</code> field in <code>tasks.yaml</code>.</td>
+</tr>
+<tr>
+<td><code>MAX_TASK_ATTEMPTS</code></td>
+<td><code>5</code></td>
+<td>Auto-block threshold. If the Stop hook observes the same task
+<code>in_progress</code> across this many resume cycles without a
+<code>complete</code>, the task is flipped to <code>blocked</code> and
+the loop moves on.</td>
+</tr>
+<tr>
+<td><code>TASKS_BACKUP_KEEP</code></td>
+<td><code>5</code></td>
+<td>Rolling <code>tasks.yaml.bak.N</code> copies retained on every
+<code>save_tasks</code> write. Oldest is evicted atomically via
+<code>Path.replace</code>.</td>
+</tr>
+<tr>
+<td><code>LOG_ROTATE_BYTES</code></td>
+<td><code>10 * 1024²</code></td>
+<td>Trigger threshold (10 MiB) for rotating
+<code>logs/trace.jsonl</code> and <code>logs/CHANGELOG.md</code>.
+Rotation runs at every task boundary.</td>
+</tr>
+<tr>
+<td><code>LOG_RETAIN_DAYS</code></td>
+<td><code>7</code></td>
+<td>Rotated/compressed logs older than this are deleted at the next
+rotation pass.</td>
+</tr>
+<tr>
+<td><code>STATE_SCHEMA_VERSION</code></td>
+<td><code>2</code></td>
+<td>On-disk schema for <code>.roadmap_state.json</code>. Bump when the
+format changes incompatibly. See the migration contract below.</td>
+</tr>
+<tr>
+<td><code>SNAPSHOT_SCHEMA_VERSION</code></td>
+<td><code>1</code></td>
+<td>On-disk schema for <code>.context_snapshot.json</code>. Bump when
+the PreCompact snapshot format changes incompatibly.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="per-task-validation-timeout">Per-task validation timeout</h3>
+<p><code>DEFAULT_VALIDATION_TIMEOUT</code> is the fallback. Individual
+tasks override it by setting
+<code>validation_timeout: &lt;seconds&gt;</code> on the task:</p>
+<pre class="yaml"><code>- id: ROAD-099
+  title: &quot;Long-running integration test&quot;
+  validation_timeout: 900     # 15 minutes for this task only
+  validation_commands:
+    - ./scripts/slow-e2e.sh</code></pre>
+<p>The override must be a positive number;
+<code>validate_task_schema</code> rejects anything else at load
+time.</p>
+<h3 id="environment-variables">Environment variables</h3>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 21%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Consumer</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ROADMAP_MAX_ITERATIONS</code></td>
+<td><code>hooks/stop_hook.sh</code></td>
+<td>Overrides the per-session iteration cap; passed to
+<code>roadrunner check-stop</code> as <code>--max-iterations</code>.
+Defaults to <code>100</code>. See “Runaway-Protection Cap” below.</td>
+</tr>
+<tr>
+<td><code>CLAUDE_PROJECT_DIR</code></td>
+<td>every hook script + the CLI</td>
+<td>Set by Claude Code itself; the CLI uses it to anchor
+<code>ROOT</code> (and therefore <code>tasks.yaml</code>,
+<code>logs/</code>, <code>.roadmap_state.json</code>). You do not set
+this manually unless you’re invoking the CLI from outside Claude
+Code.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="iteration-counters">Iteration Counters</h2>
+<p>Roadrunner tracks two iteration counters in
+<code>.roadmap_state.json</code>. They exist so the runaway-protection
+cap does not accidentally become a lifetime ceiling on the project as a
+whole.</p>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 44%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr>
+<th>Counter</th>
+<th>Purpose</th>
+<th>Reset on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>iteration</code></td>
+<td>Lifetime audit counter. Never gates behavior.</td>
+<td><code>reset-iteration --hard</code> only</td>
+</tr>
+<tr>
+<td><code>session_iteration</code></td>
+<td>Per-session runaway guard. Gates the Stop-hook cap.</td>
+<td>Every <code>SessionStart</code> hook fire, plus
+<code>reset-iteration</code> (soft or hard)</td>
+</tr>
+</tbody>
+</table>
+<p>Both counters are incremented on every <code>check-stop</code>
+invocation (i.e., every time Claude finishes a turn and the Stop hook
+fires). The cap is compared against <code>session_iteration</code>
+only.</p>
+<h3 id="why-two-counters">Why Two Counters?</h3>
+<p>Before 2026-04-24, Roadrunner kept a single <code>iteration</code>
+counter and the cap fired when that counter hit <code>max_iter</code>.
+Because the counter persisted across every <code>claude</code>
+invocation for the same project, long-running projects (e.g.,
+entra-triage running periodically against production data) would
+accumulate iterations across many sessions and eventually trip the cap
+even though no single run looped. The split preserves the audit trail
+(<code>iteration</code>) while making the runaway guard per-session
+(<code>session_iteration</code>). See <code>logs/ROAD-010.md</code> for
+the full history.</p>
+<h2 id="runaway-protection-cap">Runaway-Protection Cap</h2>
+<p>The Stop hook enforces a maximum number of Claude turns per
+session.</p>
+<p><strong>Default:</strong> 100.</p>
+<p><strong>Override (env var, per invocation):</strong></p>
+<pre class="bash"><code>export ROADMAP_MAX_ITERATIONS=50   # tighter cap for a short run</code></pre>
+<p>The env var is read by <code>hooks/stop_hook.sh</code> and passed as
+<code>--max-iterations</code> to <code>roadrunner check-stop</code>. The
+CLI itself defaults to 100 if the flag is absent.</p>
+<p><strong>When the cap fires:</strong> <code>check-stop</code> emits a
+hard halt with <code>stopReason</code> explaining the cap was hit. The
+session terminates; Alex’s next <code>claude</code> invocation starts
+fresh at session iteration 0 (because <code>SessionStart</code> resets
+it).</p>
+<h2 id="resetting-iteration-counters">Resetting Iteration Counters</h2>
+<p>The <code>reset-iteration</code> subcommand provides manual
+control.</p>
+<pre class="bash"><code># Reset session counter only. Lifetime counter preserved.
+roadrunner reset-iteration --soft   # default if no flag
+
+# Reset both counters. Destructive; loses lifetime audit trail.
+roadrunner reset-iteration --hard</code></pre>
+<p>Trace events (<code>reset_iteration</code>) record the mode and the
+prior lifetime counter for every invocation, so <code>--hard</code> is
+recoverable via the trace log if needed.</p>
+<h2 id="state-schema">State Schema</h2>
+<p><code>.roadmap_state.json</code> is versioned via
+<code>STATE_SCHEMA_VERSION</code>. Roadrunner’s forward-compat
+contract:</p>
+<ul>
+<li><strong>Older Roadrunner reading newer state:</strong> refuses to
+run (<code>version &gt; current</code> exits with an upgrade-required
+message). Prevents data loss from writes that drop fields the newer
+version added.</li>
+<li><strong>Newer Roadrunner reading older state:</strong> migrates
+transparently. Missing fields are filled in via <code>setdefault</code>
+during <code>read_state</code>, then written back in the new schema on
+the next <code>write_state</code>.</li>
+</ul>
+<h3 id="schema-v1-v2-road-010-2026-04-24">Schema v1 → v2 (ROAD-010,
+2026-04-24)</h3>
+<p>Adds <code>session_iteration: int</code> field. Default for legacy
+state files: <code>0</code>. No manual migration required; first load
+auto-fills.</p>
+<h2 id="tasks.yaml-reference"><code>tasks.yaml</code> reference</h2>
+<p><code>tasks/tasks.yaml</code> is the roadmap — the source of truth
+for task ordering, dependencies, and validation contracts. It has two
+kinds of entries: <strong>top-level project config</strong> and the
+<strong><code>tasks:</code> list</strong>.</p>
+<h3 id="top-level-keys">Top-level keys</h3>
+<pre class="yaml"><code>project_base: main          # required-ish; falls back to current git branch, then &#39;main&#39;
+push_on_complete: base      # optional; default &#39;none&#39;
+tasks:                      # required; the ordered task list
+  - id: ROAD-001
+    # ...</code></pre>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 14%" />
+<col style="width: 5%" />
+<col style="width: 68%" />
+</colgroup>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Required?</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project_base</code></td>
+<td>string</td>
+<td>optional</td>
+<td>Branch that <code>roadrunner/&lt;TASK-ID&gt;</code> branches fork
+from. Prevents stacking. Falls back to current branch, then
+<code>main</code>.</td>
+</tr>
+<tr>
+<td><code>push_on_complete</code></td>
+<td><code>"base"</code> / <code>"task"</code> / <code>"both"</code> /
+<code>"none"</code></td>
+<td>optional</td>
+<td>What to push after a successful merge on <code>complete</code>.
+Default <code>"none"</code> (local only).</td>
+</tr>
+<tr>
+<td><code>tasks</code></td>
+<td>list</td>
+<td>required</td>
+<td>Ordered task list. See field reference below.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="per-task-fields">Per-task fields</h3>
+<p>Required on every task:</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 8%" />
+<col style="width: 80%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>Must match <code>^[A-Z]+-\d+$</code> (e.g., <code>ROAD-001</code>,
+<code>TASK-042</code>).</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>string</td>
+<td>Short, human-readable title. Used in briefs and status output.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>string</td>
+<td>One of <code>todo</code>, <code>in_progress</code>,
+<code>done</code>, <code>blocked</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Optional on every task:</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 9%" />
+<col style="width: 8%" />
+<col style="width: 67%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>depends_on</code></td>
+<td>list[string]</td>
+<td><code>[]</code></td>
+<td>Task IDs that must be <code>done</code> before this task becomes
+eligible. Must be a list; cycles are rejected by
+<code>roadrunner analyze</code>.</td>
+</tr>
+<tr>
+<td><code>goal</code></td>
+<td>string</td>
+<td><code>""</code></td>
+<td>Prose description. Injected into the task brief at session start /
+resume.</td>
+</tr>
+<tr>
+<td><code>acceptance_criteria</code></td>
+<td>list[string]</td>
+<td><code>[]</code></td>
+<td>Bullet list shown in the brief. Advisory — not checked
+programmatically.</td>
+</tr>
+<tr>
+<td><code>validation_commands</code></td>
+<td>list[string]</td>
+<td><code>[]</code></td>
+<td>Shell commands run by <code>roadrunner validate</code>. All must
+exit 0 for <code>complete</code> to succeed.</td>
+</tr>
+<tr>
+<td><code>validation_timeout</code></td>
+<td>number</td>
+<td><code>DEFAULT_VALIDATION_TIMEOUT</code> (300)</td>
+<td>Per-task override in seconds. Must be a positive number.</td>
+</tr>
+<tr>
+<td><code>files_expected</code></td>
+<td>list[string]</td>
+<td><code>[]</code></td>
+<td>Paths the task is allowed to touch. Used by
+<code>roadrunner commit</code> to scope staged changes.</td>
+</tr>
+<tr>
+<td><code>documentation_targets</code></td>
+<td>list[string]</td>
+<td><code>[]</code></td>
+<td>Documentation files that should also be updated. Advisory —
+informational only.</td>
+</tr>
+<tr>
+<td><code>notes</code></td>
+<td>string</td>
+<td><code>""</code></td>
+<td>Free-form notes. Not interpreted by the control loop.</td>
+</tr>
+</tbody>
+</table>
+<p>Schema validation (<code>validate_task_schema</code>) runs on every
+<code>load_tasks</code>. It rejects: missing required fields, invalid
+<code>id</code> format, unknown <code>status</code>, non-list
+<code>depends_on</code> or <code>validation_commands</code>, and
+non-positive <code>validation_timeout</code>.</p>
+<h3 id="minimal-example">Minimal example</h3>
+<pre class="yaml"><code>project_base: main
+tasks:
+  - id: TASK-001
+    title: &quot;First task — replace me&quot;
+    status: todo
+    depends_on: []
+    goal: |
+      Describe what this task accomplishes.
+    acceptance_criteria:
+      - &quot;Describe a concrete, observable outcome&quot;
+    validation_commands:
+      - &quot;echo &#39;replace with a real check (test, lint, build)&#39;&quot;
+    files_expected: []</code></pre>
+<hr />
+<h2 id="roadmap_state.json"><code>.roadmap_state.json</code></h2>
+<p>The control-loop state file. Mutated on every <code>start</code>,
+<code>complete</code>, <code>block</code>, <code>reset</code>, and
+<code>check-stop</code>. Protected by an advisory POSIX lock
+(<code>.roadmap_state.lock</code>) and written atomically via
+<code>os.replace</code>.</p>
+<p>Schema v2 (current):</p>
+<pre class="json"><code>{
+  &quot;schema_version&quot;: 2,
+  &quot;current_task_id&quot;: &quot;ROAD-006&quot;,
+  &quot;iteration&quot;: 116,
+  &quot;session_iteration&quot;: 1,
+  &quot;attempts_per_task&quot;: {
+    &quot;ROAD-001&quot;: 3,
+    &quot;ROAD-005&quot;: 5
+  },
+  &quot;updated_at&quot;: &quot;2026-04-25T02:24:17.324121+00:00&quot;,
+  &quot;base_branch&quot;: &quot;roadrunner/ROAD-005&quot;
+}</code></pre>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 12%" />
+<col style="width: 71%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema_version</code></td>
+<td>int</td>
+<td>Matches <code>STATE_SCHEMA_VERSION</code> (currently
+<code>2</code>). Controls forward-compat gate.</td>
+</tr>
+<tr>
+<td><code>current_task_id</code></td>
+<td>string | null</td>
+<td>ID of the task currently <code>in_progress</code>, or null between
+boundaries.</td>
+</tr>
+<tr>
+<td><code>iteration</code></td>
+<td>int</td>
+<td>Lifetime audit counter. Never gates behavior. Only reset via
+<code>reset-iteration --hard</code>.</td>
+</tr>
+<tr>
+<td><code>session_iteration</code></td>
+<td>int</td>
+<td>Per-session runaway-protection counter. Reset every
+<code>SessionStart</code> fire and via <code>reset-iteration</code>.
+Gates the cap.</td>
+</tr>
+<tr>
+<td><code>attempts_per_task</code></td>
+<td>dict[str, int]</td>
+<td>Count of resume cycles per task. Reaching
+<code>MAX_TASK_ATTEMPTS</code> (5) auto-blocks the task.</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>ISO-8601 string</td>
+<td>UTC timestamp of the last write.</td>
+</tr>
+<tr>
+<td><code>base_branch</code></td>
+<td>string</td>
+<td>The branch in play when the last <code>start</code> ran — used to
+recover the base branch after task merges.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="context_snapshot.json"><code>.context_snapshot.json</code></h2>
+<p>Written by the PreCompact hook (<code>roadrunner snapshot</code>) so
+Claude can cold-resume after context compaction. Verified by the
+PostCompact hook (<code>roadrunner post-compact</code>), which logs a
+<code>post_compact_verify</code> trace event.</p>
+<p>Schema v1 (current):</p>
+<pre class="json"><code>{
+  &quot;schema_version&quot;: 1,
+  &quot;snapshot_at&quot;: &quot;2026-04-25T02:11:50.665330+00:00&quot;,
+  &quot;current_task&quot;: &quot;ROAD-005&quot;,
+  &quot;iteration&quot;: 109,
+  &quot;next_eligible&quot;: &quot;ROAD-006&quot;,
+  &quot;status_summary&quot;: {
+    &quot;ROAD-001&quot;: &quot;done&quot;,
+    &quot;ROAD-002&quot;: &quot;done&quot;,
+    &quot;ROAD-005&quot;: &quot;in_progress&quot;,
+    &quot;ROAD-006&quot;: &quot;todo&quot;
+  }
+}</code></pre>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 14%" />
+<col style="width: 69%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema_version</code></td>
+<td>int</td>
+<td>Matches <code>SNAPSHOT_SCHEMA_VERSION</code> (currently
+<code>1</code>).</td>
+</tr>
+<tr>
+<td><code>snapshot_at</code></td>
+<td>ISO-8601 string</td>
+<td>UTC timestamp of the snapshot write.</td>
+</tr>
+<tr>
+<td><code>current_task</code></td>
+<td>string | null</td>
+<td>ID of the <code>in_progress</code> task at snapshot time, if
+any.</td>
+</tr>
+<tr>
+<td><code>iteration</code></td>
+<td>int</td>
+<td>Lifetime iteration counter at snapshot time.</td>
+</tr>
+<tr>
+<td><code>next_eligible</code></td>
+<td>string | null</td>
+<td>ID of the next eligible <code>todo</code> task, if any.</td>
+</tr>
+<tr>
+<td><code>status_summary</code></td>
+<td>dict[str, str]</td>
+<td>Flat <code>id → status</code> map covering every task in
+<code>tasks.yaml</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>PostCompact verification checks that every required field is present
+and that <code>schema_version == SNAPSHOT_SCHEMA_VERSION</code>.
+Mismatches surface as <code>schema_mismatch</code> /
+<code>missing_fields</code> keys in the <code>post_compact_verify</code>
+trace event.</p>
+<hr />
+<h2 id="downstream-consumers">Downstream Consumers</h2>
+<p><code>entra-triage</code> vendors <code>roadrunner.py</code> in-tree
+and syncs periodically. Because the v1 → v2 migration is
+setdefault-based (not a hard schema check), vendored copies pick up the
+new schema without coordination: the state file on disk migrates the
+first time a post-sync <code>roadrunner.py</code> invocation runs.</p>
+<p>If you fork or vendor this file elsewhere, follow the same
+contract:</p>
+<ol type="1">
+<li>Bump <code>STATE_SCHEMA_VERSION</code> when adding new state
+fields.</li>
+<li>In <code>read_state</code>, put
+<code>data.setdefault(new_field, default)</code> after the JSON load so
+older state files migrate cleanly.</li>
+<li>Keep the forward-compat gate
+(<code>version &gt; STATE_SCHEMA_VERSION → exit</code>) intact so older
+binaries can’t silently corrupt newer state.</li>
+</ol>
+<hr />
+<h1 id="workflow">Workflow</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/WORKFLOW.md</code></em></p>
+<h1 id="roadrunner-workflow">Roadrunner Workflow</h1>
+<p>How the tool works end-to-end — for operators bringing a new project
+to the loop and for agents executing inside it.</p>
+<hr />
+<h2 id="the-five-stages-end-to-end">1. The Five Stages, End-to-End</h2>
+<p>Roadrunner drives a project through five stages. The first four are
+human-led setup; the fifth is the autonomous loop.</p>
+<pre class="mermaid"><code>flowchart TD
+    Start([Project idea or existing repo]) --&gt; A
+
+    subgraph A_[&quot;Stage A — Intake&quot;]
+        direction TB
+        A[Read spec / SPEC.md&lt;br/&gt;Read ADRs, existing docs&lt;br/&gt;Walk the code tree]
+    end
+
+    subgraph B_[&quot;Stage B — Reconciliation&quot;]
+        direction TB
+        B1[Read representative code files]
+        B2[Categorize: REAL / STUB / PARTIAL / WRONG]
+        B3[Surface architectural contradictions]
+        B1 --&gt; B2 --&gt; B3
+    end
+
+    subgraph C_[&quot;Stage C — Draft tasks.yaml&quot;]
+        direction TB
+        C1[Translate spec → roadrunner schema]
+        C2[Split tasks &amp;gt; ~4hr of work]
+        C3[Add validation_commands&lt;br/&gt;strong / medium / weak tiering]
+        C4[Set depends_on per task]
+        C1 --&gt; C2 --&gt; C3 --&gt; C4
+    end
+
+    subgraph D_[&quot;Stage D — Review Gate&quot;]
+        direction TB
+        D1[User reviews tasks.yaml]
+        D2[roadrunner analyze&lt;br/&gt;must exit 0]
+        D1 --&gt; D2
+    end
+
+    subgraph E_[&quot;Stage E — Scaffold&quot;]
+        direction TB
+        E1[pip install roadrunner-cli + roadrunner init in target repo]
+        E2[Merge hook registrations&lt;br/&gt;into .claude/settings.json]
+        E3[Gitignore runtime state files]
+        E4[Move reviewed YAML&lt;br/&gt;→ tasks/tasks.yaml]
+        E1 --&gt; E2 --&gt; E3 --&gt; E4
+    end
+
+    subgraph F_[&quot;Stage F — Execute&quot;]
+        direction TB
+        F1[Open Claude Code in repo]
+        F2[SessionStart injects snapshot]
+        F3[Autonomous per-task loop]
+        F4[Phase-boundary review + merge]
+        F1 --&gt; F2 --&gt; F3 --&gt; F4
+    end
+
+    A --&gt; B_
+    B_ --&gt; C_
+    C_ --&gt; D_
+    D_ --&gt;|changes needed| C_
+    D_ --&gt;|approved| E_
+    E_ --&gt; F_
+    F_ --&gt; Done([All tasks done&lt;br/&gt;ROADMAP_COMPLETE])</code></pre>
+<p><strong>Stage B was the gap</strong> before the entra-triage pilot
+surfaced it. Spec-shaped plans assume greenfield; real repos have
+partial implementations that contradict the spec. Stage B catches that
+before the loop burns iterations on false premises.</p>
+<hr />
+<h2 id="per-task-cycle">2. Per-Task Cycle</h2>
+<p>What happens inside a single task. This is the loop’s atomic
+unit.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Eligible: roadrunner next
+
+    Eligible --&gt; InProgress: roadrunner start TASK-XXX&lt;br/&gt;(creates roadrunner/TASK-XXX branch)
+
+    InProgress --&gt; Validating: implement&lt;br/&gt;(edit files in files_expected)
+
+    Validating --&gt; FixErrors: validation_commands fail
+    FixErrors --&gt; Validating: retry
+
+    Validating --&gt; AutoBlock: same task failed 5×
+    AutoBlock --&gt; [*]: loop moves on&lt;br/&gt;(status = blocked)
+
+    Validating --&gt; Completing: all validation_commands exit 0
+    Completing --&gt; Linting: roadrunner complete TASK-XXX&lt;br/&gt;(status = done)
+
+    Linting --&gt; FixLint: lint fails
+    FixLint --&gt; Linting: retry
+
+    Linting --&gt; Committing: lint passes
+    Committing --&gt; Resetting: git commit&lt;br/&gt;on roadrunner/TASK-XXX
+
+    Resetting --&gt; NextBrief: roadrunner reset TASK-XXX
+
+    NextBrief --&gt; Eligible: Stop hook injects&lt;br/&gt;next task brief
+    NextBrief --&gt; [*]: no more eligible tasks&lt;br/&gt;→ ROADMAP_COMPLETE
+
+    note right of Linting
+        Stop hook guards here:
+        dirty tree + no in_progress task
+        → block stop until lint + commit done
+    end note</code></pre>
+<p>The Stop hook enforces two invariants: 1.
+<strong>Validation-as-gate.</strong> The agent can’t claim a task is
+done until <code>roadrunner validate</code> exits 0. 2. <strong>Commit
+discipline.</strong> The agent can’t move to the next task with
+uncommitted work on a <code>roadrunner/*</code> branch — lint runs
+first; if it passes, commit; if it fails, fix lint first.</p>
+<hr />
+<h2 id="stop-hook-decision-tree">3. Stop Hook Decision Tree</h2>
+<p>The Stop hook fires after every Claude turn. Its job: decide whether
+the agent can stop, or must keep working.</p>
+<pre class="mermaid"><code>flowchart TD
+    Fire[Stop hook fires] --&gt; Active{stop_hook_active&lt;br/&gt;already true?}
+    Active --&gt;|yes| AllowInf[Allow stop&lt;br/&gt;infinite-loop guard]
+
+    Active --&gt;|no| Branch{On roadrunner/*&lt;br/&gt;branch?}
+    Branch --&gt;|no| Delegate
+
+    Branch --&gt;|yes| Dirty{Working tree&lt;br/&gt;dirty?}
+    Dirty --&gt;|no| Delegate
+
+    Dirty --&gt;|yes| InProg{current_task_id&lt;br/&gt;set in state?}
+    InProg --&gt;|yes — mid-task| Delegate
+
+    InProg --&gt;|no — just completed| RunLint[Run project lint&lt;br/&gt;e.g. npm run lint]
+    RunLint --&gt; LintOK{lint&lt;br/&gt;passes?}
+
+    LintOK --&gt;|yes| BlockCommit[Block stop&lt;br/&gt;Instructions:&lt;br/&gt;git add -A&lt;br/&gt;git commit -m&lt;br/&gt;roadrunner reset]
+    LintOK --&gt;|no| BlockLint[Block stop&lt;br/&gt;Surfaces lint output&lt;br/&gt;+ fix instructions]
+
+    Delegate[Delegate to&lt;br/&gt;roadrunner check-stop] --&gt; CSDecide{check-stop&lt;br/&gt;decision}
+
+    CSDecide --&gt;|iteration cap hit| HardHalt[Hard halt&lt;br/&gt;continue: false]
+    CSDecide --&gt;|task in_progress| ResumeBrief[Block&lt;br/&gt;inject resume brief]
+    CSDecide --&gt;|eligible task| NextBrief[Block&lt;br/&gt;inject next-task brief]
+    CSDecide --&gt;|blocked tasks| BlockedReport[Block&lt;br/&gt;report blocked tasks]
+    CSDecide --&gt;|all done| DonePrompt[Block&lt;br/&gt;prompt for ROADMAP_COMPLETE]
+    CSDecide --&gt;|ROADMAP_COMPLETE&lt;br/&gt;output detected| AllowDone[Allow stop]</code></pre>
+<p>The decision order matters: the commit gate runs
+<strong>before</strong> <code>check-stop</code> delegation, so a dirty
+tree never proceeds to the next task. The Python <code>check-stop</code>
+command owns all loop-state logic; the bash wrapper only enforces the
+commit gate.</p>
+<hr />
+<h2 id="worked-example-entra-triage-task-dag">4. Worked Example —
+entra-triage Task DAG</h2>
+<p>The 18-task dependency graph for the first external pilot. Critical
+path is 10 tasks deep (ENTRA-001 → 002 → 003 → 010 → 011 → 020 → 040 →
+080 → 081 → 090).</p>
+<pre class="mermaid"><code>flowchart LR
+    subgraph P1[&quot;Phase 1 — Reconcile &amp; Foundation&quot;]
+        direction TB
+        E001[ENTRA-001&lt;br/&gt;Reconcile entities&lt;br/&gt;single-tenant DB schema]
+        E002[ENTRA-002&lt;br/&gt;npm install +&lt;br/&gt;monorepo build green]
+        E003[ENTRA-003&lt;br/&gt;Drizzle ORM layer&lt;br/&gt;schema.ts/db.ts/migrate.ts]
+        E001 --&gt; E002 --&gt; E003
+    end
+
+    subgraph P2[&quot;Phase 2 — Graph Connectors&quot;]
+        direction TB
+        E010[ENTRA-010&lt;br/&gt;Real client&lt;br/&gt;pagination + 429/503 backoff]
+        E011[ENTRA-011&lt;br/&gt;Mock client&lt;br/&gt;drop-in parity + P1/P2 variants]
+        E010 --&gt; E011
+    end
+
+    subgraph P3[&quot;Phase 3 — Pipeline&quot;]
+        direction TB
+        E020[ENTRA-020&lt;br/&gt;Ingestion worker&lt;br/&gt;cursor + dedup + dead-letter]
+        E030[ENTRA-030&lt;br/&gt;Agent base&lt;br/&gt;Anthropic tool use + confidence]
+        E031[ENTRA-031&lt;br/&gt;Sign-in + identity-risk agents]
+        E032[ENTRA-032&lt;br/&gt;Directory / baseline / response /&lt;br/&gt;research agents]
+        E040[ENTRA-040&lt;br/&gt;Triage worker&lt;br/&gt;pre-filter + dispatch + dedup]
+        E030 --&gt; E031 --&gt; E032
+        E032 --&gt; E040
+        E020 --&gt; E040
+    end
+
+    subgraph P4[&quot;Phase 4 — API + UI&quot;]
+        direction TB
+        E050[ENTRA-050&lt;br/&gt;tRPC read routes&lt;br/&gt;incidents / cases / auditLog]
+        E051[ENTRA-051&lt;br/&gt;tRPC write routes&lt;br/&gt;baseline / responseActions / ingestion]
+        E060[ENTRA-060&lt;br/&gt;UI shell&lt;br/&gt;login / dashboard / incidents]
+        E061[ENTRA-061&lt;br/&gt;UI&lt;br/&gt;baseline / approvals / settings]
+        E050 --&gt; E051
+        E050 --&gt; E060
+        E051 --&gt; E061
+        E060 --&gt; E061
+    end
+
+    subgraph P5[&quot;Phase 5 — Test Hardening&quot;]
+        direction TB
+        E070[ENTRA-070&lt;br/&gt;Unit tests&lt;br/&gt;policy / parsers / dedup hash]
+        E080[ENTRA-080&lt;br/&gt;Local dev&lt;br/&gt;docker-compose + dev-setup.sh]
+        E081[ENTRA-081&lt;br/&gt;Integration tests&lt;br/&gt;ingestion + triage + response]
+        E090[ENTRA-090&lt;br/&gt;Playwright E2E&lt;br/&gt;5 key flows]
+        E070 --&gt; E081
+        E080 --&gt; E081
+        E081 --&gt; E090
+    end
+
+    E003 --&gt; E010
+    E003 --&gt; E030
+    E003 --&gt; E050
+    E011 --&gt; E020
+    E032 --&gt; E070
+    E040 --&gt; E080
+    E061 --&gt; E090</code></pre>
+<h3 id="task-phases-at-a-glance">Task phases at a glance</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Tasks</th>
+<th>Why this grouping</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Reconcile &amp; Foundation</strong></td>
+<td>ENTRA-001, 002, 003</td>
+<td>Fix the spec/reality mismatch, install deps, add the DB layer.
+Nothing else can move until this is done.</td>
+</tr>
+<tr>
+<td><strong>2. Graph Connectors</strong></td>
+<td>ENTRA-010, 011</td>
+<td>Pagination, backoff, typed returns, mock parity. The data-source
+boundary.</td>
+</tr>
+<tr>
+<td><strong>3. Pipeline</strong></td>
+<td>ENTRA-020, 030, 031, 032, 040</td>
+<td>Ingestion → agents → triage. Where LLM cost and quality get
+shaped.</td>
+</tr>
+<tr>
+<td><strong>4. API + UI</strong></td>
+<td>ENTRA-050, 051, 060, 061</td>
+<td>tRPC routes first, then the pages that consume them.</td>
+</tr>
+<tr>
+<td><strong>5. Test Hardening</strong></td>
+<td>ENTRA-070, 080, 081, 090</td>
+<td>Unit + integration + E2E, plus the local-dev one-shot script.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="per-task-breakdown">Per-task breakdown</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Phase</th>
+<th>Scope</th>
+<th>Validation tier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ENTRA-001</td>
+<td>1</td>
+<td>Delete <code>tenant.ts</code> + <code>connector.ts</code>; strip
+<code>tenantId</code> from 12 entity files; fix
+<code>db/seed.sql</code></td>
+<td>Strong (grep + build)</td>
+</tr>
+<tr>
+<td>ENTRA-002</td>
+<td>1</td>
+<td><code>npm install</code> + <code>npm run build</code> green across
+workspaces</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>ENTRA-003</td>
+<td>1</td>
+<td>Create
+<code>packages/shared/src/db/{schema,db,migrate}.ts</code></td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-010</td>
+<td>2</td>
+<td>Graph client pagination, 429/503 backoff, typed Zod returns</td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-011</td>
+<td>2</td>
+<td>Mock client drop-in parity; P1/P2 variants for ID Protection</td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-020</td>
+<td>3</td>
+<td>Ingestion worker: checkpoint, dedup, dead-letter, pino
+redaction</td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-030</td>
+<td>3</td>
+<td><code>BaseAgent</code> refactor to Anthropic tool use + confidence
+scores</td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-031</td>
+<td>3</td>
+<td>SignInTriage + IdentityRisk agents on new base</td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-032</td>
+<td>3</td>
+<td>DirectoryChange + BaselineReview + ResponsePolicy + Research
+agents</td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-040</td>
+<td>3</td>
+<td>Triage worker: pre-filter PASS/FLAG/AMBIGUOUS, dispatch, dedup,
+audit</td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-050</td>
+<td>4</td>
+<td>tRPC read routes: <code>incidents</code>, <code>cases</code>,
+<code>auditLog</code> + JWT middleware</td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-051</td>
+<td>4</td>
+<td>tRPC action routes: <code>baseline</code>,
+<code>responseActions</code>, <code>ingestion</code> — <strong>no
+<code>execute</code> procedure per ADR 0006</strong></td>
+<td>Medium + strong</td>
+</tr>
+<tr>
+<td>ENTRA-060</td>
+<td>4</td>
+<td>UI: login, dashboard layout, incidents page</td>
+<td>Weak + strong</td>
+</tr>
+<tr>
+<td>ENTRA-061</td>
+<td>4</td>
+<td>UI: baseline, approvals (no Execute button per ADR 0006),
+settings</td>
+<td>Weak + strong</td>
+</tr>
+<tr>
+<td>ENTRA-070</td>
+<td>5</td>
+<td>Vitest unit tests: policy engine + parsers + dedup hash</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>ENTRA-080</td>
+<td>5</td>
+<td><code>docker-compose.yml</code> +
+<code>scripts/dev-setup.sh</code></td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>ENTRA-081</td>
+<td>5</td>
+<td>Integration tests (live Postgres) for ingestion, triage,
+response-action lifecycle</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>ENTRA-090</td>
+<td>5</td>
+<td>Playwright E2E for 5 flows</td>
+<td>Strong</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="operator-cheat-sheet">5. Operator Cheat Sheet</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Task</th>
+<th>Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Check queue</td>
+<td><code>roadrunner status</code></td>
+</tr>
+<tr>
+<td>Next eligible</td>
+<td><code>roadrunner next</code></td>
+</tr>
+<tr>
+<td>Validate a tasks.yaml</td>
+<td><code>roadrunner analyze [--tasks-file PATH]</code></td>
+</tr>
+<tr>
+<td>Scaffold a new project</td>
+<td><code>roadrunner init &lt;dir&gt; [--dry-run]</code></td>
+</tr>
+<tr>
+<td>Health snapshot</td>
+<td><code>roadrunner health</code></td>
+</tr>
+<tr>
+<td>Unblock a task</td>
+<td>Edit <code>status</code> back to <code>todo</code> in
+<code>tasks/tasks.yaml</code>, then <code>roadrunner status</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="related-docs">6. Related Docs</h2>
+<ul>
+<li><a href="../CLAUDE.md">CLAUDE.md</a> — operating contract the agent
+follows</li>
+<li><a href="architecture.md">architecture.md</a> — architectural
+rationale</li>
+<li><a href="./adr/">docs/adr/</a> — accepted decisions (ADR-001 through
+ADR-010)</li>
+</ul>
+<hr />
+<h1 id="release-process">Release Process</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/release.md</code></em></p>
+<h1 id="release-process-1">Release Process</h1>
+<p>Roadrunner publishes to PyPI via <a
+href="../.github/workflows/publish.yml">GitHub Actions</a> using
+<strong>PyPI Trusted Publishing</strong> (OIDC). No long-lived API
+tokens are stored in repo secrets — the publish job exchanges its
+workflow OIDC token for a short-lived upload token at runtime.</p>
+<p>This document covers the one-time PyPI/GitHub setup and the
+per-release checklist.</p>
+<hr />
+<h2 id="one-time-setup">One-time setup</h2>
+<p>You only do this once per project (or once per Trusted Publisher
+environment).</p>
+<h3 id="reserve-the-package-name-on-pypi">1. Reserve the package name on
+PyPI</h3>
+<ol type="1">
+<li>Sign in at <a href="https://pypi.org/"
+class="uri">https://pypi.org/</a>.</li>
+<li>The first publish needs to come from a Trusted Publisher, so you
+cannot “reserve” the name with a manual upload. Instead, create the
+publisher record below and then push your first <code>v*</code> tag —
+the OIDC publish will create the project automatically.</li>
+</ol>
+<p>If you want the name immediately reserved (recommended to prevent
+squatting): do an initial manual <code>twine upload</code> of a
+<code>0.0.1.dev0</code> build, then proceed with the OIDC setup. Future
+releases continue via OIDC.</p>
+<h3 id="configure-the-trusted-publisher-on-pypi">2. Configure the
+Trusted Publisher on PyPI</h3>
+<p>For the <strong>production</strong> PyPI:</p>
+<ol type="1">
+<li>Go to <a href="https://pypi.org/manage/account/publishing/"
+class="uri">https://pypi.org/manage/account/publishing/</a>.</li>
+<li>Under <strong>Add a new pending publisher</strong>, fill in:
+<ul>
+<li><strong>PyPI Project Name</strong>: <code>roadrunner-cli</code></li>
+<li><strong>Owner</strong>: <code>afoxnyc3</code> (the GitHub user/org
+that owns the repo)</li>
+<li><strong>Repository name</strong>: <code>roadrunner-cli</code></li>
+<li><strong>Workflow name</strong>: <code>publish.yml</code></li>
+<li><strong>Environment name</strong>: <code>pypi</code></li>
+</ul></li>
+<li>Click <strong>Add</strong>.</li>
+</ol>
+<p>For <strong>TestPyPI</strong> (optional but recommended for
+rehearsals):</p>
+<ol type="1">
+<li>Repeat the steps at <a
+href="https://test.pypi.org/manage/account/publishing/"
+class="uri">https://test.pypi.org/manage/account/publishing/</a> with
+the same fields, but use environment name <code>testpypi</code>.</li>
+<li>Add a second job to <code>publish.yml</code> if you want automatic
+test publishes (omitted from the default workflow to keep things
+simple).</li>
+</ol>
+<h3 id="create-the-github-environment">3. Create the GitHub
+Environment</h3>
+<p>GitHub Environments let you gate the publish job behind manual
+approval if you want a human checkpoint before every release.</p>
+<ol type="1">
+<li>In the repo: <strong>Settings → Environments → New
+environment</strong> → name it <code>pypi</code> (must match the
+<code>environment.name</code> field in <code>publish.yml</code>).</li>
+<li>Optionally add a <strong>Required reviewer</strong> so each publish
+needs explicit approval. Useful for early releases; remove later if it
+becomes friction.</li>
+<li>Optionally restrict the environment to specific tags or
+branches.</li>
+</ol>
+<p>That’s the whole one-time setup.</p>
+<hr />
+<h2 id="per-release-checklist">Per-release checklist</h2>
+<p>Every release follows the same six steps. Treat the checklist as the
+source of truth — any deviation means writing it down here first.</p>
+<ol type="1">
+<li><p><strong>Confirm <code>main</code> is green.</strong> Check the <a
+href="../.github/workflows/ci.yml">CI badge</a> and that there are no
+open critical issues blocking release.</p></li>
+<li><p><strong>Bump the version.</strong> Edit
+<code>pyproject.toml</code>:</p>
+<pre class="toml"><code>[project]
+version = &quot;X.Y.Z&quot;</code></pre>
+<p>Follow <a href="https://semver.org/">Semantic Versioning</a>:</p>
+<ul>
+<li><strong>Patch</strong> (<code>0.1.0</code> → <code>0.1.1</code>):
+bug fixes, doc updates, no API change.</li>
+<li><strong>Minor</strong> (<code>0.1.0</code> → <code>0.2.0</code>):
+new commands or features, backward-compatible.</li>
+<li><strong>Major</strong> (<code>0.1.0</code> → <code>1.0.0</code>):
+breaking changes to <code>tasks.yaml</code> schema, state-file schema,
+hook contracts, or CLI surface.</li>
+</ul></li>
+<li><p><strong>Update <code>CHANGELOG.md</code>.</strong> Move the
+unreleased entries under a new <code>## [X.Y.Z] — YYYY-MM-DD</code>
+heading. Cross-reference the relevant ROAD-NNN tasks where
+helpful.</p></li>
+<li><p><strong>Commit on <code>main</code>:</strong></p>
+<pre class="bash"><code>git add pyproject.toml CHANGELOG.md
+git commit -m &quot;release: vX.Y.Z&quot;
+git push origin main</code></pre></li>
+<li><p><strong>Tag and push:</strong></p>
+<pre class="bash"><code>git tag -a vX.Y.Z -m &quot;Release X.Y.Z&quot;
+git push origin vX.Y.Z</code></pre>
+<p>The <code>v*</code> tag push triggers
+<code>.github/workflows/publish.yml</code>. The workflow runs the full
+test matrix, builds the sdist + wheel, then publishes via OIDC. If you
+configured a required reviewer on the <code>pypi</code> environment, it
+will pause for approval at the publish step.</p></li>
+<li><p><strong>Verify the release.</strong> After the workflow
+completes:</p>
+<pre class="bash"><code>pip install --upgrade roadrunner-cli==X.Y.Z
+roadrunner --help        # should print the CLI usage</code></pre>
+<p>Then create a GitHub Release referencing the tag, paste the changelog
+section, and attach any release notes.</p></li>
+</ol>
+<hr />
+<h2 id="rehearsing-without-publishing">Rehearsing without
+publishing</h2>
+<p>The <code>publish</code> workflow has a
+<code>workflow_dispatch</code> trigger so a maintainer can exercise the
+build steps without cutting a real release.</p>
+<ol type="1">
+<li>Go to the <strong>Actions</strong> tab → select
+<strong>publish</strong> → <strong>Run workflow</strong>.</li>
+<li>Pick the branch you want to rehearse against.</li>
+<li>The <code>test</code> and <code>build</code> jobs run; the
+<code>publish</code> job is gated on
+<code>github.event_name == 'push' &amp;&amp; startsWith(github.ref, 'refs/tags/v')</code>
+and is skipped, so nothing is uploaded.</li>
+</ol>
+<p>Use this to verify the build artifacts before tagging:</p>
+<ul>
+<li>The <code>python-package-distributions</code> artifact attached to
+the run will contain <code>roadrunner_cli-X.Y.Z-py3-none-any.whl</code>
+and the matching <code>.tar.gz</code>.</li>
+<li>Download, install in a clean venv
+(<code>pip install &lt;wheel&gt;</code>), and smoke-test the
+<code>roadrunner</code> console script.</li>
+</ul>
+<hr />
+<h2 id="local-rehearsal">Local rehearsal</h2>
+<p>Before pushing a tag, build locally:</p>
+<pre class="bash"><code>pip install build
+python -m build --sdist --wheel --outdir dist/</code></pre>
+<p>That should produce both files in <code>dist/</code>. Smoke-test:</p>
+<pre class="bash"><code>python -m venv /tmp/rr-release-test
+/tmp/rr-release-test/bin/pip install dist/roadrunner_cli-*.whl
+/tmp/rr-release-test/bin/roadrunner --help</code></pre>
+<p>If <code>--help</code> works, the wheel is shippable.</p>
+<hr />
+<h2 id="rollback">Rollback</h2>
+<p>PyPI does <strong>not</strong> allow re-uploading a deleted version
+with the same number. If a release is broken:</p>
+<ol type="1">
+<li><strong>Yank</strong> the broken release on PyPI: <a
+href="https://pypi.org/manage/project/roadrunner-cli/release/X.Y.Z/"
+class="uri">https://pypi.org/manage/project/roadrunner-cli/release/X.Y.Z/</a>
+→ <strong>Options → Yank</strong>. This hides the version from
+<code>pip install roadrunner-cli</code> (no version bound) but leaves it
+installable for users who explicitly pin it.</li>
+<li>Bump to the next patch version (e.g. <code>X.Y.Z+1</code>) with the
+fix and ship a new release. Never reuse a version number.</li>
+<li>Document the yank in <code>CHANGELOG.md</code> under the affected
+version.</li>
+</ol>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://docs.pypi.org/trusted-publishers/">PyPI Trusted
+Publishing docs</a></li>
+<li><a
+href="https://github.com/pypa/gh-action-pypi-publish"><code>pypa/gh-action-pypi-publish</code></a></li>
+<li><a
+href="https://docs.github.com/en/actions/deployment/targeting-different-environments">GitHub
+Environments</a></li>
+<li><a href="https://semver.org/">Semantic Versioning</a></li>
+</ul>
+<hr />
+<h1 id="adr-001-line-anchored-completion-signal">ADR-001 Line-Anchored
+Completion Signal</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/001-line-anchored-completion-signal.md</code></em></p>
+<h1 id="adr-001-line-anchored-completion-signal-1">ADR-001:
+Line-Anchored Completion Signal</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-16
+<strong>Deciders:</strong> Alex, Claude Opus 4.6</p>
+<h2 id="context">Context</h2>
+<p>The roadmap loop terminates when Claude outputs
+<code>ROADMAP_COMPLETE</code>. The original implementation used a
+substring match (<code>"ROADMAP_COMPLETE" in last_msg</code>), which
+triggered on any assistant message containing the literal — including
+quoted references, error explanations, CLAUDE.md excerpts, and the task
+brief itself (which embedded the string as a hint).</p>
+<p>Two independent code reviews flagged this as high-risk. The task
+brief generated by <code>_build_task_brief()</code> literally contained
+<code>ROADMAP_COMPLETE</code> on a line that could match, creating a
+self-triggering loop termination path.</p>
+<h2 id="decision">Decision</h2>
+<p>Replace the substring match with a line-anchored regex
+(<code>^\s*ROADMAP_COMPLETE\s*$</code>) applied only to the <strong>last
+non-empty line</strong> of <code>last_assistant_message</code>.
+Additionally, <code>_build_task_brief()</code> no longer emits the
+sentinel as a bare matchable line — it describes the signal in prose
+instead.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Eliminated:</strong> False-positive termination from
+quoting, echoing instructions, or log excerpts.</li>
+<li><strong>Preserved:</strong> Intentional termination when Claude
+outputs the sentinel on its own trailing line.</li>
+<li><strong>Trade-off:</strong> If Claude buries
+<code>ROADMAP_COMPLETE</code> mid-message with trailing text, it won’t
+trigger. This is intentional — the signal must be deliberate.</li>
+<li><strong>Test coverage:</strong> 9 test cases in
+<code>tests/test_roadrunner.py::TestCompletionSignal</code> cover bare
+signal, trailing newline, leading text, whitespace, substring non-match,
+mid-message non-match, and empty input.</li>
+</ul>
+<hr />
+<h1 id="adr-002-check-stop-in-progress-awareness">ADR-002 check-stop
+In-Progress Awareness</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/002-check-stop-in-progress-awareness.md</code></em></p>
+<h1 id="adr-002-check-stop-in-progress-task-awareness">ADR-002:
+Check-Stop In-Progress Task Awareness</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-16
+<strong>Deciders:</strong> Alex, Claude Opus 4.6</p>
+<h2 id="context-1">Context</h2>
+<p><code>cmd_check_stop</code> determined whether work remained by
+calling <code>next_eligible_task()</code>, which only returns tasks with
+<code>status == "todo"</code>. After <code>cmd_start</code>, the active
+task transitions to <code>in_progress</code> — making it invisible to
+the eligibility check. If Claude responded before calling
+<code>complete</code> (e.g., to ask a question, or on context overflow),
+<code>check-stop</code> would declare “All tasks complete” and prompt
+for <code>ROADMAP_COMPLETE</code>, even though a task was
+mid-flight.</p>
+<p>This was the highest-severity finding in the code review
+reconciliation.</p>
+<h2 id="decision-1">Decision</h2>
+<p><code>cmd_check_stop</code> now checks for in-progress tasks before
+checking for eligible tasks:</p>
+<ol type="1">
+<li><code>active_task(tasks)</code> returns the first
+<code>in_progress</code> task.</li>
+<li>If found, emit a <code>RESUME IN-PROGRESS TASK</code> brief instead
+of the “all complete” message.</li>
+<li>Only declare completion when no <code>todo</code>,
+<code>in_progress</code>, or <code>blocked</code> tasks remain.</li>
+</ol>
+<p>The priority order in check-stop is now: 1.
+<code>stop_hook_active</code> → allow stop (infinite loop guard) 2.
+Iteration cap → hard stop 3. <code>ROADMAP_COMPLETE</code> signal →
+allow stop 4. <strong>In-progress task → resume brief</strong> (new) 5.
+Eligible todo task → task brief 6. Blocked tasks → report blocked 7.
+Non-done tasks → report anomaly 8. All done → prompt for completion
+signal</p>
+<h2 id="consequences-1">Consequences</h2>
+<ul>
+<li><strong>Fixed:</strong> Claude can now respond mid-task without the
+loop incorrectly terminating.</li>
+<li><strong>New behavior:</strong> The
+<code>RESUME IN-PROGRESS TASK</code> header in the brief distinguishes a
+resumption from a fresh task start.</li>
+<li><strong>Test coverage:</strong>
+<code>TestCheckStop::test_resumes_in_progress</code> verifies this
+path.</li>
+</ul>
+<hr />
+<h1 id="adr-003-retry-storm-prevention">ADR-003 Retry Storm
+Prevention</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/003-retry-storm-prevention.md</code></em></p>
+<h1 id="adr-003-per-task-attempt-counter-and-auto-block">ADR-003:
+Per-Task Attempt Counter and Auto-Block</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-16
+<strong>Deciders:</strong> Alex, Claude Opus 4.6</p>
+<h2 id="context-2">Context</h2>
+<p>If Claude repeatedly fails validation on a task, the loop retries
+indefinitely — each iteration costs tokens with no progress. Research on
+agentic loop failure modes (Tianpan 2026) documents 200x cost
+amplification from unbounded retry loops. Roadrunner had no mechanism to
+detect or break this pattern; the only escape was the global iteration
+cap (which may be set high for legitimate long roadmaps).</p>
+<h2 id="decision-2">Decision</h2>
+<p>Extend <code>.roadmap_state.json</code> with an
+<code>attempts_per_task</code> dictionary. Each time
+<code>cmd_check_stop</code> resumes an in-progress task, the counter for
+that task increments. When a task reaches <code>MAX_TASK_ATTEMPTS</code>
+(default 5, configurable via <code>--max-attempts</code>), the task is
+automatically set to <code>blocked</code> with a changelog entry
+explaining why.</p>
+<pre class="json"><code>{
+  &quot;current_task_id&quot;: &quot;TASK-003&quot;,
+  &quot;iteration&quot;: 12,
+  &quot;attempts_per_task&quot;: {
+    &quot;TASK-001&quot;: 1,
+    &quot;TASK-002&quot;: 1,
+    &quot;TASK-003&quot;: 4
+  }
+}</code></pre>
+<h2 id="alternatives-considered">Alternatives Considered</h2>
+<ul>
+<li><strong>Validation-result hashing:</strong> Only count attempts
+where validation fails identically. More precise but adds complexity;
+deferred.</li>
+<li><strong>Exponential backoff:</strong> Delay between retries. Not
+applicable — Claude Code doesn’t support sleep between iterations.</li>
+<li><strong>Global-only cap:</strong> Rely on
+<code>--max-iterations</code>. Too coarse — a 50-task roadmap with a
+50-iteration cap leaves no room for retries.</li>
+</ul>
+<h2 id="consequences-2">Consequences</h2>
+<ul>
+<li><strong>Prevents:</strong> Unbounded cost on stuck tasks.</li>
+<li><strong>Trade-off:</strong> A task that needs 6 legitimate attempts
+will be auto-blocked. Operator can unblock manually and the counter
+resets on re-start.</li>
+<li><strong>Trace logging:</strong> Auto-block events are recorded in
+<code>logs/trace.jsonl</code> with the attempt count.</li>
+<li><strong>Test coverage:</strong>
+<code>TestCheckStop::test_auto_block_after_max_attempts</code> verifies
+the path.</li>
+</ul>
+<hr />
+<h1 id="adr-004-atomic-writes-and-data-integrity">ADR-004 Atomic Writes
+and Data Integrity</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/004-atomic-writes-and-data-integrity.md</code></em></p>
+<h1 id="adr-004-atomic-file-writes-for-state-integrity">ADR-004: Atomic
+File Writes for State Integrity</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-16
+<strong>Deciders:</strong> Alex, Claude Opus 4.6</p>
+<h2 id="context-3">Context</h2>
+<p><code>save_tasks()</code> opened <code>tasks.yaml</code> for writing
+(truncating it), then wrote the new YAML content. A <code>SIGINT</code>
+or crash between truncation and write completion would leave the file
+empty or partially written, corrupting the task queue with no recovery
+path. For overnight unattended runs, this is an unacceptable data loss
+risk.</p>
+<h2 id="decision-3">Decision</h2>
+<p>Write to a temporary file (<code>tasks.yaml.tmp</code>),
+<code>fsync</code> the file descriptor, then atomically replace the
+original via <code>os.replace()</code>. On POSIX systems,
+<code>os.replace</code> is an atomic rename — the file is either fully
+old or fully new, never partial.</p>
+<pre class="python"><code>tmp_path = TASKS_FILE.with_suffix(TASKS_FILE.suffix + &quot;.tmp&quot;)
+with open(tmp_path, &quot;w&quot;) as f:
+    yaml.dump(data, f, ...)
+    f.flush()
+    os.fsync(f.fileno())
+os.replace(tmp_path, TASKS_FILE)</code></pre>
+<h2 id="consequences-3">Consequences</h2>
+<ul>
+<li><strong>Fixed:</strong> SIGINT mid-write can no longer corrupt the
+task queue.</li>
+<li><strong>Trade-off:</strong> Slightly more disk I/O (write + rename
+vs. write in place). Negligible for a file under 10KB.</li>
+<li><strong>Update (2026-04-16):</strong> <code>write_state()</code> now
+also uses the temp-file + fsync + <code>os.replace()</code> pattern,
+matching <code>save_tasks()</code>. Both state files are now
+crash-safe.</li>
+</ul>
+<hr />
+<h1 id="adr-005-absolute-hook-paths">ADR-005 Absolute Hook Paths</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/005-absolute-hook-paths.md</code></em></p>
+<h1 id="adr-005-absolute-hook-paths-via-claude_project_dir">ADR-005:
+Absolute Hook Paths via $CLAUDE_PROJECT_DIR</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-16
+<strong>Deciders:</strong> Alex, Claude Opus 4.6</p>
+<h2 id="context-4">Context</h2>
+<p>Hook commands in <code>.claude/settings.json</code> used relative
+paths (<code>bash hooks/stop_hook.sh</code>). Claude Code hook
+documentation states that hook commands execute in the current working
+directory, which can change during a session. If Claude <code>cd</code>s
+into a subdirectory (e.g., <code>tasks/</code>, <code>logs/</code>), the
+relative path resolves from the wrong directory and the hook silently
+fails to execute.</p>
+<h2 id="decision-4">Decision</h2>
+<p>Use the <code>$CLAUDE_PROJECT_DIR</code> environment variable
+(provided by Claude Code at hook invocation time) to root all hook
+paths:</p>
+<pre class="json"><code>&quot;command&quot;: &quot;bash \&quot;$CLAUDE_PROJECT_DIR\&quot;/hooks/stop_hook.sh&quot;</code></pre>
+<p>This is the pattern recommended in the official Claude Code hooks
+documentation.</p>
+<h2 id="consequences-4">Consequences</h2>
+<ul>
+<li><strong>Fixed:</strong> Hooks execute correctly regardless of
+Claude’s current working directory.</li>
+<li><strong>Dependency:</strong> Requires Claude Code to set
+<code>$CLAUDE_PROJECT_DIR</code>. If the variable is unset, the command
+resolves to <code>/hooks/...</code> which will fail — but this would
+indicate a Claude Code runtime issue, not a roadrunner configuration
+error.</li>
+<li><strong>Verified:</strong> Tested by running the stop hook from
+<code>cwd=/tmp</code> with <code>CLAUDE_PROJECT_DIR</code> set to the
+project root.</li>
+</ul>
+<hr />
+<h1 id="adr-006-structured-trace-logging">ADR-006 Structured Trace
+Logging</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/006-structured-trace-logging.md</code></em></p>
+<h1 id="adr-006-structured-json-trace-logging">ADR-006: Structured JSON
+Trace Logging</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-16
+<strong>Deciders:</strong> Alex, Claude Opus 4.6</p>
+<h2 id="context-5">Context</h2>
+<p>Roadrunner’s only logging was markdown-for-humans:
+<code>logs/CHANGELOG.md</code> and per-task
+<code>logs/TASK-XXX.md</code>. Reconstructing what happened during an
+overnight run required reading multiple markdown files in order. There
+was no machine-parseable record of which iteration ran which command
+with which exit code and how long it took.</p>
+<p>This matches the “no observability” anti-pattern identified in
+agentic loop failure-mode literature.</p>
+<h2 id="decision-5">Decision</h2>
+<p>Add a JSON Lines trace log at <code>logs/trace.jsonl</code>. One line
+per event, compact JSON (no pretty-print). Events are emitted from key
+lifecycle points:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Event</th>
+<th>Emitted from</th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>check_stop</code></td>
+<td><code>cmd_check_stop</code></td>
+<td><code>task_id</code>, <code>iteration</code>,
+<code>max_iter</code></td>
+</tr>
+<tr>
+<td><code>task_start</code></td>
+<td><code>cmd_start</code></td>
+<td><code>task_id</code>, <code>iteration</code></td>
+</tr>
+<tr>
+<td><code>task_complete</code></td>
+<td><code>cmd_complete</code></td>
+<td><code>task_id</code>, <code>iteration</code></td>
+</tr>
+<tr>
+<td><code>task_block</code></td>
+<td><code>cmd_block</code></td>
+<td><code>task_id</code>, <code>iteration</code>,
+<code>notes</code></td>
+</tr>
+<tr>
+<td><code>auto_block</code></td>
+<td><code>cmd_check_stop</code></td>
+<td><code>task_id</code>, <code>iteration</code>, <code>attempts</code>,
+<code>max_attempts</code></td>
+</tr>
+<tr>
+<td><code>validation_command</code></td>
+<td><code>run_validation</code></td>
+<td><code>task_id</code>, <code>iteration</code>, <code>command</code>,
+<code>exit_code</code>, <code>duration_ms</code></td>
+</tr>
+<tr>
+<td><code>validation_complete</code></td>
+<td><code>run_validation</code></td>
+<td><code>task_id</code>, <code>iteration</code>, <code>passed</code>,
+<code>total</code></td>
+</tr>
+</tbody>
+</table>
+<p>Every record includes <code>ts</code> (ISO 8601 UTC timestamp).</p>
+<h2 id="consequences-5">Consequences</h2>
+<ul>
+<li><strong>Enables:</strong> <code>jq</code> queries over overnight
+runs (e.g.,
+<code>jq 'select(.event=="auto_block")' logs/trace.jsonl</code>).</li>
+<li><strong>Coexists:</strong> Markdown logs remain for human
+readability. Trace log is the machine-parseable complement.</li>
+<li><strong>Growth:</strong> Trace log grows linearly with iterations. A
+50-iteration run with 3 validation commands per task produces ~200 lines
+(~40KB). Acceptable without rotation.</li>
+<li><strong>Not addressed:</strong> No log rotation, no remote shipping,
+no metrics counters. These are future concerns if roadrunner moves to
+multi-project or team use.</li>
+</ul>
+<hr />
+<h1 id="adr-007-dead-hook-cleanup">ADR-007 Dead Hook Cleanup</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/007-dead-hook-cleanup.md</code></em></p>
+<h1 id="adr-007-dead-hook-cleanup-1">ADR-007: Dead Hook Cleanup</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-16
+<strong>Deciders:</strong> Alex, Claude Opus 4.6</p>
+<h2 id="context-6">Context</h2>
+<p>An independent analysis flagged three pieces of dead configuration in
+the hook system. All three were verified against the official Claude
+Code hooks documentation
+(https://docs.claude.com/en/docs/claude-code/hooks) using Ref and Exa
+MCP tools.</p>
+<h3 id="finding-1-taskcompleted-hook-never-fires">Finding 1:
+TaskCompleted hook never fires</h3>
+<p>The <code>TaskCompleted</code> event fires only in two situations: 1.
+When any agent explicitly marks a task as completed through the
+<strong>TaskUpdate</strong> tool. 2. When an <strong>agent team
+teammate</strong> finishes its turn with in-progress tasks.</p>
+<p>Roadrunner uses neither <code>TaskUpdate</code> nor agent teams. It
+completes tasks via <code>roadrunner.py complete</code>, which is a
+subprocess call — invisible to Claude Code’s hook system. The hook was
+dead code that never fired during any session.</p>
+<p>The <code>task_id</code> in the TaskCompleted payload is Claude’s
+internal task identifier (e.g., <code>"task-001"</code>), not roadmap
+IDs like <code>"TASK-001"</code>. Even if the hook fired, the ID
+namespace mismatch would prevent correct routing.</p>
+<h3 id="finding-2-multiedit-matcher-is-dead-config">Finding 2: MultiEdit
+matcher is dead config</h3>
+<p>The PostToolUse hook matcher was <code>"Write|Edit|MultiEdit"</code>.
+There is no <code>MultiEdit</code> tool in Claude Code — only
+<code>Write</code> and <code>Edit</code>. The <code>MultiEdit</code>
+branch never matches.</p>
+<h3 id="finding-3-precompact-does-not-support-additionalcontext">Finding
+3: PreCompact does not support additionalContext</h3>
+<p>The <code>write_context_snapshot()</code> function printed
+<code>{"additionalContext": "..."}</code> to stdout, expecting
+PreCompact to inject it into the compacted context. Per the docs,
+PreCompact supports only <code>decision: "block"</code> for output. The
+<code>additionalContext</code> field is supported by SessionStart,
+UserPromptSubmit, PreToolUse, PostToolUse, Notification, and
+SubagentStart — but not PreCompact or PostCompact. The print was
+silently ignored.</p>
+<h2 id="decision-6">Decision</h2>
+<ol type="1">
+<li><strong>Delete the TaskCompleted hook</strong> — remove from
+<code>settings.json</code> and delete
+<code>hooks/task_completed_hook.sh</code>. Validation gating is already
+handled by <code>cmd_complete</code> in Python.</li>
+<li><strong>Fix the PostToolUse matcher</strong> — change to
+<code>"Write|Edit"</code>.</li>
+<li><strong>Remove the dead <code>print()</code> from
+<code>write_context_snapshot()</code></strong> — keep only the file
+write.</li>
+<li><strong>Add a SessionStart hook</strong> — reads
+<code>.context_snapshot.json</code> and emits
+<code>additionalContext</code> (which IS supported by SessionStart).
+This provides the context injection that PreCompact was incorrectly
+attempting.</li>
+</ol>
+<h2 id="consequences-6">Consequences</h2>
+<ul>
+<li><strong>Removed:</strong> ~60 lines of dead hook code and
+config.</li>
+<li><strong>Added:</strong> <code>hooks/session_start_hook.sh</code>
+(~50 lines) that correctly injects roadmap state on session
+start/resume.</li>
+<li><strong>Net effect:</strong> Roadmap state now actually reaches
+Claude’s context after compaction (via SessionStart), whereas before it
+was silently discarded (via PreCompact).</li>
+<li><strong>Validation gate unchanged:</strong>
+<code>cmd_complete</code> in <code>roadrunner.py</code> re-runs
+<code>run_validation</code> before flipping status — this was always the
+real gate, not the TaskCompleted hook.</li>
+</ul>
+<hr />
+<h1 id="adr-008-validation-timeout-and-task-id-sanitization">ADR-008
+Validation Timeout and Task ID Sanitization</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/008-validation-timeout-and-task-id-sanitization.md</code></em></p>
+<h1 id="adr-008-validation-timeout-and-task-id-sanitization-1">ADR-008:
+Validation Timeout and Task ID Sanitization</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-16
+<strong>Deciders:</strong> Alex, Claude Opus 4.6</p>
+<h2 id="context-7">Context</h2>
+<p>An architecture review (2026-04-15) identified two open risks in
+<code>roadrunner.py</code>:</p>
+<ol type="1">
+<li><p><strong>No subprocess timeout.</strong>
+<code>run_validation()</code> called <code>subprocess.run()</code>
+without a <code>timeout</code> parameter. A hanging validation command
+(network wait, deadlock, infinite loop) would block the entire roadmap
+loop indefinitely with no recovery path. Every fault-tolerance guide for
+agentic systems lists unbounded execution as a top
+anti-pattern.</p></li>
+<li><p><strong>No task ID sanitization.</strong> Task IDs flowed
+unsanitized into file paths (<code>ROOT / f".reset_{task_id}"</code>,
+<code>LOGS_DIR / f"{task['id']}.md"</code>) and git branch names
+(<code>f"roadrunner/{task_id}"</code>). A task ID containing
+<code>../</code> could write files outside the project directory. Low
+risk for single-operator use, but a latent path traversal
+vulnerability.</p></li>
+</ol>
+<h2 id="decision-7">Decision</h2>
+<h3 id="subprocess-timeout">Subprocess timeout</h3>
+<p>Add <code>timeout</code> parameter to <code>subprocess.run()</code>
+in <code>run_validation()</code>:</p>
+<ul>
+<li>Default: 300 seconds (<code>DEFAULT_VALIDATION_TIMEOUT</code>)</li>
+<li>Per-task override: <code>validation_timeout</code> field in
+<code>tasks.yaml</code></li>
+<li>On <code>TimeoutExpired</code>: catch the exception, report as a
+validation failure with <code>returncode: -1</code> and
+<code>timed_out: True</code> in the result dict</li>
+<li><code>TimeoutExpired.stdout</code>/<code>.stderr</code> are
+<code>bytes | None</code> even with <code>text=True</code> (exception
+fires before text decoding) — decode with
+<code>errors="replace"</code></li>
+</ul>
+<pre class="python"><code>try:
+    result = subprocess.run(cmd, shell=True, ..., timeout=timeout)
+except subprocess.TimeoutExpired as exc:
+    passed = False
+    stdout = (exc.stdout or b&quot;&quot;).decode(errors=&quot;replace&quot;).strip()[:500]
+    stderr = (exc.stderr or b&quot;&quot;).decode(errors=&quot;replace&quot;).strip()[:500]
+    returncode = -1</code></pre>
+<h3 id="task-id-sanitization">Task ID sanitization</h3>
+<p>Add regex validation in <code>validate_task_schema()</code>:</p>
+<ul>
+<li>Pattern: <code>^[A-Z]+-\d+$</code> (matches <code>TASK-001</code>,
+<code>FEAT-12</code>, <code>BUG-1</code>, etc.)</li>
+<li>Rejects: <code>../etc</code>, empty strings, lowercase, spaces,
+shell metacharacters</li>
+<li>Fires on every <code>load_tasks()</code> call (schema validation
+runs per-task)</li>
+</ul>
+<p>Also validate <code>validation_timeout</code> if present: must be a
+positive number.</p>
+<h3 id="empty-yaml-guard">Empty YAML guard</h3>
+<p><code>yaml.safe_load()</code> returns <code>None</code> for empty
+files. Added <code>or {}</code> guard in <code>load_tasks()</code> to
+prevent <code>AttributeError</code>.</p>
+<h2 id="consequences-7">Consequences</h2>
+<ul>
+<li><strong>Fixed:</strong> Hanging validation commands now fail after
+timeout instead of blocking forever.</li>
+<li><strong>Fixed:</strong> Path traversal via malicious task IDs is no
+longer possible.</li>
+<li><strong>Fixed:</strong> Empty <code>tasks.yaml</code> returns an
+empty task list instead of crashing.</li>
+<li><strong>Trade-off:</strong> The 300s default timeout may be too
+short for very long test suites. Operators can override per-task with
+<code>validation_timeout</code>.</li>
+<li><strong>Trade-off:</strong> The <code>^[A-Z]+-\d+$</code> regex is
+strict — task IDs like <code>my-task</code> or <code>task_1</code> are
+rejected. This matches the established convention (<code>TASK-001</code>
+through <code>TASK-006</code>) and prevents the entire class of
+injection attacks.</li>
+<li><strong>Test coverage:</strong> 14 new tests cover timeout handling
+(including None output edge case), task ID validation (path traversal,
+empty, spaces, lowercase), corrupt input (invalid YAML, invalid JSON,
+empty YAML), and circular dependency behavior.</li>
+</ul>
+<hr />
+<h1 id="adr-009-state-schema-versioning-and-concurrency-lock">ADR-009
+State Schema Versioning and Concurrency Lock</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/009-state-schema-versioning-and-concurrency-lock.md</code></em></p>
+<h1 id="adr-009-state-schema-versioning-and-concurrency-lock-1">ADR-009:
+State Schema Versioning and Concurrency Lock</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-17
+<strong>Deciders:</strong> Alex, Claude Opus 4.7</p>
+<h2 id="context-8">Context</h2>
+<p>A second-pass audit (Opus 4.7, 2026-04-16) identified two correctness
+gaps in the state-management layer:</p>
+<ol type="1">
+<li><p><strong>No schema version on <code>.roadmap_state.json</code> /
+<code>.context_snapshot.json</code>.</strong> If the shape of either
+file changes in a future release — adding, renaming, or retyping a field
+— <code>read_state()</code> has no way to distinguish a current-format
+file from a newer one. A downgrade that read a newer file would silently
+corrupt it on the next write.</p></li>
+<li><p><strong>No lock around the read→increment→write span in
+<code>cmd_check_stop</code>.</strong> The function reads
+<code>.roadmap_state.json</code>, increments the iteration counter,
+optionally increments the per-task attempt counter, and writes back. Two
+concurrent Stop-hook fires can interleave the two reads and two writes
+so that one increment is lost. The project is documented
+single-operator, but “documented” is not “enforced”; a single Claude
+Code session running with parallel tool calls is all it takes for the
+race to become reachable.</p></li>
+</ol>
+<p>Both issues are “won’t bite today, could silently bite tomorrow.”
+Either one costs a few lines of code to close.</p>
+<h2 id="decision-8">Decision</h2>
+<h3 id="schema-versioning">Schema versioning</h3>
+<ul>
+<li>Add module-level constants <code>STATE_SCHEMA_VERSION = 1</code> and
+<code>SNAPSHOT_SCHEMA_VERSION = 1</code> to <code>roadrunner.py</code>
+(Tunables section).</li>
+<li><code>write_state()</code> and <code>write_context_snapshot()</code>
+always emit <code>"schema_version": &lt;N&gt;</code> as the first field
+of their JSON output.</li>
+<li><code>read_state()</code> interprets the field with these rules:
+<ul>
+<li><strong>Missing</strong> → treat as v1 (backward compatible with
+legacy files from before this ADR).</li>
+<li><strong>Equal to <code>STATE_SCHEMA_VERSION</code></strong> → normal
+path.</li>
+<li><strong>Greater than <code>STATE_SCHEMA_VERSION</code></strong> →
+<code>sys.exit(2)</code> with an operator-facing message pointing at the
+specific file and suggesting upgrade / manual migration. Crucially, the
+on-disk file is <strong>not</strong> overwritten, so an accidental
+downgrade does not destroy forward-compat state.</li>
+</ul></li>
+</ul>
+<h3 id="concurrency-lock">Concurrency lock</h3>
+<ul>
+<li>Add a <code>@contextmanager</code> helper
+<code>_exclusive_state_lock()</code> backed by
+<code>fcntl.flock(LOCK_EX)</code> on a sibling
+<code>.roadmap_state.lock</code> file.</li>
+<li>The lockfile is separate from the state file itself because
+<code>os.replace(tmp, STATE_FILE)</code> during <code>write_state</code>
+would invalidate any fd held on <code>STATE_FILE</code>.</li>
+<li><code>cmd_check_stop</code> wraps the entire body after the
+<code>stop_hook_active</code> guard in the context manager.
+<code>SystemExit</code> from any <code>sys.exit(...)</code> still runs
+<code>finally</code> and releases the lock.</li>
+<li>On Windows (<code>fcntl</code> unavailable) the helper is a no-op —
+Windows is explicitly not a target platform per DESIGN.md, but the
+module must remain importable there for <code>pip install</code>-time
+setup.</li>
+</ul>
+<h2 id="alternatives-considered-1">Alternatives considered</h2>
+<ul>
+<li><strong>SQLite-backed state:</strong> would give locking, schemas,
+and migrations for free — but introduces a real dependency and breaks
+the “copy three files into another project” install story. Out of
+proportion for the problem.</li>
+<li><strong>Lock the state file directly:</strong> rejected because
+<code>os.replace</code> invalidates held locks on the original
+inode.</li>
+<li><strong>Migration-on-read for newer files:</strong> deferred. Today
+there are no v2/v3 migrations to define. When a format change lands, the
+migration lives alongside the bump.</li>
+<li><strong>Schema check that returns defaults instead of
+exiting:</strong> the read could warn-and-default, but the caller then
+writes v1 and overwrites the forward-compat file. Exiting is louder and
+strictly safer.</li>
+</ul>
+<h2 id="consequences-8">Consequences</h2>
+<ul>
+<li>Any state file or snapshot written by a post-ADR-009 roadrunner is
+readable by any later version that preserves backward
+compatibility.</li>
+<li>A future roadrunner that bumps <code>STATE_SCHEMA_VERSION = 2</code>
+can ship migration logic with confidence that older files are detectable
+and newer files are protected.</li>
+<li>Concurrent Stop-hook fires now serialize at the flock boundary
+instead of racing on the state JSON. Single-operator semantics are now
+enforced, not just documented.</li>
+<li>Adds <code>.roadmap_state.lock</code> to the set of session-local
+runtime files (gitignored).</li>
+</ul>
+<h2 id="test-coverage">Test coverage</h2>
+<ul>
+<li><code>TestStateSchemaVersion::test_write_includes_schema_version</code></li>
+<li><code>TestStateSchemaVersion::test_legacy_state_without_version_reads_as_v1</code></li>
+<li><code>TestStateSchemaVersion::test_future_schema_version_exits_and_preserves_file</code></li>
+<li><code>TestStateSchemaVersion::test_snapshot_includes_schema_version</code></li>
+<li><code>TestCheckStopLock::test_lock_serializes_concurrent_increments</code>
+(two-thread race under <code>threading.Barrier</code>)</li>
+</ul>
+<h2 id="references-1">References</h2>
+<ul>
+<li>Schema evolution best-practices reading: oneuptime.com “How to Fix
+Schema Evolution Issues” (2026-01); conduktor.io “Schema Evolution Best
+Practices” (2026-04).</li>
+<li>Python <code>fcntl</code> stdlib documentation for POSIX advisory
+locking.</li>
+<li>Implementation commit: <code>7ea3f06</code>.</li>
+</ul>
+<hr />
+<h1 id="adr-010-hook-python-entrypoint-unification">ADR-010 Hook Python
+Entrypoint Unification</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/010-hook-python-entrypoint-unification.md</code></em></p>
+<h1 id="adr-010-hook-python-entry-point-unification">ADR-010: Hook →
+Python Entry Point Unification</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-17
+<strong>Deciders:</strong> Alex, Claude Opus 4.7</p>
+<h2 id="context-9">Context</h2>
+<p>The project historically grew two different patterns for how a bash
+hook delegated to Python:</p>
+<ul>
+<li><strong><code>hooks/precompact_hook.sh</code></strong> called
+<code>python3 "$PROJECT_ROOT/roadrunner.py" snapshot</code> — one
+subcommand dispatched from the main CLI module.</li>
+<li><strong><code>hooks/session_start_hook.sh</code></strong> called a
+small dedicated helper, <code>hooks/_session_start.py</code>, which read
+<code>.context_snapshot.json</code> and emitted the
+<code>hookSpecificOutput</code> JSON.</li>
+</ul>
+<p>Both patterns worked. The second-pass audit (Opus 4.7, 2026-04-16)
+flagged the inconsistency as a nit (N4) — two ways to do the same thing
+makes the codebase harder to learn than necessary. Every new reader has
+to figure out <em>why</em> one hook reaches into
+<code>roadrunner.py</code> and the other reaches into a sibling
+file.</p>
+<p>Other operational differences between the two patterns:</p>
+<ul>
+<li>The dedicated helper had its own import path and exception-handling
+discipline that could drift from <code>roadrunner.py</code>’s
+(e.g. <code>ensure_ascii=False</code> had to be fixed in two places
+during M4).</li>
+<li>The helper was not covered by the module-level TypedDicts or
+Tunables block, so any schema change to the snapshot had to be
+propagated twice.</li>
+<li>Testing wanted both files copied into tmp projects, doubling the
+surface area of the integration tests.</li>
+</ul>
+<h2 id="decision-9">Decision</h2>
+<p>Promote the helper’s logic into a <code>cmd_session_start</code>
+subcommand on <code>roadrunner.py</code> and delete
+<code>hooks/_session_start.py</code>.</p>
+<ul>
+<li>New subcommand <code>python3 roadrunner.py session-start</code>
+reads <code>.context_snapshot.json</code> and emits the same
+<code>hookSpecificOutput</code> JSON as before. Silent no-op when the
+snapshot is missing or corrupt.</li>
+<li><code>hooks/session_start_hook.sh</code> becomes a one-liner that
+mirrors <code>precompact_hook.sh</code>: derive
+<code>PROJECT_ROOT</code> from <code>BASH_SOURCE</code>, call
+<code>python3 "$PROJECT_ROOT/roadrunner.py" session-start</code>.</li>
+<li><code>hooks/_session_start.py</code> is removed from the repo.</li>
+</ul>
+<h2 id="alternatives-considered-2">Alternatives considered</h2>
+<ul>
+<li><strong>Move <code>cmd_snapshot</code>’s logic out of
+<code>roadrunner.py</code> into a new
+<code>hooks/_precompact.py</code></strong> — inverse of the chosen
+direction. Rejected because it would scatter Python logic across
+multiple files and prevent reuse of <code>load_tasks</code>,
+<code>read_state</code>, <code>write_context_snapshot</code> without
+re-importing <code>roadrunner</code> anyway.</li>
+<li><strong>Leave the two patterns alone.</strong> Documented as
+intentional at the time — but re-examined: the helper had no real
+justification beyond historical accident. Unifying costs ~30 lines and
+removes one file.</li>
+<li><strong>Extract a shared <code>hooks/_common.py</code>.</strong>
+Overkill for the amount of logic involved.</li>
+</ul>
+<h2 id="consequences-9">Consequences</h2>
+<ul>
+<li>All Python logic invoked by hooks now lives in
+<code>roadrunner.py</code>. One file to read, one import graph to
+maintain, one set of Tunables and TypedDicts to keep current.</li>
+<li>The <code>session-start</code> subcommand is operator-invokable
+(<code>python3 roadrunner.py session-start</code>) for debugging — same
+ergonomics as <code>snapshot</code>, <code>health</code>,
+<code>status</code>.</li>
+<li>Existing <code>tests/test_hooks.py::TestSessionStartHook</code>
+keeps working with the new pattern; test staging now copies
+<code>roadrunner.py</code> into the tmp root instead of
+<code>_session_start.py</code>.</li>
+<li>New direct tests in
+<code>tests/test_roadrunner.py::TestSessionStart</code> cover the three
+paths (no snapshot, valid snapshot, corrupt snapshot) without needing a
+bash subprocess.</li>
+</ul>
+<h2 id="test-coverage-1">Test coverage</h2>
+<ul>
+<li><code>TestSessionStart::test_session_start_without_snapshot_is_silent</code></li>
+<li><code>TestSessionStart::test_session_start_with_snapshot_emits_additional_context</code></li>
+<li><code>TestSessionStart::test_session_start_with_corrupt_snapshot_is_silent</code></li>
+<li><code>TestSessionStartHook::test_with_snapshot</code> (existing,
+unchanged)</li>
+<li><code>TestSessionStartHook::test_without_snapshot</code> (updated to
+stage <code>roadrunner.py</code> into tmp)</li>
+</ul>
+<h2 id="references-2">References</h2>
+<ul>
+<li>Claude Code hooks reference: <a
+href="https://code.claude.com/docs/en/hooks.md"
+class="uri">https://code.claude.com/docs/en/hooks.md</a></li>
+<li>Implementation commit: this ADR.</li>
+</ul>
+<hr />
+<h1 id="adr-011-roadmap-vs-hotfix-commit-convention">ADR-011 Roadmap vs
+Hotfix Commit Convention</h1>
+<p><em>Source:
+<code>/Users/alex/dev/projects/roadrunner-cli/docs/adr/011-roadmap-vs-hotfix-commit-convention.md</code></em></p>
+<h1 id="adr-011-roadmap-vs-hotfix-commit-convention-1">ADR-011: Roadmap
+vs Hotfix Commit Convention</h1>
+<p><strong>Status:</strong> Accepted <strong>Date:</strong> 2026-04-25
+<strong>Deciders:</strong> Alex, principal_engineer</p>
+<h2 id="context-10">Context</h2>
+<p>Roadrunner-cli runs two parallel streams of change:</p>
+<ol type="1">
+<li><strong>Planned roadmap work.</strong> Tasks defined in
+<code>tasks/tasks.yaml</code>, executed by the loop, committed under
+their task ID.</li>
+<li><strong>Observation-driven hotfixes.</strong> Patches Alex (or a
+reviewer) writes by hand while watching a live run, addressing bugs
+surfaced by the loop itself before they show up in the plan. Examples to
+date: ROAD-021 (<code>roadrunner commit</code> scope-aware staging),
+ROAD-023/ROAD-025 (state + branch correctness), ROAD-028 (instructional
+SessionStart), ROAD-031 (<code>push_on_complete</code> config).</li>
+</ol>
+<p>Both streams are legitimate. Hotfixes especially are a healthy
+dogfooding signal: when the loop reveals a problem, patching it
+immediately beats bureaucratically routing it through the task queue and
+waiting a session.</p>
+<p>The audit on 2026-04-24 found that these five commits referenced
+ROAD-021/023/025/028/031, IDs that do not exist in the live
+<code>tasks.yaml</code>. To a future reader (or to the eventual DevOps
+agent), there is no way to tell from the commit subject whether a
+<code>(ROAD-NNN)</code> scope means “this was a planned task that
+shipped” or “this was a hotfix and the ID is just a label.” The audit
+trail is ambiguous.</p>
+<h2 id="decision-10">Decision</h2>
+<p>Adopt a two-track commit subject convention and a hotfix log to
+disambiguate the streams.</p>
+<h3 id="commit-subject-format">Commit subject format</h3>
+<ul>
+<li><p><strong>Roadmap work</strong> (task ID exists in
+<code>tasks/tasks.yaml</code> on <code>main</code>):
+<code>&lt;type&gt;(ROAD-&lt;num&gt;): &lt;imperative summary&gt;</code>
+Example:
+<code>feat(ROAD-001): pyproject.toml — pip-installable packaging</code></p></li>
+<li><p><strong>Hotfix / observation-driven</strong> (no roadmap task;
+written reactively against a live run):
+<code>&lt;type&gt;(hotfix): &lt;imperative summary&gt;</code> Example:
+<code>fix(hotfix): clear current_task_id on cmd_complete</code> No task
+ID in the scope. The date is already captured by the commit timestamp;
+<code>(hotfix)</code> reads more clearly at a glance in
+<code>git log --oneline</code> than <code>(obs-2026-04-23)</code>
+would.</p></li>
+<li><p><strong>Pure chore / docs / refactor</strong> unrelated to either
+stream: <code>&lt;type&gt;: &lt;imperative summary&gt;</code> with no
+scope.</p></li>
+</ul>
+<p>Conventional commit types apply: <code>feat</code>, <code>fix</code>,
+<code>chore</code>, <code>docs</code>, <code>refactor</code>,
+<code>test</code>, <code>ci</code>.</p>
+<h3 id="hotfix-log">Hotfix log</h3>
+<p>Maintain <code>docs/hotfix-log.md</code> as an append-only ledger.
+One entry per hotfix commit. Each entry records:</p>
+<ul>
+<li>Date</li>
+<li>Commit SHA</li>
+<li>Symptom observed during the live run</li>
+<li>Root cause</li>
+<li>Fix applied</li>
+<li>Whether a follow-up roadmap task is warranted</li>
+</ul>
+<p>Backfill the five existing observation-driven commits
+(ROAD-021/023/025/028/031) as the initial entries. They retain their
+historical subjects (rewriting public history is out of scope); the log
+makes the dual-track structure visible going forward.</p>
+<h3 id="ci-check-deferred-phase-2-only">CI check (deferred — Phase 2
+only)</h3>
+<p>A future linter could parse <code>(ROAD-\d+)</code> out of commit
+subjects on <code>main</code> and assert each ID resolves to a task in
+<code>tasks.yaml</code>. Unresolved IDs would be flagged as “probably
+should have been <code>(hotfix)</code>.” This is a warn-only
+convenience, not a gate. Not implemented in this ADR; revisit if the
+convention proves insufficient on its own.</p>
+<h2 id="alternatives-considered-3">Alternatives considered</h2>
+<ul>
+<li><strong><code>(obs-&lt;date&gt;)</code> scope for hotfixes.</strong>
+Rejected. The date is redundant with the commit timestamp, and
+<code>(hotfix)</code> reads more clearly in one-line log views.</li>
+<li><strong>Reuse <code>(ROAD-NNN)</code> for hotfixes with a separate
+ID range</strong> (e.g., 900+). Rejected. Mixing the ID space invites
+confusion: a reader cannot tell from the subject alone whether the ID
+resolves to a real task or to a hotfix label without consulting
+<code>tasks.yaml</code>.</li>
+<li><strong>No formal convention; rely on commit body to
+clarify.</strong> Rejected. The audit trail needs to be readable from
+<code>git log --oneline</code> without expanding bodies, and the
+dual-track distinction has to survive into a future where DevOps owns
+merges.</li>
+<li><strong>Rewrite the historical hotfix subjects to match.</strong>
+Rejected. The five existing commits are on <code>main</code> and on
+remotes; rewriting public history costs more than the log file
+does.</li>
+</ul>
+<h2 id="consequences-10">Consequences</h2>
+<ul>
+<li>New commits in either stream are unambiguous from the subject line
+alone.</li>
+<li>The hotfix log gives a permanent, append-only record of what
+observation-driven patches have shipped, separate from the roadmap.</li>
+<li>A reader (human or DevOps agent) can reconstruct “what was planned”
+vs “what was reactive” without grepping commit bodies.</li>
+<li>Existing <code>roadrunner commit</code> (from ROAD-021) does not
+need changes for this ADR. It already builds subjects from task IDs that
+live in <code>tasks.yaml</code>. The hotfix track is a hand-authored
+path and is unaffected by the scope-aware staging machinery.</li>
+<li>The hotfix log adds a small documentation discipline to each
+hand-authored fix. Skipping the log entry is a soft failure: the commit
+still lands, but the audit trail thins out.</li>
+</ul>
+<h2 id="test-coverage-2">Test coverage</h2>
+<ul>
+<li>ADR file present at
+<code>docs/adr/011-roadmap-vs-hotfix-commit-convention.md</code>.</li>
+<li><code>docs/hotfix-log.md</code> present with backfilled entries for
+ROAD-021, ROAD-023, ROAD-025, ROAD-028, ROAD-031.</li>
+<li>README links to both files via the existing ADR index reference
+(count bumped from “ten” to “eleven”).</li>
+<li>No code changes; no new test runner gates required.</li>
+</ul>
+<h2 id="references-3">References</h2>
+<ul>
+<li>Resolution plan, Issue 2:
+<code>docs/resolution-plan-2026-04-24.md</code> (when present in working
+tree).</li>
+<li>Backfilled hotfix commits: <code>81ecaf5</code> (ROAD-021),
+<code>afa2c60</code> (ROAD-023 + ROAD-025), <code>6328dd8</code>
+(ROAD-028), <code>f640fb9</code> (ROAD-031).</li>
+</ul>
+</body>
+</html>
