@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>task-board — unified backlog + kanban spec — P&amp;A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060d1f; --surface: #0d1b35; --surface-2: #111e3d; --surface-3: #0a1628;
+      --border: rgba(59,130,246,0.15); --border-strong: rgba(59,130,246,0.35);
+      --text: #e2e8f0; --muted: #94a3b8; --text-muted: #475569;
+      --primary: #3b82f6; --accent: #3b82f6;
+      --code-bg: #0a1628; --tag-bg: #111e3d; --tag-border: rgba(59,130,246,0.15);
+      --link: #93c5fd; --type-color: #a855f7;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 32px 32px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .back { font-size: 11px; color: var(--muted); text-decoration: none; font-family: var(--font-mono); }
+    .back:hover { color: var(--accent); }
+    .header-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .hero { border-bottom: 1px solid var(--border); padding: 32px; max-width: 860px; margin: 0 auto; }
+    .type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--type-color); font-family: var(--font-mono); margin-bottom: 10px; }
+    .type-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--type-color); }
+    .agent-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.3; margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; padding: 3px 8px; background: var(--tag-bg); border: 1px solid var(--tag-border); border-radius: 3px; color: var(--muted); font-family: var(--font-mono); }
+    article { max-width: 860px; margin: 0 auto; padding: 32px; }
+    article h1 { font-size: 20px; margin: 28px 0 12px; color: var(--accent); }
+    article h2 { font-size: 15px; margin: 28px 0 10px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    article h3 { font-size: 13px; margin: 20px 0 8px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+    article p { margin-bottom: 12px; }
+    article ul { margin: 8px 0 12px 20px; }
+    article ol { margin: 8px 0 12px 20px; }
+    article ul.checklist { list-style: none; margin-left: 4px; }
+    article li { margin-bottom: 4px; }
+    article hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    article a { color: var(--link); text-decoration: none; }
+    article a:hover { text-decoration: underline; }
+    article code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; color: #93c5fd; }
+    article pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0 16px; }
+    article pre code { background: none; padding: 0; font-size: 12px; line-height: 1.55; }
+    footer { border-top: 1px solid var(--border); padding: 16px 32px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">&#8592; archive</a>
+    <div class="header-meta">2026-04-26</div>
+  </header>
+  <div class="hero">
+    <div class="type-badge"><span class="type-dot"></span>design</div>
+    <div class="agent-label">principal_architect</div>
+    <h1>task-board — unified backlog + kanban spec</h1>
+    <div class="tags"><span class="tag">principal_architect</span><span class="tag">task-board</span><span class="tag">spec</span><span class="tag">backlog</span><span class="tag">kanban</span></div>
+  </div>
+  <article>
+    <h1>task-board — Spec</h1>
+
+<h2>Problem</h2>
+
+<p>ClaudeClaw has a mission queue (<code>mission_tasks</code>) for one-shot agent dispatches and an action log (<code>hive_mind</code>) for what happened, but no persistent place to capture "things we want to do" that survives across missions. Alex captures ideas in chat, in vault notes, and in his head. There is no single source of truth that:</p>
+
+<ul>
+<li>accepts intake from any agent or from Alex,</li>
+<li>tracks an item from idea to done across multiple agent runs,</li>
+<li>gives one Mission Control view that shows backlog and in-flight work side by side,</li>
+<li>forces every meaningful artifact (design doc, diagram, ADR, retro) to be linked back to the work it came from.</li>
+</ul>
+
+<p>This must be fixed without breaking the mission queue, the hive_mind log, or the Issue 6 session summary primitive currently in flight on <code>feat/issue-6-session-summary</code>.</p>
+
+<h2>Proposed Solution</h2>
+
+<p>A single <code>tasks</code> table in <code>claudeclaw.db</code> is the unified store. Status drives view membership: <code>captured</code> is the backlog, <code>{todo, in_progress, review, blocked, done}</code> are the kanban lanes. Missions reference tasks via a new <code>task_id</code> foreign key on <code>mission_tasks</code> (additive, nullable). Agents claim, update, comment on, and close tasks via a new <code>task-cli</code> that mirrors <code>mission-cli</code> patterns. Mission Control's <code>dashboard-html.ts</code> gains two sections: Backlog (intake form + filterable list) and Kanban (lanes by status, filterable by agent). Every agent's CLAUDE.md is amended with a small ritual: claim before work, comment as you go, link artifact and move to <code>review</code> at completion.</p>
+
+<h2>Non-Goals</h2>
+
+<ul>
+<li>Replacing the mission queue. Missions still exist as one-shot dispatches; tasks are the parent unit of work that may spawn 0..N missions.</li>
+<li>Replacing Obsidian as the writing surface. Long-form planning still happens in vault and <code>~/dev/projects/&lt;slug&gt;/</code>. Tasks are pointers, not prose.</li>
+<li>Replacing GitHub Issues. This system is for cross-project, cross-agent work tracking inside the Principal & Agent stack. GitHub Issues remain the source of truth inside individual project repos like <code>roadrunner-cli</code>.</li>
+<li>Multi-tenant or multi-operator access. Single-operator (Alex) only.</li>
+<li>Real-time collaborative editing. Last-write-wins on update is fine for one operator.</li>
+<li>Drag-and-drop kanban UI in v1. Status moves happen via buttons or CLI; drag-drop is post-v1 polish.</li>
+<li>Auth on Mission Control endpoints in v1 — MC is already on localhost or behind PIN; same posture inherited.</li>
+<li>Migrating historical work from <code>hive_mind</code> or <code>mission_tasks</code> into <code>tasks</code> retroactively. Forward-only.</li>
+<li>Cross-database sync (no Linear, Jira, Notion mirror). Out of scope.</li>
+</ul>
+
+<h2>Acceptance Criteria</h2>
+
+<p>Storage and migration:</p>
+<ul class="checklist">
+<li><input type="checkbox" disabled> <code>tasks</code> table exists in <code>claudeclaw.db</code> after migration with columns and constraints from ARCHITECTURE.md, verified by <code>sqlite3 store/claudeclaw.db ".schema tasks"</code>.</li>
+<li><input type="checkbox" disabled> <code>mission_tasks.task_id</code> column exists, is nullable, and has an index on <code>(task_id, status)</code>, verified by <code>.schema mission_tasks</code>.</li>
+<li><input type="checkbox" disabled> Running migrations twice on a fresh DB and on a populated DB (60 missions, 39 hive_mind rows) produces zero errors and no data loss, verified by row counts before and after.</li>
+<li><input type="checkbox" disabled> Existing rows in <code>mission_tasks</code> have <code>task_id IS NULL</code> and continue to behave correctly through the queue.</li>
+</ul>
+
+<p>CLI:</p>
+<ul class="checklist">
+<li><input type="checkbox" disabled> <code>node dist/task-cli.js add --title "X" --created-by alex --body "description"</code> creates a row with <code>status='captured'</code> and prints the task id. Positional body argument also accepted (e.g. <code>... add --title "X" "description"</code>) to match <code>mission-cli create</code> ergonomics.</li>
+<li><input type="checkbox" disabled> <code>node dist/task-cli.js list --status backlog</code> returns only rows with <code>status='captured'</code>.</li>
+<li><input type="checkbox" disabled> <code>node dist/task-cli.js list --status kanban</code> returns rows with status in <code>{todo, in_progress, review, blocked, done}</code>.</li>
+<li><input type="checkbox" disabled> <code>node dist/task-cli.js move &lt;id&gt; in_progress</code> updates status and writes a row to <code>task_events</code>.</li>
+<li><input type="checkbox" disabled> <code>node dist/task-cli.js claim &lt;id&gt; --agent principal_engineer</code> sets <code>assigned_agent</code>, moves status to <code>in_progress</code>, and writes an event.</li>
+<li><input type="checkbox" disabled> <code>node dist/task-cli.js comment &lt;id&gt; "text"</code> appends a comment row to <code>task_events</code> of type <code>comment</code>.</li>
+<li><input type="checkbox" disabled> <code>node dist/task-cli.js link &lt;id&gt; --artifact &lt;path-or-url&gt;</code> appends an event of type <code>artifact</code> and stores the link.</li>
+<li><input type="checkbox" disabled> <code>node dist/task-cli.js show &lt;id&gt;</code> prints the task plus its full event timeline plus all linked missions.</li>
+<li><input type="checkbox" disabled> Every CLI subcommand exits non-zero on invalid input and prints a usable error.</li>
+</ul>
+
+<p>Mission linkage:</p>
+<ul class="checklist">
+<li><input type="checkbox" disabled> <code>node dist/mission-cli.js create --task-id &lt;id&gt; ...</code> accepts <code>--task-id</code>, validates the task exists, and stores it on the mission row.</li>
+<li><input type="checkbox" disabled> When a linked mission completes, the task automatically moves from <code>in_progress</code> to <code>review</code> (configurable behaviour, default on).</li>
+<li><input type="checkbox" disabled> <code>task-cli show &lt;id&gt;</code> lists every mission with that <code>task_id</code> and their statuses.</li>
+</ul>
+
+<p>Mission Control UI:</p>
+<ul class="checklist">
+<li><input type="checkbox" disabled> <code>dashboard-html.ts</code> renders a Backlog section listing all <code>status='captured'</code> tasks with title, created_by, age, and an "Activate" button that moves to <code>todo</code>.</li>
+<li><input type="checkbox" disabled> <code>dashboard-html.ts</code> renders a Kanban section with lanes <code>todo</code>, <code>in_progress</code>, <code>review</code>, <code>blocked</code>, <code>done</code> showing tasks as cards with title, assigned_agent, age, and mission count.</li>
+<li><input type="checkbox" disabled> Both sections refresh in under 500ms on a localhost DB with 1000 tasks (measured manually with the dashboard timer).</li>
+<li><input type="checkbox" disabled> Backlog has an inline form with title, body, created_by; submit calls <code>POST /api/tasks</code> and the new task appears without a full reload.</li>
+<li><input type="checkbox" disabled> Kanban cards have lane-move buttons (left and right arrow per status); clicking calls <code>POST /api/tasks/:id/move</code> and the card relocates without a full reload.</li>
+<li><input type="checkbox" disabled> Filter by <code>assigned_agent</code> (dropdown of distinct agents from the table) works on the Kanban view.</li>
+</ul>
+
+<p>Agent integration:</p>
+<ul class="checklist">
+<li><input type="checkbox" disabled> Every principal's CLAUDE.md (<code>~/.claudeclaw/agents/principal_*/CLAUDE.md</code> and the central Clarke prompt) gains a "Task discipline" section mandating: claim before work, comment per checkpoint, link artifact at completion, move to review.</li>
+<li><input type="checkbox" disabled> At least one principal demonstrates the loop end-to-end: pick a task from backlog, move to in_progress, comment twice, link an artifact, move to review. Verified by running the loop and inspecting <code>task-cli show &lt;id&gt;</code>.</li>
+<li><input type="checkbox" disabled> Mission completion handler updates the linked task's status to <code>review</code> and writes a <code>mission_completed</code> event.</li>
+</ul>
+
+<p>Artifact publishing:</p>
+<ul class="checklist">
+<li><input type="checkbox" disabled> When an agent runs <code>publish_session.sh</code> against a task-linked artifact, the published URL is automatically captured as a <code>link</code> event on the task. Implementation: a small wrapper in <code>pna-sessions/scripts/publish_session.sh</code> that accepts <code>--task-id</code> and posts back to claudeclaw's task API on success.</li>
+<li><input type="checkbox" disabled> <code>task-cli show &lt;id&gt;</code> displays artifact links inline.</li>
+</ul>
+
+<p>Performance and durability:</p>
+<ul class="checklist">
+<li><input type="checkbox" disabled> With 1000 seeded tasks in the DB, the Kanban view's initial paint of the first 200 rendered cards completes in under 500ms p95 on Alex's M-series Mac (manual measurement, single user, three runs).</li>
+<li><input type="checkbox" disabled> All writes go through the existing better-sqlite3 transaction wrapper; no raw <code>db.exec</code> outside migration code.</li>
+<li><input type="checkbox" disabled> Existing tests in <code>~/dev/claudeclaw</code> continue to pass; new tests cover task CRUD, status transitions, and mission linkage.</li>
+</ul>
+
+<h2>Tech Stack</h2>
+
+<div class="table-wrapper"><table>
+<thead><tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Rationale</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Storage</td>
+<td>SQLite via better-sqlite3 (existing claudeclaw.db)</td>
+<td>One DB, one process, one writer is already the model; adding a second store doubles backup and migration surface for no gain at single-operator scale.</td>
+</tr>
+<tr>
+<td>Schema migrations</td>
+<td>Existing <code>migrations.ts</code> runner with a new numbered file</td>
+<td>Already used by hive_mind, agent_events, mission_tasks; reusing it keeps the upgrade path identical to every prior schema change.</td>
+</tr>
+<tr>
+<td>CLI</td>
+<td>Node + TypeScript, distributed as <code>dist/task-cli.js</code></td>
+<td>Mirrors <code>mission-cli.js</code> and <code>schedule-cli.js</code> exactly, including the DB_ENCRYPTION_KEY env contract and arg parsing style; zero new dependencies, instant familiarity for engineer.</td>
+</tr>
+<tr>
+<td>Dashboard</td>
+<td>Extend <code>src/dashboard-html.ts</code> (single-file HTML/JS already serving Mission Control)</td>
+<td>Avoids spinning up a Next.js app for two new sections; current dashboard is 2289 lines of vanilla HTML/Tailwind/inline JS that loads in one round trip and works behind PIN auth. A separate web app would multiply deploy steps and break the localhost-first posture.</td>
+</tr>
+<tr>
+<td>API</td>
+<td>Extend <code>src/dashboard.ts</code> HTTP handler with <code>/api/tasks*</code> routes</td>
+<td>Same reason — the dashboard server already vends <code>/api/missions</code>; adding <code>/api/tasks</code> is a 100-line patch, not a new service.</td>
+</tr>
+<tr>
+<td>Test runner</td>
+<td>vitest (existing)</td>
+<td>Used by every other claudeclaw module.</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Inherit existing PIN gate on the dashboard</td>
+<td>Same posture as today; this is single-operator localhost.</td>
+</tr>
+<tr>
+<td>Artifact links</td>
+<td>Plain text URL or absolute path stored on <code>task_events</code> rows</td>
+<td>No CMS, no thumbnails; Mission Control already renders pna-sessions URLs.</td>
+</tr>
+</tbody></table></div>
+
+<p>Real projects doing this exact pattern (single SQLite + single-file HTML dashboard for personal task tracking): <code>simonw/datasette</code>, <code>TodoTxt</code> desktop variants, and ClaudeClaw's own existing dashboard surface. Not novel.</p>
+
+<h2>Architecture</h2>
+
+<p>See <code>ARCHITECTURE.md</code>. High-level:</p>
+
+<ul>
+<li><strong>task-cli.ts</strong> is the write/read API surface for terminals and agents.</li>
+<li><strong>dashboard.ts</strong> API handlers expose the same operations to the HTML UI.</li>
+<li><strong>dashboard-html.ts</strong> renders Backlog + Kanban sections with vanilla JS calling <code>/api/tasks*</code>.</li>
+<li><strong>migrations.ts</strong> ships migration <code>00NN_tasks_and_events.sql</code>.</li>
+<li><strong>mission lifecycle</strong> in <code>scheduler.ts</code> and <code>orchestrator.ts</code> updates linked tasks on mission completion.</li>
+<li><strong>agent CLAUDE.md prompts</strong> are amended with the task-discipline section.</li>
+<li><strong>publish_session.sh</strong> in <code>pna-sessions/</code> is patched to accept <code>--task-id</code> and post back.</li>
+</ul>
+
+<h2>Risks</h2>
+
+<ol>
+<li><strong>Mission completion handler races with manual status moves.</strong> Likelihood: M, Impact: L — Mitigation: optimistic write that only auto-moves <code>in_progress → review</code> if status is still <code>in_progress</code>; otherwise no-op and write a <code>mission_completed_no_move</code> event for diagnosis.</li>
+<li><strong>Migration runs against a live DB while bot is up.</strong> Likelihood: L, Impact: M — Mitigation: existing migration runner already takes a write lock; add a startup gate that refuses to start if migration version mismatches code version. Engineer documents the standard <code>launchctl kickstart -k</code> ritual in the migration's README header.</li>
+<li><strong>Dashboard becomes slow when tasks grow past several thousand.</strong> Likelihood: L, Impact: L — Mitigation: paginate kanban lanes at 50 cards each with "show more"; backlog list paginates at 100; full-text search skipped in v1. Single-operator scale will not realistically hit this.</li>
+<li><strong>Agent CLAUDE.md prompts get bloated.</strong> Likelihood: M, Impact: L — Mitigation: the task-discipline section is one short paragraph plus a 4-bullet ritual, total under 30 lines per agent. Librarian audits in the next routine grooming pass.</li>
+<li><strong>Mission ↔ task linkage drift if a mission is created via DB insert outside the CLI.</strong> Likelihood: L, Impact: L — Mitigation: accepted. Single-operator system; if Alex inserts rows by hand, he owns the consistency.</li>
+<li><strong><code>publish_session.sh</code> patch needs to know the claudeclaw API endpoint.</strong> Likelihood: L, Impact: L — Mitigation: introduce <code>CLAUDECLAW_API_URL</code> env var with a localhost default; document in pna-sessions README.</li>
+<li><strong>Kanban "review" lane fills up because no one closes tasks.</strong> Likelihood: M, Impact: L — Mitigation: dashboard shows age of cards; cards older than 7 days in review get a visual flag. Process problem, not architecture problem; flagged for retro discipline.</li>
+<li><strong>Naming collision with <code>tasks/</code> directory in <code>~/dev/projects/</code>.</strong> Likelihood: L, Impact: L — Mitigation: project slug is <code>task-board</code>, table is <code>tasks</code>, CLI is <code>task-cli</code>. The existing <code>~/dev/projects/tasks/</code> is unrelated and untouched.</li>
+</ol>
+
+<h2>Open Questions</h2>
+
+<p>None. Defaults applied:</p>
+
+<ul>
+<li><strong>Linkage cardinality</strong>: one task → many missions, missions optionally link to one task. Bidirectional link via <code>mission_tasks.task_id</code>.</li>
+<li><strong>Sessions table interpretation</strong>: Alex said "agents logging missions to the sessions table." Interpreted as: every mission completion writes a <code>task_event</code> of type <code>mission_completed</code> against its linked task, AND the existing Issue 6 session summary primitive (engineer's branch) becomes the canonical narrative log. No new <code>sessions</code> schema needed; existing <code>sessions</code> table is left untouched.</li>
+<li><strong>Backlog vs idea capture</strong>: backlog accepts everything (ideas, bugs, initiatives, follow-ups). No separate "idea" status — <code>captured</code> covers it. Promotion to <code>todo</code> is the moment work is committed to.</li>
+<li><strong>Multi-task missions</strong>: a mission belongs to at most one task. If a mission spans concerns, split it.</li>
+<li><strong>Closed tasks</strong>: <code>done</code> is terminal. Reopening writes a new <code>task_events</code> row of type <code>reopened</code> and moves status back; immutable history preserved.</li>
+<li><strong>Default <code>created_by</code></strong>: if CLI omits <code>--created-by</code>, default to the value of <code>$CLAUDECLAW_AGENT_ID</code> env var, falling back to <code>alex</code>.</li>
+</ul>
+  </article>
+  <footer>Principal &amp; Agent &mdash; internal</footer>
+</body>
+</html>
