@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="principal_architect" />
+  <meta name="dcterms.date" content="2026-04-26" />
+  <title>Engineering Playbooks (vault Architecture/playbooks/)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Engineering Playbooks (vault
+Architecture/playbooks/)</h1>
+<p class="author">principal_architect</p>
+<p class="date">2026-04-26</p>
+</header>
+<hr />
+<h1 id="accessibility-checklist">Accessibility Checklist</h1>
+<p><em>Source:
+<code>/Users/alex/Documents/Obsidian/claudeclaw/Architecture/playbooks/accessibility-checklist.md</code></em></p>
+<h1 id="accessibility-checklist-1">Accessibility Checklist</h1>
+<p>Quick reference for WCAG 2.1 AA compliance. Use alongside the
+<code>frontend-ui-engineering</code> skill.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#essential-checks">Essential Checks</a></li>
+<li><a href="#common-html-patterns">Common HTML Patterns</a></li>
+<li><a href="#testing-tools">Testing Tools</a></li>
+<li><a href="#quick-reference-aria-live-regions">Quick Reference: ARIA
+Live Regions</a></li>
+<li><a href="#common-anti-patterns">Common Anti-Patterns</a></li>
+</ul>
+<h2 id="essential-checks">Essential Checks</h2>
+<h3 id="keyboard-navigation">Keyboard Navigation</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />All interactive elements focusable
+via Tab key</label></li>
+<li><label><input type="checkbox" />Focus order follows visual/logical
+order</label></li>
+<li><label><input type="checkbox" />Focus is visible (outline/ring on
+focused elements)</label></li>
+<li><label><input type="checkbox" />Custom widgets have keyboard support
+(Enter to activate, Escape to close)</label></li>
+<li><label><input type="checkbox" />No keyboard traps (user can always
+Tab away from a component)</label></li>
+<li><label><input type="checkbox" />Skip-to-content link at top of page
+- visible (at least) on keyboard focus</label></li>
+<li><label><input type="checkbox" />Modals trap focus while open, return
+focus on close</label></li>
+</ul>
+<h3 id="screen-readers">Screen Readers</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />All images have <code>alt</code>
+text (or <code>alt=""</code> for decorative images)</label></li>
+<li><label><input type="checkbox" />All form inputs have associated
+labels (<code>&lt;label&gt;</code> or
+<code>aria-label</code>)</label></li>
+<li><label><input type="checkbox" />Buttons and links have descriptive
+text (not “Click here”)</label></li>
+<li><label><input type="checkbox" />Icon-only buttons have
+<code>aria-label</code></label></li>
+<li><label><input type="checkbox" />Page has one <code>&lt;h1&gt;</code>
+and headings don’t skip levels</label></li>
+<li><label><input type="checkbox" />Dynamic content changes announced
+(<code>aria-live</code> regions)</label></li>
+<li><label><input type="checkbox" />Tables have <code>&lt;th&gt;</code>
+headers with scope</label></li>
+</ul>
+<h3 id="visual">Visual</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Text contrast ≥ 4.5:1 (normal text)
+or ≥ 3:1 (large text, 18px+)</label></li>
+<li><label><input type="checkbox" />UI components contrast ≥ 3:1 against
+background</label></li>
+<li><label><input type="checkbox" />Color is not the only way to convey
+information</label></li>
+<li><label><input type="checkbox" />Text resizable to 200% without
+breaking layout</label></li>
+<li><label><input type="checkbox" />No content that flashes more than 3
+times per second</label></li>
+</ul>
+<h3 id="forms">Forms</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Every input has a visible
+label</label></li>
+<li><label><input type="checkbox" />Required fields indicated (not by
+color alone)</label></li>
+<li><label><input type="checkbox" />Error messages specific and
+associated with the field</label></li>
+<li><label><input type="checkbox" />Error state visible by more than
+color (icon, text, border)</label></li>
+<li><label><input type="checkbox" />Form submission errors summarized
+and focusable</label></li>
+<li><label><input type="checkbox" />Known fields use autocomplete (for
+example <code>type="email" autocomplete="email"</code>)</label></li>
+</ul>
+<h3 id="content">Content</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Language declared
+(<code>&lt;html lang="en"&gt;</code>)</label></li>
+<li><label><input type="checkbox" />Page has a descriptive
+<code>&lt;title&gt;</code></label></li>
+<li><label><input type="checkbox" />Links distinguish from surrounding
+text (not by color alone)</label></li>
+<li><label><input type="checkbox" />Touch targets ≥ 44x44px on
+mobile</label></li>
+<li><label><input type="checkbox" />Meaningful empty states (not blank
+screens)</label></li>
+</ul>
+<h2 id="common-html-patterns">Common HTML Patterns</h2>
+<h3 id="buttons-vs.-links">Buttons vs. Links</h3>
+<pre class="html"><code>&lt;!-- Use &lt;button&gt; for actions --&gt;
+&lt;button onClick={handleDelete}&gt;Delete Task&lt;/button&gt;
+
+&lt;!-- Use &lt;a&gt; for navigation --&gt;
+&lt;a href=&quot;/tasks/123&quot;&gt;View Task&lt;/a&gt;
+
+&lt;!-- NEVER use div/span as buttons --&gt;
+&lt;div onClick={handleDelete}&gt;Delete&lt;/div&gt;  &lt;!-- BAD --&gt;</code></pre>
+<h3 id="form-labels">Form Labels</h3>
+<pre class="html"><code>&lt;!-- Explicit label association --&gt;
+&lt;label htmlFor=&quot;email&quot;&gt;Email address&lt;/label&gt;
+&lt;input id=&quot;email&quot; type=&quot;email&quot; required /&gt;
+
+&lt;!-- Implicit wrapping --&gt;
+&lt;label&gt;
+  Email address
+  &lt;input type=&quot;email&quot; required /&gt;
+&lt;/label&gt;
+
+&lt;!-- Hidden label (visible label preferred) --&gt;
+&lt;input type=&quot;search&quot; aria-label=&quot;Search tasks&quot; /&gt;</code></pre>
+<h3 id="aria-roles">ARIA Roles</h3>
+<pre class="html"><code>&lt;!-- Navigation --&gt;
+&lt;nav aria-label=&quot;Main navigation&quot;&gt;...&lt;/nav&gt;
+&lt;nav aria-label=&quot;Footer links&quot;&gt;...&lt;/nav&gt;
+
+&lt;!-- Status messages --&gt;
+&lt;div role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;Task saved&lt;/div&gt;
+
+&lt;!-- Alert messages --&gt;
+&lt;div role=&quot;alert&quot;&gt;Error: Title is required&lt;/div&gt;
+
+&lt;!-- Modal dialogs --&gt;
+&lt;dialog aria-modal=&quot;true&quot; aria-labelledby=&quot;dialog-title&quot;&gt;
+  &lt;h2 id=&quot;dialog-title&quot;&gt;Confirm Delete&lt;/h2&gt;
+  ...
+&lt;/dialog&gt;
+
+&lt;!-- Loading states --&gt;
+&lt;div aria-busy=&quot;true&quot; aria-label=&quot;Loading tasks&quot;&gt;
+  &lt;Spinner /&gt;
+&lt;/div&gt;</code></pre>
+<h3 id="accessible-lists">Accessible Lists</h3>
+<pre class="html"><code>&lt;ul role=&quot;list&quot; aria-label=&quot;Tasks&quot;&gt;
+  &lt;li&gt;
+    &lt;input type=&quot;checkbox&quot; id=&quot;task-1&quot; aria-label=&quot;Complete: Buy groceries&quot; /&gt;
+    &lt;label htmlFor=&quot;task-1&quot;&gt;Buy groceries&lt;/label&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+<h2 id="testing-tools">Testing Tools</h2>
+<pre class="bash"><code># Automated audit
+npx axe-core          # Programmatic accessibility testing
+npx pa11y             # CLI accessibility checker
+
+# In browser
+# Chrome DevTools → Lighthouse → Accessibility
+# Chrome DevTools → Elements → Accessibility tree
+
+# Screen reader testing
+# macOS: VoiceOver (Cmd + F5)
+# Windows: NVDA (free) or JAWS
+# Linux: Orca</code></pre>
+<h2 id="quick-reference-aria-live-regions">Quick Reference: ARIA Live
+Regions</h2>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 38%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr>
+<th>Value</th>
+<th>Behavior</th>
+<th>Use For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aria-live="polite"</code></td>
+<td>Announced at next pause</td>
+<td>Status updates, saved confirmations</td>
+</tr>
+<tr>
+<td><code>aria-live="assertive"</code></td>
+<td>Announced immediately</td>
+<td>Errors, time-sensitive alerts</td>
+</tr>
+<tr>
+<td><code>role="status"</code></td>
+<td>Same as <code>polite</code></td>
+<td>Status messages</td>
+</tr>
+<tr>
+<td><code>role="alert"</code></td>
+<td>Same as <code>assertive</code></td>
+<td>Error messages</td>
+</tr>
+</tbody>
+</table>
+<h2 id="common-anti-patterns">Common Anti-Patterns</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Anti-Pattern</th>
+<th>Problem</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>div</code> as button</td>
+<td>Not focusable, no keyboard support</td>
+<td>Use <code>&lt;button&gt;</code></td>
+</tr>
+<tr>
+<td>Missing <code>alt</code> text</td>
+<td>Images invisible to screen readers</td>
+<td>Add descriptive <code>alt</code></td>
+</tr>
+<tr>
+<td>Color-only states</td>
+<td>Invisible to color-blind users</td>
+<td>Add icons, text, or patterns</td>
+</tr>
+<tr>
+<td>Autoplaying media</td>
+<td>Disorienting, can’t be stopped</td>
+<td>Add controls, don’t autoplay</td>
+</tr>
+<tr>
+<td>Custom dropdown with no ARIA</td>
+<td>Unusable by keyboard/screen reader</td>
+<td>Use native <code>&lt;select&gt;</code> or proper ARIA listbox</td>
+</tr>
+<tr>
+<td>Removing focus outlines</td>
+<td>Users can’t see where they are</td>
+<td>Style outlines, don’t remove them</td>
+</tr>
+<tr>
+<td>Empty links/buttons</td>
+<td>“Link” announced with no description</td>
+<td>Add text or <code>aria-label</code></td>
+</tr>
+<tr>
+<td><code>tabindex &gt; 0</code></td>
+<td>Breaks natural tab order</td>
+<td>Use <code>tabindex="0"</code> or <code>-1</code> only</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="performance-checklist">Performance Checklist</h1>
+<p><em>Source:
+<code>/Users/alex/Documents/Obsidian/claudeclaw/Architecture/playbooks/performance-checklist.md</code></em></p>
+<h1 id="performance-checklist-1">Performance Checklist</h1>
+<p>Quick reference checklist for web application performance. Use
+alongside the <code>performance-optimization</code> skill.</p>
+<h2 id="table-of-contents-1">Table of Contents</h2>
+<ul>
+<li><a href="#core-web-vitals-targets">Core Web Vitals Targets</a></li>
+<li><a href="#ttfb-diagnosis">TTFB Diagnosis</a></li>
+<li><a href="#frontend-checklist">Frontend Checklist</a></li>
+<li><a href="#backend-checklist">Backend Checklist</a></li>
+<li><a href="#measurement-commands">Measurement Commands</a></li>
+<li><a href="#common-anti-patterns">Common Anti-Patterns</a></li>
+</ul>
+<h2 id="core-web-vitals-targets">Core Web Vitals Targets</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Good</th>
+<th>Needs Work</th>
+<th>Poor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LCP (Largest Contentful Paint)</td>
+<td>≤ 2.5s</td>
+<td>≤ 4.0s</td>
+<td>&gt; 4.0s</td>
+</tr>
+<tr>
+<td>INP (Interaction to Next Paint)</td>
+<td>≤ 200ms</td>
+<td>≤ 500ms</td>
+<td>&gt; 500ms</td>
+</tr>
+<tr>
+<td>CLS (Cumulative Layout Shift)</td>
+<td>≤ 0.1</td>
+<td>≤ 0.25</td>
+<td>&gt; 0.25</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ttfb-diagnosis">TTFB Diagnosis</h2>
+<p>When TTFB is slow (&gt; 800ms), check each component in DevTools
+Network waterfall:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" /><strong>DNS resolution</strong> slow
+→ add <code>&lt;link rel="dns-prefetch"&gt;</code> or
+<code>&lt;link rel="preconnect"&gt;</code> for known
+origins</label></li>
+<li><label><input type="checkbox" /><strong>TCP/TLS handshake</strong>
+slow → enable HTTP/2, consider edge deployment, verify
+keep-alive</label></li>
+<li><label><input type="checkbox" /><strong>Server processing</strong>
+slow → profile backend, check slow queries, add caching</label></li>
+</ul>
+<h2 id="frontend-checklist">Frontend Checklist</h2>
+<h3 id="images">Images</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Images use modern formats (WebP,
+AVIF)</label></li>
+<li><label><input type="checkbox" />Images are responsively sized
+(<code>srcset</code> and <code>sizes</code>)</label></li>
+<li><label><input type="checkbox" />Images and
+<code>&lt;source&gt;</code> elements have explicit <code>width</code>
+and <code>height</code> (prevents CLS in art direction)</label></li>
+<li><label><input type="checkbox" />Below-the-fold images use
+<code>loading="lazy"</code> and
+<code>decoding="async"</code></label></li>
+<li><label><input type="checkbox" />Hero/LCP images use
+<code>fetchpriority="high"</code> and no lazy loading</label></li>
+</ul>
+<h3 id="javascript">JavaScript</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Bundle size under 200KB gzipped
+(initial load)</label></li>
+<li><label><input type="checkbox" />Code splitting with dynamic
+<code>import()</code> for routes and heavy features</label></li>
+<li><label><input type="checkbox" />Tree shaking enabled (verify
+dependency ships ESM and marks
+<code>sideEffects: false</code>)</label></li>
+<li><label><input type="checkbox" />No blocking JavaScript in
+<code>&lt;head&gt;</code> (use <code>defer</code> or
+<code>async</code>)</label></li>
+<li><label><input type="checkbox" />Heavy computation offloaded to Web
+Workers (if applicable)</label></li>
+<li><label><input type="checkbox" /><code>React.memo()</code> on
+expensive components that re-render with same props</label></li>
+<li><label><input type="checkbox" /><code>useMemo()</code> /
+<code>useCallback()</code> only where profiling shows
+benefit</label></li>
+<li><label><input type="checkbox" />Long tasks (&gt; 50ms) broken up to
+keep the main thread available — main lever for INP</label></li>
+<li><label><input type="checkbox" /><code>yieldToMain</code> pattern
+used inside long-running loops so input events can run between
+chunks</label></li>
+<li><label><input type="checkbox" />Modern scheduling APIs used where
+available: <code>scheduler.yield()</code> (preferred),
+<code>scheduler.postTask()</code> with priorities,
+<code>isInputPending()</code> to yield only when needed</label></li>
+<li><label><input type="checkbox" /><code>requestIdleCallback</code> for
+deferrable, non-urgent work (analytics flush, prefetch,
+warmup)</label></li>
+<li><label><input type="checkbox" />Third-party scripts loaded with
+<code>async</code> / <code>defer</code>, audited for size, and fronted
+by a facade when heavy (chat widgets, embeds)</label></li>
+</ul>
+<h3 id="css">CSS</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Critical CSS inlined or
+preloaded</label></li>
+<li><label><input type="checkbox" />No render-blocking CSS for
+non-critical styles</label></li>
+<li><label><input type="checkbox" />No CSS-in-JS runtime cost in
+production (use extraction)</label></li>
+</ul>
+<h3 id="fonts">Fonts</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Limited to 2–3 font families, 2–3
+weights each (every additional weight is another request)</label></li>
+<li><label><input type="checkbox" />WOFF2 format only (smallest,
+universal support — skip WOFF/TTF/EOT)</label></li>
+<li><label><input type="checkbox" />Self-hosted when possible
+(third-party font CDNs add DNS + TCP + TLS round-trips)</label></li>
+<li><label><input type="checkbox" />LCP-critical fonts preloaded:
+<code>&lt;link rel="preload" as="font" type="font/woff2" crossorigin&gt;</code></label></li>
+<li><label><input type="checkbox" /><code>font-display: swap</code> (or
+<code>optional</code> for non-critical) to avoid FOIT blocking
+render</label></li>
+<li><label><input type="checkbox" />Subsetted via
+<code>unicode-range</code> to ship only the glyphs each page
+needs</label></li>
+<li><label><input type="checkbox" />Variable fonts considered when
+multiple weights/styles are required (one file replaces
+many)</label></li>
+<li><label><input type="checkbox" />Fallback font metrics adjusted with
+<code>size-adjust</code>, <code>ascent-override</code>,
+<code>descent-override</code> to reduce CLS on font swap</label></li>
+<li><label><input type="checkbox" />System font stack considered before
+any custom font</label></li>
+</ul>
+<h3 id="network">Network</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Static assets cached with long
+<code>max-age</code> + content hashing</label></li>
+<li><label><input type="checkbox" />API responses cached where
+appropriate (<code>Cache-Control</code>)</label></li>
+<li><label><input type="checkbox" />HTTP/2 or HTTP/3
+enabled</label></li>
+<li><label><input type="checkbox" />Resources preconnected
+(<code>&lt;link rel="preconnect"&gt;</code>) for known
+origins</label></li>
+<li><label><input type="checkbox" /><code>fetchpriority</code> used on
+critical non-image resources (e.g., key
+<code>&lt;link rel="preload"&gt;</code>, above-the-fold
+<code>&lt;script&gt;</code>) — not only on
+<code>&lt;img&gt;</code></label></li>
+<li><label><input type="checkbox" />No unnecessary
+redirects</label></li>
+</ul>
+<h3 id="rendering">Rendering</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />No layout thrashing (forced
+synchronous layouts)</label></li>
+<li><label><input type="checkbox" />Animations use
+<code>transform</code> and <code>opacity</code>
+(GPU-accelerated)</label></li>
+<li><label><input type="checkbox" />Long lists use virtualization (e.g.,
+<code>react-window</code>)</label></li>
+<li><label><input type="checkbox" />No unnecessary full-page
+re-renders</label></li>
+<li><label><input type="checkbox" />Off-screen sections use
+<code>content-visibility: auto</code> with
+<code>contain-intrinsic-size</code> to skip layout/paint of non-visible
+areas</label></li>
+<li><label><input type="checkbox" />No <code>unload</code> event
+handlers and no <code>Cache-Control: no-store</code> on HTML responses —
+preserves back/forward cache (bfcache) eligibility</label></li>
+</ul>
+<h2 id="backend-checklist">Backend Checklist</h2>
+<h3 id="database">Database</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />No N+1 query patterns (use eager
+loading / joins)</label></li>
+<li><label><input type="checkbox" />Queries have appropriate
+indexes</label></li>
+<li><label><input type="checkbox" />List endpoints paginated (never
+<code>SELECT * FROM table</code>)</label></li>
+<li><label><input type="checkbox" />Connection pooling
+configured</label></li>
+<li><label><input type="checkbox" />Slow query logging
+enabled</label></li>
+</ul>
+<h3 id="api">API</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Response times &lt; 200ms
+(p95)</label></li>
+<li><label><input type="checkbox" />No synchronous heavy computation in
+request handlers</label></li>
+<li><label><input type="checkbox" />Bulk operations instead of loops of
+individual calls</label></li>
+<li><label><input type="checkbox" />Response compression
+(gzip/brotli)</label></li>
+<li><label><input type="checkbox" />Appropriate caching (in-memory,
+Redis, CDN)</label></li>
+</ul>
+<h3 id="infrastructure">Infrastructure</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />CDN for static assets</label></li>
+<li><label><input type="checkbox" />Server located close to users (or
+edge deployment)</label></li>
+<li><label><input type="checkbox" />Horizontal scaling configured (if
+needed)</label></li>
+<li><label><input type="checkbox" />Health check endpoint for load
+balancer</label></li>
+</ul>
+<h2 id="measurement-commands">Measurement Commands</h2>
+<pre class="bash"><code># Lighthouse CLI
+npx lighthouse https://localhost:3000 --output json --output-path ./report.json
+
+# Bundle analysis
+npx webpack-bundle-analyzer stats.json
+# or for Vite:
+npx vite-bundle-visualizer
+
+# Check bundle size
+npx bundlesize
+
+# Web Vitals in code
+import { onLCP, onINP, onCLS } from &#39;web-vitals&#39;;
+onLCP(console.log);
+onINP(console.log);
+onCLS(console.log);</code></pre>
+<h2 id="common-anti-patterns-1">Common Anti-Patterns</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Anti-Pattern</th>
+<th>Impact</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>N+1 queries</td>
+<td>Linear DB load growth</td>
+<td>Use joins, includes, or batch loading</td>
+</tr>
+<tr>
+<td>Unbounded queries</td>
+<td>Memory exhaustion, timeouts</td>
+<td>Always paginate, add LIMIT</td>
+</tr>
+<tr>
+<td>Missing indexes</td>
+<td>Slow reads as data grows</td>
+<td>Add indexes for filtered/sorted columns</td>
+</tr>
+<tr>
+<td>Layout thrashing</td>
+<td>Jank, dropped frames</td>
+<td>Batch DOM reads, then batch writes</td>
+</tr>
+<tr>
+<td>Unoptimized images</td>
+<td>Slow LCP, wasted bandwidth</td>
+<td>Use WebP, responsive sizes, lazy load</td>
+</tr>
+<tr>
+<td>Large bundles</td>
+<td>Slow Time to Interactive</td>
+<td>Code split, tree shake, audit deps</td>
+</tr>
+<tr>
+<td>Blocking main thread</td>
+<td>Poor INP, unresponsive UI</td>
+<td>Chunk long tasks with <code>scheduler.yield()</code> /
+<code>yieldToMain</code>, offload to Web Workers</td>
+</tr>
+<tr>
+<td>Memory leaks</td>
+<td>Growing memory, eventual crash</td>
+<td>Clean up listeners, intervals, refs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="security-checklist">Security Checklist</h1>
+<p><em>Source:
+<code>/Users/alex/Documents/Obsidian/claudeclaw/Architecture/playbooks/security-checklist.md</code></em></p>
+<h1 id="security-checklist-1">Security Checklist</h1>
+<p>Quick reference for web application security. Use alongside the
+<code>security-and-hardening</code> skill.</p>
+<h2 id="table-of-contents-2">Table of Contents</h2>
+<ul>
+<li><a href="#pre-commit-checks">Pre-Commit Checks</a></li>
+<li><a href="#authentication">Authentication</a></li>
+<li><a href="#authorization">Authorization</a></li>
+<li><a href="#input-validation">Input Validation</a></li>
+<li><a href="#security-headers">Security Headers</a></li>
+<li><a href="#cors-configuration">CORS Configuration</a></li>
+<li><a href="#data-protection">Data Protection</a></li>
+<li><a href="#dependency-security">Dependency Security</a></li>
+<li><a href="#error-handling">Error Handling</a></li>
+<li><a href="#owasp-top-10-quick-reference">OWASP Top 10 Quick
+Reference</a></li>
+</ul>
+<h2 id="pre-commit-checks">Pre-Commit Checks</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />No secrets in code
+(<code>git diff --cached | grep -i "password\|secret\|api_key\|token"</code>)</label></li>
+<li><label><input type="checkbox" /><code>.gitignore</code> covers:
+<code>.env</code>, <code>.env.local</code>, <code>*.pem</code>,
+<code>*.key</code></label></li>
+<li><label><input type="checkbox" /><code>.env.example</code> uses
+placeholder values (not real secrets)</label></li>
+</ul>
+<h2 id="authentication">Authentication</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Passwords hashed with bcrypt (≥12
+rounds), scrypt, or argon2</label></li>
+<li><label><input type="checkbox" />Session cookies:
+<code>httpOnly</code>, <code>secure</code>,
+<code>sameSite: 'lax'</code></label></li>
+<li><label><input type="checkbox" />Session expiration configured
+(reasonable max-age)</label></li>
+<li><label><input type="checkbox" />Rate limiting on login endpoint (≤10
+attempts per 15 minutes)</label></li>
+<li><label><input type="checkbox" />Password reset tokens: time-limited
+(≤1 hour), single-use</label></li>
+<li><label><input type="checkbox" />Account lockout after repeated
+failures (optional, with notification)</label></li>
+<li><label><input type="checkbox" />MFA supported for sensitive
+operations (optional but recommended)</label></li>
+</ul>
+<h2 id="authorization">Authorization</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Every protected endpoint checks
+authentication</label></li>
+<li><label><input type="checkbox" />Every resource access checks
+ownership/role (prevents IDOR)</label></li>
+<li><label><input type="checkbox" />Admin endpoints require admin role
+verification</label></li>
+<li><label><input type="checkbox" />API keys scoped to minimum necessary
+permissions</label></li>
+<li><label><input type="checkbox" />JWT tokens validated (signature,
+expiration, issuer)</label></li>
+</ul>
+<h2 id="input-validation">Input Validation</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />All user input validated at system
+boundaries (API routes, form handlers)</label></li>
+<li><label><input type="checkbox" />Validation uses allowlists (not
+denylists)</label></li>
+<li><label><input type="checkbox" />String lengths constrained
+(min/max)</label></li>
+<li><label><input type="checkbox" />Numeric ranges
+validated</label></li>
+<li><label><input type="checkbox" />Email, URL, and date formats
+validated with proper libraries</label></li>
+<li><label><input type="checkbox" />File uploads: type restricted, size
+limited, content verified</label></li>
+<li><label><input type="checkbox" />SQL queries parameterized (no string
+concatenation)</label></li>
+<li><label><input type="checkbox" />HTML output encoded (use framework
+auto-escaping)</label></li>
+<li><label><input type="checkbox" />URLs validated before redirect
+(prevent open redirect)</label></li>
+</ul>
+<h2 id="security-headers">Security Headers</h2>
+<pre><code>Content-Security-Policy: default-src &#39;self&#39;; script-src &#39;self&#39;
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 0  (disabled, rely on CSP)
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()</code></pre>
+<h2 id="cors-configuration">CORS Configuration</h2>
+<pre class="typescript"><code>// Restrictive (recommended)
+cors({
+  origin: [&#39;https://yourdomain.com&#39;, &#39;https://app.yourdomain.com&#39;],
+  credentials: true,
+  methods: [&#39;GET&#39;, &#39;POST&#39;, &#39;PUT&#39;, &#39;PATCH&#39;, &#39;DELETE&#39;],
+  allowedHeaders: [&#39;Content-Type&#39;, &#39;Authorization&#39;],
+})
+
+// NEVER use in production:
+cors({ origin: &#39;*&#39; })  // Allows any origin</code></pre>
+<h2 id="data-protection">Data Protection</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Sensitive fields excluded from API
+responses (<code>passwordHash</code>, <code>resetToken</code>,
+etc.)</label></li>
+<li><label><input type="checkbox" />Sensitive data not logged
+(passwords, tokens, full CC numbers)</label></li>
+<li><label><input type="checkbox" />PII encrypted at rest (if required
+by regulation)</label></li>
+<li><label><input type="checkbox" />HTTPS for all external
+communication</label></li>
+<li><label><input type="checkbox" />Database backups
+encrypted</label></li>
+</ul>
+<h2 id="dependency-security">Dependency Security</h2>
+<pre class="bash"><code># Audit dependencies
+npm audit
+
+# Fix automatically where possible
+npm audit fix
+
+# Check for critical vulnerabilities
+npm audit --audit-level=critical
+
+# Keep dependencies updated
+npx npm-check-updates</code></pre>
+<h2 id="error-handling">Error Handling</h2>
+<pre class="typescript"><code>// Production: generic error, no internals
+res.status(500).json({
+  error: { code: &#39;INTERNAL_ERROR&#39;, message: &#39;Something went wrong&#39; }
+});
+
+// NEVER in production:
+res.status(500).json({
+  error: err.message,
+  stack: err.stack,         // Exposes internals
+  query: err.sql,           // Exposes database details
+});</code></pre>
+<h2 id="owasp-top-10-quick-reference">OWASP Top 10 Quick Reference</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Vulnerability</th>
+<th>Prevention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Broken Access Control</td>
+<td>Auth checks on every endpoint, ownership verification</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Cryptographic Failures</td>
+<td>HTTPS, strong hashing, no secrets in code</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Injection</td>
+<td>Parameterized queries, input validation</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Insecure Design</td>
+<td>Threat modeling, spec-driven development</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Security Misconfiguration</td>
+<td>Security headers, minimal permissions, audit deps</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Vulnerable Components</td>
+<td><code>npm audit</code>, keep deps updated, minimal deps</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Auth Failures</td>
+<td>Strong passwords, rate limiting, session management</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Data Integrity Failures</td>
+<td>Verify updates/dependencies, signed artifacts</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Logging Failures</td>
+<td>Log security events, don’t log secrets</td>
+</tr>
+<tr>
+<td>10</td>
+<td>SSRF</td>
+<td>Validate/allowlist URLs, restrict outbound requests</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="testing-patterns">Testing Patterns</h1>
+<p><em>Source:
+<code>/Users/alex/Documents/Obsidian/claudeclaw/Architecture/playbooks/testing-patterns.md</code></em></p>
+<h1 id="testing-patterns-reference">Testing Patterns Reference</h1>
+<p>Quick reference for common testing patterns across the stack. Use
+alongside the <code>test-driven-development</code> skill.</p>
+<h2 id="table-of-contents-3">Table of Contents</h2>
+<ul>
+<li><a href="#test-structure-arrange-act-assert">Test Structure
+(Arrange-Act-Assert)</a></li>
+<li><a href="#test-naming-conventions">Test Naming Conventions</a></li>
+<li><a href="#common-assertions">Common Assertions</a></li>
+<li><a href="#mocking-patterns">Mocking Patterns</a></li>
+<li><a href="#reactcomponent-testing">React/Component Testing</a></li>
+<li><a href="#api--integration-testing">API / Integration
+Testing</a></li>
+<li><a href="#e2e-testing-playwright">E2E Testing (Playwright)</a></li>
+<li><a href="#test-anti-patterns">Test Anti-Patterns</a></li>
+</ul>
+<h2 id="test-structure-arrange-act-assert">Test Structure
+(Arrange-Act-Assert)</h2>
+<pre class="typescript"><code>it(&#39;describes expected behavior&#39;, () =&gt; {
+  // Arrange: Set up test data and preconditions
+  const input = { title: &#39;Test Task&#39;, priority: &#39;high&#39; };
+
+  // Act: Perform the action being tested
+  const result = createTask(input);
+
+  // Assert: Verify the outcome
+  expect(result.title).toBe(&#39;Test Task&#39;);
+  expect(result.priority).toBe(&#39;high&#39;);
+  expect(result.status).toBe(&#39;pending&#39;);
+});</code></pre>
+<h2 id="test-naming-conventions">Test Naming Conventions</h2>
+<pre class="typescript"><code>// Pattern: [unit] [expected behavior] [condition]
+describe(&#39;TaskService.createTask&#39;, () =&gt; {
+  it(&#39;creates a task with default pending status&#39;, () =&gt; {});
+  it(&#39;throws ValidationError when title is empty&#39;, () =&gt; {});
+  it(&#39;trims whitespace from title&#39;, () =&gt; {});
+  it(&#39;generates a unique ID for each task&#39;, () =&gt; {});
+});</code></pre>
+<h2 id="common-assertions">Common Assertions</h2>
+<pre class="typescript"><code>// Equality
+expect(result).toBe(expected);           // Strict equality (===)
+expect(result).toEqual(expected);        // Deep equality (objects/arrays)
+expect(result).toStrictEqual(expected);  // Deep equality + type matching
+
+// Truthiness
+expect(result).toBeTruthy();
+expect(result).toBeFalsy();
+expect(result).toBeNull();
+expect(result).toBeDefined();
+expect(result).toBeUndefined();
+
+// Numbers
+expect(result).toBeGreaterThan(5);
+expect(result).toBeLessThanOrEqual(10);
+expect(result).toBeCloseTo(0.3, 5);      // Floating point
+
+// Strings
+expect(result).toMatch(/pattern/);
+expect(result).toContain(&#39;substring&#39;);
+
+// Arrays / Objects
+expect(array).toContain(item);
+expect(array).toHaveLength(3);
+expect(object).toHaveProperty(&#39;key&#39;, &#39;value&#39;);
+
+// Errors
+expect(() =&gt; fn()).toThrow();
+expect(() =&gt; fn()).toThrow(ValidationError);
+expect(() =&gt; fn()).toThrow(&#39;specific message&#39;);
+
+// Async
+await expect(asyncFn()).resolves.toBe(value);
+await expect(asyncFn()).rejects.toThrow(Error);</code></pre>
+<h2 id="mocking-patterns">Mocking Patterns</h2>
+<h3 id="mock-functions">Mock Functions</h3>
+<pre class="typescript"><code>const mockFn = jest.fn();
+mockFn.mockReturnValue(42);
+mockFn.mockResolvedValue({ data: &#39;test&#39; });
+mockFn.mockImplementation((x) =&gt; x * 2);
+
+expect(mockFn).toHaveBeenCalled();
+expect(mockFn).toHaveBeenCalledWith(&#39;arg1&#39;, &#39;arg2&#39;);
+expect(mockFn).toHaveBeenCalledTimes(3);</code></pre>
+<h3 id="mock-modules">Mock Modules</h3>
+<pre class="typescript"><code>// Mock an entire module
+jest.mock(&#39;./database&#39;, () =&gt; ({
+  query: jest.fn().mockResolvedValue([{ id: 1, title: &#39;Test&#39; }]),
+}));
+
+// Mock specific exports
+jest.mock(&#39;./utils&#39;, () =&gt; ({
+  ...jest.requireActual(&#39;./utils&#39;),
+  generateId: jest.fn().mockReturnValue(&#39;test-id&#39;),
+}));</code></pre>
+<h3 id="mock-at-boundaries-only">Mock at Boundaries Only</h3>
+<pre><code>Mock these:                    Don&#39;t mock these:
+├── Database calls             ├── Internal utility functions
+├── HTTP requests              ├── Business logic
+├── File system operations     ├── Data transformations
+├── External API calls         ├── Validation functions
+└── Time/Date (when needed)    └── Pure functions</code></pre>
+<h2 id="reactcomponent-testing">React/Component Testing</h2>
+<pre class="tsx"><code>import { render, screen, fireEvent, waitFor } from &#39;@testing-library/react&#39;;
+
+describe(&#39;TaskForm&#39;, () =&gt; {
+  it(&#39;submits the form with entered data&#39;, async () =&gt; {
+    const onSubmit = jest.fn();
+    render(&lt;TaskForm onSubmit={onSubmit} /&gt;);
+
+    // Find elements by accessible role/label (not test IDs)
+    await screen.findByRole(&#39;textbox&#39;, { name: /title/i });
+    fireEvent.change(screen.getByRole(&#39;textbox&#39;, { name: /title/i }), {
+      target: { value: &#39;New Task&#39; },
+    });
+    fireEvent.click(screen.getByRole(&#39;button&#39;, { name: /create/i }));
+
+    await waitFor(() =&gt; {
+      expect(onSubmit).toHaveBeenCalledWith({ title: &#39;New Task&#39; });
+    });
+  });
+
+  it(&#39;shows validation error for empty title&#39;, async () =&gt; {
+    render(&lt;TaskForm onSubmit={jest.fn()} /&gt;);
+
+    fireEvent.click(screen.getByRole(&#39;button&#39;, { name: /create/i }));
+
+    expect(await screen.findByText(/title is required/i)).toBeInTheDocument();
+  });
+});</code></pre>
+<h2 id="api-integration-testing">API / Integration Testing</h2>
+<pre class="typescript"><code>import request from &#39;supertest&#39;;
+import { app } from &#39;../src/app&#39;;
+
+describe(&#39;POST /api/tasks&#39;, () =&gt; {
+  it(&#39;creates a task and returns 201&#39;, async () =&gt; {
+    const response = await request(app)
+      .post(&#39;/api/tasks&#39;)
+      .send({ title: &#39;Test Task&#39; })
+      .set(&#39;Authorization&#39;, `Bearer ${testToken}`)
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      id: expect.any(String),
+      title: &#39;Test Task&#39;,
+      status: &#39;pending&#39;,
+    });
+  });
+
+  it(&#39;returns 422 for invalid input&#39;, async () =&gt; {
+    const response = await request(app)
+      .post(&#39;/api/tasks&#39;)
+      .send({ title: &#39;&#39; })
+      .set(&#39;Authorization&#39;, `Bearer ${testToken}`)
+      .expect(422);
+
+    expect(response.body.error.code).toBe(&#39;VALIDATION_ERROR&#39;);
+  });
+
+  it(&#39;returns 401 without authentication&#39;, async () =&gt; {
+    await request(app)
+      .post(&#39;/api/tasks&#39;)
+      .send({ title: &#39;Test&#39; })
+      .expect(401);
+  });
+});</code></pre>
+<h2 id="e2e-testing-playwright">E2E Testing (Playwright)</h2>
+<pre class="typescript"><code>import { test, expect } from &#39;@playwright/test&#39;;
+
+test(&#39;user can create and complete a task&#39;, async ({ page }) =&gt; {
+  // Navigate and authenticate
+  await page.goto(&#39;/&#39;);
+  await page.fill(&#39;[name=&quot;email&quot;]&#39;, &#39;test@example.com&#39;);
+  await page.fill(&#39;[name=&quot;password&quot;]&#39;, &#39;testpass123&#39;);
+  await page.click(&#39;button:has-text(&quot;Log in&quot;)&#39;);
+
+  // Create a task
+  await page.click(&#39;button:has-text(&quot;New Task&quot;)&#39;);
+  await page.fill(&#39;[name=&quot;title&quot;]&#39;, &#39;Buy groceries&#39;);
+  await page.click(&#39;button:has-text(&quot;Create&quot;)&#39;);
+
+  // Verify task appears
+  await expect(page.locator(&#39;text=Buy groceries&#39;)).toBeVisible();
+
+  // Complete the task
+  await page.click(&#39;[aria-label=&quot;Complete Buy groceries&quot;]&#39;);
+  await expect(page.locator(&#39;text=Buy groceries&#39;)).toHaveCSS(
+    &#39;text-decoration-line&#39;, &#39;line-through&#39;
+  );
+});</code></pre>
+<h2 id="test-anti-patterns">Test Anti-Patterns</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Anti-Pattern</th>
+<th>Problem</th>
+<th>Better Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Testing implementation details</td>
+<td>Breaks on refactor</td>
+<td>Test inputs/outputs</td>
+</tr>
+<tr>
+<td>Snapshot everything</td>
+<td>No one reviews snapshot diffs</td>
+<td>Assert specific values</td>
+</tr>
+<tr>
+<td>Shared mutable state</td>
+<td>Tests pollute each other</td>
+<td>Setup/teardown per test</td>
+</tr>
+<tr>
+<td>Testing third-party code</td>
+<td>Wastes time, not your bug</td>
+<td>Mock the boundary</td>
+</tr>
+<tr>
+<td>Skipping tests to pass CI</td>
+<td>Hides real bugs</td>
+<td>Fix or delete the test</td>
+</tr>
+<tr>
+<td>Using <code>test.skip</code> permanently</td>
+<td>Dead code</td>
+<td>Remove or fix it</td>
+</tr>
+<tr>
+<td>Overly broad assertions</td>
+<td>Doesn’t catch regressions</td>
+<td>Be specific</td>
+</tr>
+<tr>
+<td>No async error handling</td>
+<td>Swallowed errors, false passes</td>
+<td>Always <code>await</code> async tests</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

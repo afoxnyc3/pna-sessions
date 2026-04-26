@@ -583,5 +583,18 @@
     "agent": "principal_architect",
     "tags": [],
     "type": "design"
+  },
+  {
+    "type": "design",
+    "title": "Engineering Playbooks (vault Architecture/playbooks/)",
+    "date": "2026-04-26",
+    "agent": "principal_architect",
+    "path": "designs/2026-04-26-engineering-playbooks-vault-architectureplaybooks.html",
+    "tags": [
+      "playbook",
+      "checklist",
+      "engineering",
+      "quality"
+    ]
   }
 ]
